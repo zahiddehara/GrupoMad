@@ -1,0 +1,102 @@
+@model IEnumerable<GrupoMad.Models.Product>
+
+@{
+    ViewData["Title"] = "Productos";
+}
+
+<h1>Productos</h1>
+
+<p>
+    <a asp-action="Create" class="btn btn-primary">Crear Nuevo Producto</a>
+</p>
+
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th>SKU</th>
+            <th>Nombre</th>
+            <th>Tipo</th>
+            <th>Tipo de Precio</th>
+            <th>Tienda</th>
+            <th>Colores</th>
+            <th>Estado</th>
+            <th>Acciones</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var item in Model)
+        {
+            <tr>
+                <td>@item.SKU</td>
+                <td>@item.Name</td>
+                <td>
+                    @switch (item.ProductType)
+                    {
+                        case GrupoMad.Models.ProductType.Accessory:
+                            <span class="badge bg-info">Accesorio</span>
+                            break;
+                        case GrupoMad.Models.ProductType.Blind:
+                            <span class="badge bg-success">Persiana</span>
+                            break;
+                        default:
+                            <span class="badge bg-secondary">@item.ProductType</span>
+                            break;
+                    }
+                </td>
+                <td>
+                    @switch (item.PricingType)
+                    {
+                        case GrupoMad.Models.PricingType.PerSquareMeter:
+                            @:Por m²
+                            break;
+                        case GrupoMad.Models.PricingType.PerUnit:
+                            @:Por Unidad
+                            break;
+                        case GrupoMad.Models.PricingType.PerLinearMeter:
+                            @:Por Metro Lineal
+                            break;
+                        case GrupoMad.Models.PricingType.PerRange:
+                            @:Por Rango
+                            break;
+                    }
+                </td>
+                <td>
+                    @if (item.Store != null)
+                    {
+                        <span class="badge bg-warning">@item.Store.Name</span>
+                    }
+                    else
+                    {
+                        <span class="badge bg-primary">Global</span>
+                    }
+                </td>
+                <td>
+                    @if (item.ProductColors != null && item.ProductColors.Any())
+                    {
+                        <span class="badge bg-secondary">@item.ProductColors.Count colores</span>
+                    }
+                    else
+                    {
+                        <span class="text-muted">Sin colores</span>
+                    }
+                </td>
+                <td>
+                    @if (item.IsActive)
+                    {
+                        <span class="badge bg-success">Activo</span>
+                    }
+                    else
+                    {
+                        <span class="badge bg-danger">Inactivo</span>
+                    }
+                </td>
+                <td>
+                    <a asp-action="Details" asp-route-id="@item.Id" class="btn btn-sm btn-info">Detalles</a>
+                    <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-sm btn-warning">Editar</a>
+                    <a asp-action="ManageColors" asp-route-id="@item.Id" class="btn btn-sm btn-secondary">Colores</a>
+                    <a asp-action="Delete" asp-route-id="@item.Id" class="btn btn-sm btn-danger">Eliminar</a>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>

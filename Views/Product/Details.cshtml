@@ -1,0 +1,119 @@
+@model GrupoMad.Models.Product
+
+@{
+    ViewData["Title"] = "Detalles del Producto";
+}
+
+<h1>Detalles del Producto</h1>
+
+<div>
+    <hr />
+    <dl class="row">
+        <dt class="col-sm-3">SKU</dt>
+        <dd class="col-sm-9">@Model.SKU</dd>
+
+        <dt class="col-sm-3">Nombre</dt>
+        <dd class="col-sm-9">@Model.Name</dd>
+
+        <dt class="col-sm-3">Descripción</dt>
+        <dd class="col-sm-9">@(Model.Description ?? "Sin descripción")</dd>
+
+        <dt class="col-sm-3">Tipo de Producto</dt>
+        <dd class="col-sm-9">
+            @switch (Model.ProductType)
+            {
+                case GrupoMad.Models.ProductType.Accessory:
+                    <span class="badge bg-info">Accesorio</span>
+                    break;
+                case GrupoMad.Models.ProductType.Blind:
+                    <span class="badge bg-success">Persiana</span>
+                    break;
+                default:
+                    <span class="badge bg-secondary">@Model.ProductType</span>
+                    break;
+            }
+        </dd>
+
+        <dt class="col-sm-3">Tipo de Precio</dt>
+        <dd class="col-sm-9">
+            @switch (Model.PricingType)
+            {
+                case GrupoMad.Models.PricingType.PerSquareMeter:
+                    @:Por Metro Cuadrado (m²)
+                    break;
+                case GrupoMad.Models.PricingType.PerUnit:
+                    @:Por Unidad
+                    break;
+                case GrupoMad.Models.PricingType.PerLinearMeter:
+                    @:Por Metro Lineal
+                    break;
+                case GrupoMad.Models.PricingType.PerRange:
+                    @:Por Rango
+                    break;
+            }
+        </dd>
+
+        <dt class="col-sm-3">Tienda</dt>
+        <dd class="col-sm-9">
+            @if (Model.Store != null)
+            {
+                <span class="badge bg-warning">@Model.Store.Name</span>
+            }
+            else
+            {
+                <span class="badge bg-primary">Global (Todas las tiendas)</span>
+            }
+        </dd>
+
+        <dt class="col-sm-3">Estado</dt>
+        <dd class="col-sm-9">
+            @if (Model.IsActive)
+            {
+                <span class="badge bg-success">Activo</span>
+            }
+            else
+            {
+                <span class="badge bg-danger">Inactivo</span>
+            }
+        </dd>
+
+        <dt class="col-sm-3">Colores Disponibles</dt>
+        <dd class="col-sm-9">
+            @if (Model.ProductColors != null && Model.ProductColors.Any())
+            {
+                <div class="d-flex flex-wrap gap-2">
+                    @foreach (var pc in Model.ProductColors)
+                    {
+                        <div class="card" style="width: 150px;">
+                            <div class="card-body p-2">
+                                <p class="card-text mb-0">
+                                    <strong>@pc.Color.Name</strong><br />
+                                    <small class="text-muted">@pc.Color.Code</small>
+                                </p>
+                            </div>
+                        </div>
+                    }
+                </div>
+            }
+            else
+            {
+                <span class="text-muted">Sin colores asignados</span>
+            }
+        </dd>
+
+        <dt class="col-sm-3">Fecha de Creación</dt>
+        <dd class="col-sm-9">@Model.CreatedAt.ToString("dd/MM/yyyy HH:mm")</dd>
+
+        @if (Model.UpdatedAt.HasValue)
+        {
+            <dt class="col-sm-3">Última Actualización</dt>
+            <dd class="col-sm-9">@Model.UpdatedAt.Value.ToString("dd/MM/yyyy HH:mm")</dd>
+        }
+    </dl>
+</div>
+
+<div>
+    <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-warning">Editar</a>
+    <a asp-action="ManageColors" asp-route-id="@Model.Id" class="btn btn-secondary">Gestionar Colores</a>
+    <a asp-action="Index" class="btn btn-secondary">Volver a la Lista</a>
+</div>

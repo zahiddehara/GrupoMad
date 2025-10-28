@@ -1,0 +1,62 @@
+@model GrupoMad.Models.Product
+
+@{
+    ViewData["Title"] = "Eliminar Producto";
+}
+
+<h1>Eliminar Producto</h1>
+
+<h3>¿Está seguro de que desea eliminar este producto?</h3>
+<div>
+    <hr />
+    <dl class="row">
+        <dt class="col-sm-3">SKU</dt>
+        <dd class="col-sm-9">@Model.SKU</dd>
+
+        <dt class="col-sm-3">Nombre</dt>
+        <dd class="col-sm-9">@Model.Name</dd>
+
+        <dt class="col-sm-3">Descripción</dt>
+        <dd class="col-sm-9">@(Model.Description ?? "Sin descripción")</dd>
+
+        <dt class="col-sm-3">Tipo de Producto</dt>
+        <dd class="col-sm-9">@Model.ProductType</dd>
+
+        <dt class="col-sm-3">Tipo de Precio</dt>
+        <dd class="col-sm-9">@Model.PricingType</dd>
+
+        <dt class="col-sm-3">Tienda</dt>
+        <dd class="col-sm-9">
+            @if (Model.Store != null)
+            {
+                @Model.Store.Name
+            }
+            else
+            {
+                <span class="text-muted">Global</span>
+            }
+        </dd>
+
+        <dt class="col-sm-3">Colores</dt>
+        <dd class="col-sm-9">
+            @if (Model.ProductColors != null && Model.ProductColors.Any())
+            {
+                <span>@Model.ProductColors.Count colores asignados</span>
+            }
+            else
+            {
+                <span class="text-muted">Sin colores</span>
+            }
+        </dd>
+    </dl>
+
+    <div class="alert alert-warning" role="alert">
+        <strong>Advertencia:</strong> Esta acción eliminará permanentemente el producto y todas sus relaciones (colores, precios, etc.).
+    </div>
+
+    <form asp-action="Delete">
+        <input type="hidden" asp-for="Id" />
+        <button type="submit" class="btn btn-danger">Eliminar</button>
+        <a asp-action="Index" class="btn btn-secondary">Cancelar</a>
+    </form>
+</div>

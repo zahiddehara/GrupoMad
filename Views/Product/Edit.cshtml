@@ -1,0 +1,70 @@
+@model GrupoMad.Models.Product
+
+@{
+    ViewData["Title"] = "Editar Producto";
+}
+
+<h1>Editar Producto</h1>
+
+<hr />
+<div class="row">
+    <div class="col-md-6">
+        <form asp-action="Edit">
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <input type="hidden" asp-for="Id" />
+            <input type="hidden" asp-for="ProductType" />
+
+            <div class="form-group mb-3">
+                <label asp-for="SKU" class="control-label">SKU</label>
+                <input asp-for="SKU" class="form-control" />
+                <span asp-validation-for="SKU" class="text-danger"></span>
+            </div>
+
+            <div class="form-group mb-3">
+                <label asp-for="Name" class="control-label">Nombre</label>
+                <input asp-for="Name" class="form-control" />
+                <span asp-validation-for="Name" class="text-danger"></span>
+            </div>
+
+            <div class="form-group mb-3">
+                <label asp-for="Description" class="control-label">Descripción</label>
+                <textarea asp-for="Description" class="form-control" rows="3"></textarea>
+                <span asp-validation-for="Description" class="text-danger"></span>
+            </div>
+
+            <div class="form-group mb-3">
+                <label class="control-label">Tipo de Producto</label>
+                <input type="text" class="form-control" value="@Model.ProductType" disabled />
+                <small class="form-text text-muted">El tipo de producto no se puede cambiar después de crearlo</small>
+            </div>
+
+            <div class="form-group mb-3">
+                <label asp-for="PricingType" class="control-label">Tipo de Precio</label>
+                <select asp-for="PricingType" class="form-control" asp-items="ViewBag.PricingTypes"></select>
+                <span asp-validation-for="PricingType" class="text-danger"></span>
+            </div>
+
+            <div class="form-group mb-3">
+                <label asp-for="StoreId" class="control-label">Tienda</label>
+                <select asp-for="StoreId" class="form-control" asp-items="ViewBag.StoreId">
+                    <option value="">-- Global (Todas las tiendas) --</option>
+                </select>
+                <span asp-validation-for="StoreId" class="text-danger"></span>
+            </div>
+
+            <div class="form-group form-check mb-3">
+                <input asp-for="IsActive" class="form-check-input" type="checkbox" />
+                <label asp-for="IsActive" class="form-check-label">Activo</label>
+            </div>
+
+            <div class="form-group">
+                <input type="submit" value="Guardar" class="btn btn-primary" />
+                <a asp-action="Index" class="btn btn-secondary">Volver</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}
