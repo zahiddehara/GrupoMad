@@ -21,7 +21,7 @@ namespace GrupoMad.Models
         PerLinearMeter
     }
 
-    public class Product
+    public abstract class Product
     {
         public int Id { get; set; }
 
