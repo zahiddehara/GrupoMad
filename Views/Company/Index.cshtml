@@ -1,2 +1,25 @@
-@model GrupoMad.Models.Company
-<p>Company name: @Model.Name</p>
+@model List<GrupoMad.Models.Company>
+
+@{
+    ViewData["Title"] = "Empresas";
+}
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>Nombre</th>
+            <th>Acciones</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach(var company in Model)
+        {
+            <tr>
+                <td>@company.Name</td>
+                <td>
+                    <a asp-action="Edit" asp-route-id="@company.Id">Editar</a>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>

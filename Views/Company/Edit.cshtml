@@ -1,0 +1,15 @@
+@model GrupoMad.Models.Company
+
+@{
+    ViewData["Title"] = "Editar";
+}
+
+<h1>Editando empresa @Model.Name</h1>
+
+<form asp-action="Edit" method="post">
+    <div class="form-group">
+        <label for="Name">Nombre</label>
+        <input type="text" class="form-control" asp-for="Name" />
+    </div>
+    <button type="submit" class="btn btn-primary">Aceptar</button>
+</form>
