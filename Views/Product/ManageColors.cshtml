@@ -6,35 +6,72 @@
 }
 
 <h1>Gestionar Colores - @Model.Name</h1>
-<h5 class="text-muted">SKU: @Model.SKU</h5>
+<h5 class="text-muted">SKU Producto: @Model.SKU</h5>
+
+@if (TempData["Success"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        @TempData["Success"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+
+@if (TempData["Error"] != null)
+{
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        @TempData["Error"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
 
 <hr />
 
 <div class="row">
     <!-- Colores asignados -->
-    <div class="col-md-6">
+    <div class="col-md-7">
         <h3>Colores Asignados</h3>
 
         @if (Model.ProductColors != null && Model.ProductColors.Any())
         {
-            <div class="list-group">
-                @foreach (var pc in Model.ProductColors)
-                {
-                    <div class="list-group-item d-flex justify-content-between align-items-center">
-                        <div>
-                            <strong>@pc.Color.Name</strong><br />
-                            <small class="text-muted">Código: @pc.Color.Code</small>
-                        </div>
-                        <form asp-action="RemoveColor" method="post" style="display: inline;">
-                            @Html.AntiForgeryToken()
-                            <input type="hidden" name="productId" value="@Model.Id" />
-                            <input type="hidden" name="colorId" value="@pc.Color.Id" />
-                            <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('¿Eliminar este color?');">
-                                Eliminar
-                            </button>
-                        </form>
-                    </div>
-                }
+            <div class="table-responsive">
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>Color</th>
+                            <th>Código Color</th>
+                            <th>SKU Variante</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var pc in Model.ProductColors)
+                        {
+                            <tr>
+                                <td><strong>@pc.Color.Name</strong></td>
+                                <td><small class="text-muted">@pc.Color.Code</small></td>
+                                <td>
+                                    <form asp-action="UpdateColorSKU" method="post" class="d-inline-flex gap-2">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="productId" value="@Model.Id" />
+                                        <input type="hidden" name="colorId" value="@pc.Color.Id" />
+                                        <input type="text" name="sku" value="@pc.SKU" class="form-control form-control-sm" style="width: 150px;" required />
+                                        <button type="submit" class="btn btn-sm btn-primary">Actualizar</button>
+                                    </form>
+                                </td>
+                                <td>
+                                    <form asp-action="RemoveColor" method="post" style="display: inline;">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="productId" value="@Model.Id" />
+                                        <input type="hidden" name="colorId" value="@pc.Color.Id" />
+                                        <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('¿Eliminar este color?');">
+                                            Eliminar
+                                        </button>
+                                    </form>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
             </div>
         }
         else
@@ -46,8 +83,8 @@
     </div>
 
     <!-- Colores disponibles para agregar -->
-    <div class="col-md-6">
-        <h3>Agregar Colores</h3>
+    <div class="col-md-5">
+        <h3>Agregar Color</h3>
 
         @{
             var assignedColorIds = Model.ProductColors?.Select(pc => pc.ColorId).ToList() ?? new List<int>();
@@ -56,24 +93,37 @@
 
         @if (colorsToAdd != null && colorsToAdd.Any())
         {
-            <div class="list-group">
-                @foreach (var color in colorsToAdd)
-                {
-                    <div class="list-group-item d-flex justify-content-between align-items-center">
-                        <div>
-                            <strong>@color.Name</strong><br />
-                            <small class="text-muted">Código: @color.Code</small>
+            <div class="card">
+                <div class="card-body">
+                    <form asp-action="AddColor" method="post">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="productId" value="@Model.Id" />
+
+                        <div class="mb-3">
+                            <label for="colorId" class="form-label">Seleccionar Color</label>
+                            <select name="colorId" id="colorId" class="form-select" required>
+                                <option value="">-- Seleccione un color --</option>
+                                @foreach (var color in colorsToAdd)
+                                {
+                                    <option value="@color.Id">@color.Name (@color.Code)</option>
+                                }
+                            </select>
                         </div>
-                        <form asp-action="AddColor" method="post" style="display: inline;">
-                            @Html.AntiForgeryToken()
-                            <input type="hidden" name="productId" value="@Model.Id" />
-                            <input type="hidden" name="colorId" value="@color.Id" />
-                            <button type="submit" class="btn btn-sm btn-success">
-                                Agregar
-                            </button>
-                        </form>
-                    </div>
-                }
+
+                        <div class="mb-3">
+                            <label for="sku" class="form-label">SKU de la Variante</label>
+                            <input type="text" name="sku" id="sku" class="form-control" required
+                                   placeholder="Ej: @(Model.SKU)-COLOR" />
+                            <small class="form-text text-muted">
+                                Ingrese un SKU único para esta combinación producto-color
+                            </small>
+                        </div>
+
+                        <button type="submit" class="btn btn-success">
+                            <i class="bi bi-plus-circle"></i> Agregar Color
+                        </button>
+                    </form>
+                </div>
             </div>
         }
         else

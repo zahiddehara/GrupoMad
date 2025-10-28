@@ -1,0 +1,129 @@
+@model GrupoMad.Models.Color
+
+@{
+    ViewData["Title"] = "Eliminar Color";
+}
+
+<h1>Eliminar Color</h1>
+
+@if (TempData["Error"] != null)
+{
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        @TempData["Error"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+
+<div class="alert alert-warning">
+    <h4>¿Está seguro que desea eliminar este color?</h4>
+    <p>Esta acción no se puede deshacer.</p>
+</div>
+
+<div class="row">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header bg-danger text-white">
+                <h5>Información del Color</h5>
+            </div>
+            <div class="card-body">
+                <dl class="row">
+                    <dt class="col-sm-4">Código:</dt>
+                    <dd class="col-sm-8"><strong>@Model.Code</strong></dd>
+
+                    <dt class="col-sm-4">Nombre:</dt>
+                    <dd class="col-sm-8">@Model.Name</dd>
+
+                    <dt class="col-sm-4">Estado:</dt>
+                    <dd class="col-sm-8">
+                        @if (Model.IsActive)
+                        {
+                            <span class="badge bg-success">Activo</span>
+                        }
+                        else
+                        {
+                            <span class="badge bg-secondary">Inactivo</span>
+                        }
+                    </dd>
+
+                    <dt class="col-sm-4">Productos Asociados:</dt>
+                    <dd class="col-sm-8">
+                        @if (Model.ProductColors != null && Model.ProductColors.Any())
+                        {
+                            <span class="badge bg-danger">@Model.ProductColors.Count producto(s)</span>
+                        }
+                        else
+                        {
+                            <span class="badge bg-success">Ninguno</span>
+                        }
+                    </dd>
+                </dl>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6">
+        @if (Model.ProductColors != null && Model.ProductColors.Any())
+        {
+            <div class="card border-danger">
+                <div class="card-header bg-danger text-white">
+                    <h5>Advertencia: Color en Uso</h5>
+                </div>
+                <div class="card-body">
+                    <p class="text-danger">
+                        <strong>Este color NO puede ser eliminado</strong> porque está siendo usado
+                        por los siguientes productos:
+                    </p>
+                    <ul class="list-group">
+                        @foreach (var pc in Model.ProductColors)
+                        {
+                            <li class="list-group-item">
+                                <strong>@pc.Product.Name</strong><br />
+                                <small class="text-muted">SKU Producto: @pc.Product.SKU</small><br />
+                                <small class="text-muted">SKU Variante: @pc.SKU</small>
+                            </li>
+                        }
+                    </ul>
+                    <div class="alert alert-info mt-3 small">
+                        <strong>Sugerencia:</strong> Para eliminar este color, primero debe removerlo
+                        de todos los productos que lo usan.
+                    </div>
+                </div>
+            </div>
+        }
+        else
+        {
+            <div class="card border-success">
+                <div class="card-header bg-success text-white">
+                    <h5>Color Listo para Eliminar</h5>
+                </div>
+                <div class="card-body">
+                    <p class="text-success">
+                        Este color no está siendo usado por ningún producto y puede ser eliminado de forma segura.
+                    </p>
+                </div>
+            </div>
+        }
+    </div>
+</div>
+
+<hr />
+
+<form asp-action="Delete" method="post">
+    <input type="hidden" asp-for="Id" />
+
+    @if (Model.ProductColors == null || !Model.ProductColors.Any())
+    {
+        <button type="submit" class="btn btn-danger" onclick="return confirm('¿Está completamente seguro de eliminar este color?');">
+            Confirmar Eliminación
+        </button>
+    }
+    else
+    {
+        <button type="button" class="btn btn-danger" disabled>
+            No se Puede Eliminar (Color en Uso)
+        </button>
+    }
+
+    <a asp-action="Index" class="btn btn-secondary">Cancelar</a>
+    <a asp-action="Details" asp-route-id="@Model.Id" class="btn btn-info">Ver Detalles</a>
+</form>

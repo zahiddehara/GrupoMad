@@ -61,6 +61,9 @@ namespace GrupoMad.Models
 
         public int ColorId { get; set; }
         public Color Color { get; set; }
+
+        [Required]
+        public string SKU { get; set; }
     }
 
     public class AccessoryProduct : Product

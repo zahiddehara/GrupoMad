@@ -108,7 +108,7 @@ namespace GrupoMad.Services
             return product?.ProductColors.Select(pc => pc.Color).ToList() ?? new List<Color>();
         }
 
-        public async Task<bool> AddColorToProductAsync(int productId, int colorId)
+        public async Task<bool> AddColorToProductAsync(int productId, int colorId, string sku)
         {
             var product = await _context.Products.FindAsync(productId);
             var color = await _context.Colors.FindAsync(colorId);
@@ -121,10 +121,17 @@ namespace GrupoMad.Services
 
             if (exists) return false;
 
+            // Verificar que el SKU sea único
+            var skuExists = await _context.ProductColors
+                .AnyAsync(pc => pc.SKU == sku);
+
+            if (skuExists) return false;
+
             _context.ProductColors.Add(new ProductColor
             {
                 ProductId = productId,
-                ColorId = colorId
+                ColorId = colorId,
+                SKU = sku
             });
 
             await _context.SaveChangesAsync();
@@ -165,6 +172,32 @@ namespace GrupoMad.Services
             _context.ProductColors.Remove(productColor);
             await _context.SaveChangesAsync();
             return true;
+        }
+
+        public async Task<bool> UpdateProductColorSKUAsync(int productId, int colorId, string newSku)
+        {
+            var productColor = await _context.ProductColors
+                .FirstOrDefaultAsync(pc => pc.ProductId == productId && pc.ColorId == colorId);
+
+            if (productColor == null) return false;
+
+            // Verificar que el nuevo SKU sea único
+            var skuExists = await _context.ProductColors
+                .AnyAsync(pc => pc.SKU == newSku && (pc.ProductId != productId || pc.ColorId != colorId));
+
+            if (skuExists) return false;
+
+            productColor.SKU = newSku;
+            await _context.SaveChangesAsync();
+            return true;
+        }
+
+        public async Task<ProductColor?> GetProductColorAsync(int productId, int colorId)
+        {
+            return await _context.ProductColors
+                .Include(pc => pc.Product)
+                .Include(pc => pc.Color)
+                .FirstOrDefaultAsync(pc => pc.ProductId == productId && pc.ColorId == colorId);
         }
 
         // ==================== Búsqueda y Filtrado ====================

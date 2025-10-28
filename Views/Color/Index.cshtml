@@ -1,0 +1,88 @@
+@model IEnumerable<GrupoMad.Models.Color>
+
+@{
+    ViewData["Title"] = "Colores";
+}
+
+<h1>Gestión de Colores</h1>
+
+@if (TempData["Success"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        @TempData["Success"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+
+@if (TempData["Error"] != null)
+{
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        @TempData["Error"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+
+<p>
+    <a asp-action="Create" class="btn btn-primary">Crear Nuevo Color</a>
+</p>
+
+<div class="table-responsive">
+    <table class="table table-striped table-hover">
+        <thead>
+            <tr>
+                <th>Código</th>
+                <th>Nombre</th>
+                <th>Estado</th>
+                <th>Productos Asociados</th>
+                <th>Fecha Creación</th>
+                <th>Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var item in Model)
+            {
+                <tr>
+                    <td>
+                        <strong>@item.Code</strong>
+                    </td>
+                    <td>@item.Name</td>
+                    <td>
+                        @if (item.IsActive)
+                        {
+                            <span class="badge bg-success">Activo</span>
+                        }
+                        else
+                        {
+                            <span class="badge bg-secondary">Inactivo</span>
+                        }
+                    </td>
+                    <td>
+                        @if (item.ProductColors != null && item.ProductColors.Any())
+                        {
+                            <span class="badge bg-info">@item.ProductColors.Count producto(s)</span>
+                        }
+                        else
+                        {
+                            <span class="text-muted">0 productos</span>
+                        }
+                    </td>
+                    <td>@item.CreatedAt.ToString("dd/MM/yyyy")</td>
+                    <td>
+                        <div class="btn-group" role="group">
+                            <a asp-action="Details" asp-route-id="@item.Id" class="btn btn-sm btn-info">Detalles</a>
+                            <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-sm btn-warning">Editar</a>
+                            <a asp-action="Delete" asp-route-id="@item.Id" class="btn btn-sm btn-danger">Eliminar</a>
+                        </div>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+
+@if (!Model.Any())
+{
+    <div class="alert alert-info">
+        No hay colores registrados. <a asp-action="Create">Crear el primero</a>
+    </div>
+}

@@ -1,0 +1,102 @@
+@model GrupoMad.Models.Color
+
+@{
+    ViewData["Title"] = "Detalles del Color";
+}
+
+<h1>Detalles del Color</h1>
+
+<div class="row">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h4>@Model.Name</h4>
+            </div>
+            <div class="card-body">
+                <dl class="row">
+                    <dt class="col-sm-4">ID:</dt>
+                    <dd class="col-sm-8">@Model.Id</dd>
+
+                    <dt class="col-sm-4">Código:</dt>
+                    <dd class="col-sm-8"><strong>@Model.Code</strong></dd>
+
+                    <dt class="col-sm-4">Nombre:</dt>
+                    <dd class="col-sm-8">@Model.Name</dd>
+
+                    <dt class="col-sm-4">Estado:</dt>
+                    <dd class="col-sm-8">
+                        @if (Model.IsActive)
+                        {
+                            <span class="badge bg-success">Activo</span>
+                        }
+                        else
+                        {
+                            <span class="badge bg-secondary">Inactivo</span>
+                        }
+                    </dd>
+
+                    <dt class="col-sm-4">Fecha de Creación:</dt>
+                    <dd class="col-sm-8">@Model.CreatedAt.ToString("dd/MM/yyyy HH:mm")</dd>
+
+                    @if (Model.UpdatedAt.HasValue)
+                    {
+                        <dt class="col-sm-4">Última Actualización:</dt>
+                        <dd class="col-sm-8">@Model.UpdatedAt.Value.ToString("dd/MM/yyyy HH:mm")</dd>
+                    }
+                </dl>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5>Productos que Usan Este Color</h5>
+            </div>
+            <div class="card-body">
+                @if (Model.ProductColors != null && Model.ProductColors.Any())
+                {
+                    <p>Este color está siendo usado en <strong>@Model.ProductColors.Count</strong> producto(s):</p>
+                    <div class="list-group">
+                        @foreach (var pc in Model.ProductColors)
+                        {
+                            <a href="@Url.Action("Details", "Product", new { id = pc.ProductId })" class="list-group-item list-group-item-action">
+                                <div class="d-flex w-100 justify-content-between">
+                                    <h6 class="mb-1">@pc.Product.Name</h6>
+                                    <small>
+                                        @if (pc.Product.IsActive)
+                                        {
+                                            <span class="badge bg-success">Activo</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-secondary">Inactivo</span>
+                                        }
+                                    </small>
+                                </div>
+                                <p class="mb-1">
+                                    <small class="text-muted">SKU Producto: @pc.Product.SKU</small><br />
+                                    <small class="text-muted">SKU Variante: @pc.SKU</small>
+                                </p>
+                                <small class="text-muted">Tipo: @pc.Product.ProductType</small>
+                            </a>
+                        }
+                    </div>
+                }
+                else
+                {
+                    <div class="alert alert-info">
+                        Este color no está siendo usado por ningún producto todavía.
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+<hr />
+<div>
+    <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-warning">Editar</a>
+    <a asp-action="Delete" asp-route-id="@Model.Id" class="btn btn-danger">Eliminar</a>
+    <a asp-action="Index" class="btn btn-secondary">Volver a la Lista</a>
+</div>
