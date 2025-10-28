@@ -10,6 +10,26 @@ namespace GrupoMad.Data
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
+            // Configurar herencia TPH con discriminador para Product
+            modelBuilder.Entity<Product>()
+                .HasDiscriminator<ProductType>("ProductType")
+                .HasValue<AccessoryProduct>(ProductType.Accessory)
+                .HasValue<BlindProduct>(ProductType.Blind);
+
+            // Configurar la relación muchos-a-muchos entre Product y Color
+            modelBuilder.Entity<ProductColor>()
+                .HasKey(pc => new { pc.ProductId, pc.ColorId });
+
+            modelBuilder.Entity<ProductColor>()
+                .HasOne(pc => pc.Product)
+                .WithMany(p => p.ProductColors)
+                .HasForeignKey(pc => pc.ProductId);
+
+            modelBuilder.Entity<ProductColor>()
+                .HasOne(pc => pc.Color)
+                .WithMany(c => c.ProductColors)
+                .HasForeignKey(pc => pc.ColorId);
+
             modelBuilder.Entity<Company>().HasData(
                 new Company { Id = 1, Name = "Deconolux" },
                 new Company { Id = 2, Name = "Persianas Mad" },
@@ -29,5 +49,13 @@ namespace GrupoMad.Data
 
         public DbSet<Company> Companies { get; set; }
         public DbSet<Store> Stores { get; set; }
+        public DbSet<Product> Products { get; set; }
+        public DbSet<Color> Colors { get; set; }
+        public DbSet<ProductColor> ProductColors { get; set; }
+        public DbSet<PriceList> PriceLists { get; set; }
+        public DbSet<PriceListItem> PriceListItems { get; set; }
+
+        public DbSet<AccessoryProduct> Accessories { get; set; }
+        public DbSet<BlindProduct> Blinds { get; set; }
     }
 }

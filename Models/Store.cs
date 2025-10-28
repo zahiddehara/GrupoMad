@@ -10,5 +10,9 @@ namespace GrupoMad.Models
         public int? CompanyId { get; set; }
         [ForeignKey("CompanyId")]
         public Company? Company { get; set; }
+
+        public List<Product> Products { get; set; }
+
+        public List<PriceList> PriceLists { get; set; }
     }
 }

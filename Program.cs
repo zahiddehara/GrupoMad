@@ -1,4 +1,5 @@
 using GrupoMad.Data;
+using GrupoMad.Services;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -8,6 +9,9 @@ builder.Services.AddControllersWithViews();
 // Agregar DbContext con SQLite
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection")));
+
+builder.Services.AddScoped<ProductService>();
+builder.Services.AddScoped<PriceListService>();
 
 var app = builder.Build();
 
