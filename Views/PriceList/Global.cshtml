@@ -1,0 +1,91 @@
+@model IEnumerable<GrupoMad.Models.PriceList>
+
+@{
+    ViewData["Title"] = "Listas de Precios Globales";
+}
+
+<h1>Listas de Precios Globales</h1>
+<p class="text-muted">Listas disponibles para todas las tiendas</p>
+
+<hr />
+
+<div class="mb-3">
+    <a asp-action="Create" class="btn btn-primary">Crear Nueva Lista Global</a>
+    <a asp-action="Index" class="btn btn-secondary">Ver Todas las Listas</a>
+</div>
+
+@if (Model.Any())
+{
+    <div class="row">
+        @foreach (var priceList in Model)
+        {
+            <div class="col-md-4 mb-3">
+                <div class="card h-100 @(priceList.IsActive ? "border-primary" : "border-danger")">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0">
+                            @priceList.Name
+                            <span class="badge bg-light text-dark float-end">Global</span>
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <dl class="row mb-0">
+                            <dt class="col-sm-5">Estado:</dt>
+                            <dd class="col-sm-7">
+                                @if (priceList.IsActive)
+                                {
+                                    <span class="badge bg-success">Activa</span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-danger">Inactiva</span>
+                                }
+                            </dd>
+
+                            <dt class="col-sm-5">Productos:</dt>
+                            <dd class="col-sm-7">
+                                @if (priceList.PriceListItems != null && priceList.PriceListItems.Any())
+                                {
+                                    <strong>@priceList.PriceListItems.Count</strong>
+                                }
+                                else
+                                {
+                                    <span class="text-muted">0</span>
+                                }
+                            </dd>
+
+                            <dt class="col-sm-5">Creada:</dt>
+                            <dd class="col-sm-7">@priceList.CreatedAt.ToString("dd/MM/yyyy")</dd>
+
+                            @if (priceList.UpdatedAt.HasValue)
+                            {
+                                <dt class="col-sm-5">Actualizada:</dt>
+                                <dd class="col-sm-7">@priceList.UpdatedAt.Value.ToString("dd/MM/yyyy")</dd>
+                            }
+                        </dl>
+                    </div>
+                    <div class="card-footer">
+                        <div class="d-grid gap-2">
+                            <a asp-action="Details" asp-route-id="@priceList.Id" class="btn btn-sm btn-info">Ver Detalles</a>
+                            <a asp-action="ManageItems" asp-route-id="@priceList.Id" class="btn btn-sm btn-secondary">Gestionar Productos</a>
+                            <div class="btn-group" role="group">
+                                <a asp-action="Edit" asp-route-id="@priceList.Id" class="btn btn-sm btn-warning">Editar</a>
+                                <a asp-action="BulkOperations" asp-route-id="@priceList.Id" class="btn btn-sm btn-dark">Operaciones</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+}
+else
+{
+    <div class="alert alert-info">
+        <h4 class="alert-heading">No hay listas globales</h4>
+        <p>Las listas globales son listas de precios disponibles para todas las tiendas.</p>
+        <hr>
+        <p class="mb-0">
+            <a asp-action="Create" class="btn btn-primary">Crear la primera lista global</a>
+        </p>
+    </div>
+}

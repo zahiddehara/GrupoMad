@@ -1,0 +1,165 @@
+@model GrupoMad.Models.PriceList
+
+@{
+    ViewData["Title"] = "Detalles de Lista de Precios";
+}
+
+<h1>Detalles de Lista de Precios</h1>
+
+<hr />
+<div class="row">
+    <div class="col-md-6">
+        <dl class="row">
+            <dt class="col-sm-4">Nombre</dt>
+            <dd class="col-sm-8"><strong>@Model.Name</strong></dd>
+
+            <dt class="col-sm-4">Tienda</dt>
+            <dd class="col-sm-8">
+                @if (Model.Store != null)
+                {
+                    <span class="badge bg-warning">@Model.Store.Name</span>
+                }
+                else
+                {
+                    <span class="badge bg-primary">Global (Todas las tiendas)</span>
+                }
+            </dd>
+
+            <dt class="col-sm-4">Estado</dt>
+            <dd class="col-sm-8">
+                @if (Model.IsActive)
+                {
+                    <span class="badge bg-success">Activa</span>
+                }
+                else
+                {
+                    <span class="badge bg-danger">Inactiva</span>
+                }
+            </dd>
+
+            <dt class="col-sm-4">Fecha de Creación</dt>
+            <dd class="col-sm-8">@Model.CreatedAt.ToString("dd/MM/yyyy HH:mm")</dd>
+
+            @if (Model.UpdatedAt.HasValue)
+            {
+                <dt class="col-sm-4">Última Actualización</dt>
+                <dd class="col-sm-8">@Model.UpdatedAt.Value.ToString("dd/MM/yyyy HH:mm")</dd>
+            }
+
+            <dt class="col-sm-4">Total de Productos</dt>
+            <dd class="col-sm-8">
+                @if (Model.PriceListItems != null && Model.PriceListItems.Any())
+                {
+                    <span class="badge bg-secondary">@Model.PriceListItems.Count productos</span>
+                }
+                else
+                {
+                    <span class="text-muted">Sin productos</span>
+                }
+            </dd>
+        </dl>
+    </div>
+</div>
+
+<hr />
+
+<h3>Productos en esta Lista</h3>
+
+@if (Model.PriceListItems != null && Model.PriceListItems.Any())
+{
+    <div class="table-responsive">
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>SKU</th>
+                    <th>Producto</th>
+                    <th>Tipo de Precio</th>
+                    <th>Precio por m²</th>
+                    <th>Precio por Unidad</th>
+                    <th>Precio por Metro Lineal</th>
+                    <th>Colores</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var item in Model.PriceListItems.OrderBy(p => p.Product.Name))
+                {
+                    <tr>
+                        <td><code>@item.Product.SKU</code></td>
+                        <td><strong>@item.Product.Name</strong></td>
+                        <td>
+                            @switch (item.Product.PricingType)
+                            {
+                                case GrupoMad.Models.PricingType.PerSquareMeter:
+                                    <span class="badge bg-info">Por m²</span>
+                                    break;
+                                case GrupoMad.Models.PricingType.PerUnit:
+                                    <span class="badge bg-success">Por Unidad</span>
+                                    break;
+                                case GrupoMad.Models.PricingType.PerLinearMeter:
+                                    <span class="badge bg-warning">Por Metro Lineal</span>
+                                    break;
+                                case GrupoMad.Models.PricingType.PerRange:
+                                    <span class="badge bg-secondary">Por Rango</span>
+                                    break;
+                            }
+                        </td>
+                        <td>
+                            @if (item.PricePerSquareMeter.HasValue)
+                            {
+                                <strong>@item.PricePerSquareMeter.Value.ToString("C")</strong>
+                            }
+                            else
+                            {
+                                <span class="text-muted">-</span>
+                            }
+                        </td>
+                        <td>
+                            @if (item.PricePerUnit.HasValue)
+                            {
+                                <strong>@item.PricePerUnit.Value.ToString("C")</strong>
+                            }
+                            else
+                            {
+                                <span class="text-muted">-</span>
+                            }
+                        </td>
+                        <td>
+                            @if (item.PricePerLinearMeter.HasValue)
+                            {
+                                <strong>@item.PricePerLinearMeter.Value.ToString("C")</strong>
+                            }
+                            else
+                            {
+                                <span class="text-muted">-</span>
+                            }
+                        </td>
+                        <td>
+                            @if (item.Product.ProductColors != null && item.Product.ProductColors.Any())
+                            {
+                                <span class="badge bg-secondary">@item.Product.ProductColors.Count</span>
+                            }
+                            else
+                            {
+                                <span class="text-muted">-</span>
+                            }
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+}
+else
+{
+    <div class="alert alert-info">
+        Esta lista no tiene productos asignados. <a asp-action="ManageItems" asp-route-id="@Model.Id">Agregar productos</a>
+    </div>
+}
+
+<hr />
+<div>
+    <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-warning">Editar</a>
+    <a asp-action="ManageItems" asp-route-id="@Model.Id" class="btn btn-secondary">Gestionar Productos</a>
+    <a asp-action="BulkOperations" asp-route-id="@Model.Id" class="btn btn-dark">Operaciones en Lote</a>
+    <a asp-action="Index" class="btn btn-secondary">Volver a la Lista</a>
+</div>

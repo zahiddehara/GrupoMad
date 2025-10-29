@@ -1,0 +1,385 @@
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Rendering;
+using GrupoMad.Services;
+using GrupoMad.Models;
+using GrupoMad.Data;
+
+namespace GrupoMad.Controllers
+{
+    public class PriceListController : Controller
+    {
+        private readonly PriceListService _priceListService;
+        private readonly ApplicationDbContext _context;
+
+        public PriceListController(PriceListService priceListService, ApplicationDbContext context)
+        {
+            _priceListService = priceListService;
+            _context = context;
+        }
+
+        // ==================== CRUD de PriceList ====================
+
+        // GET: PriceList
+        public async Task<IActionResult> Index(bool includeInactive = false)
+        {
+            var priceLists = await _priceListService.GetAllPriceListsAsync(includeInactive);
+            ViewBag.IncludeInactive = includeInactive;
+            return View(priceLists);
+        }
+
+        // GET: PriceList/Details/5
+        public async Task<IActionResult> Details(int? id)
+        {
+            if (id == null)
+            {
+                return NotFound();
+            }
+
+            var priceList = await _priceListService.GetPriceListByIdAsync(id.Value);
+            if (priceList == null)
+            {
+                return NotFound();
+            }
+
+            return View(priceList);
+        }
+
+        // GET: PriceList/Create
+        public IActionResult Create()
+        {
+            ViewData["StoreId"] = new SelectList(_context.Stores, "Id", "Name");
+            return View();
+        }
+
+        // POST: PriceList/Create
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Create([Bind("Name,StoreId,IsActive")] PriceList priceList)
+        {
+            if (ModelState.IsValid)
+            {
+                // Verificar que el nombre sea único
+                if (!await _priceListService.IsPriceListNameUniqueAsync(priceList.Name))
+                {
+                    ModelState.AddModelError("Name", "Ya existe una lista de precios con este nombre.");
+                    ViewData["StoreId"] = new SelectList(_context.Stores, "Id", "Name", priceList.StoreId);
+                    return View(priceList);
+                }
+
+                await _priceListService.CreatePriceListAsync(priceList);
+                TempData["Success"] = "Lista de precios creada exitosamente.";
+                return RedirectToAction(nameof(Index));
+            }
+
+            ViewData["StoreId"] = new SelectList(_context.Stores, "Id", "Name", priceList.StoreId);
+            return View(priceList);
+        }
+
+        // GET: PriceList/Edit/5
+        public async Task<IActionResult> Edit(int? id)
+        {
+            if (id == null)
+            {
+                return NotFound();
+            }
+
+            var priceList = await _priceListService.GetPriceListByIdAsync(id.Value);
+            if (priceList == null)
+            {
+                return NotFound();
+            }
+
+            ViewData["StoreId"] = new SelectList(_context.Stores, "Id", "Name", priceList.StoreId);
+            return View(priceList);
+        }
+
+        // POST: PriceList/Edit/5
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Edit(int id, [Bind("Id,Name,StoreId,IsActive")] PriceList priceList)
+        {
+            if (id != priceList.Id)
+            {
+                return NotFound();
+            }
+
+            if (ModelState.IsValid)
+            {
+                // Verificar que el nombre sea único (excluyendo la lista actual)
+                if (!await _priceListService.IsPriceListNameUniqueAsync(priceList.Name, priceList.Id))
+                {
+                    ModelState.AddModelError("Name", "Ya existe una lista de precios con este nombre.");
+                    ViewData["StoreId"] = new SelectList(_context.Stores, "Id", "Name", priceList.StoreId);
+                    return View(priceList);
+                }
+
+                var result = await _priceListService.UpdatePriceListAsync(id, priceList);
+                if (result == null)
+                {
+                    return NotFound();
+                }
+
+                TempData["Success"] = "Lista de precios actualizada exitosamente.";
+                return RedirectToAction(nameof(Index));
+            }
+
+            ViewData["StoreId"] = new SelectList(_context.Stores, "Id", "Name", priceList.StoreId);
+            return View(priceList);
+        }
+
+        // GET: PriceList/Delete/5
+        public async Task<IActionResult> Delete(int? id)
+        {
+            if (id == null)
+            {
+                return NotFound();
+            }
+
+            var priceList = await _priceListService.GetPriceListByIdAsync(id.Value);
+            if (priceList == null)
+            {
+                return NotFound();
+            }
+
+            return View(priceList);
+        }
+
+        // POST: PriceList/Delete/5
+        [HttpPost, ActionName("Delete")]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> DeleteConfirmed(int id)
+        {
+            await _priceListService.DeletePriceListAsync(id);
+            TempData["Success"] = "Lista de precios eliminada exitosamente.";
+            return RedirectToAction(nameof(Index));
+        }
+
+        // POST: PriceList/Activate/5
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Activate(int id)
+        {
+            var result = await _priceListService.ActivatePriceListAsync(id);
+            if (!result)
+            {
+                TempData["Error"] = "No se pudo activar la lista de precios.";
+            }
+            else
+            {
+                TempData["Success"] = "Lista de precios activada exitosamente.";
+            }
+            return RedirectToAction(nameof(Index));
+        }
+
+        // POST: PriceList/Deactivate/5
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Deactivate(int id)
+        {
+            var result = await _priceListService.DeactivatePriceListAsync(id);
+            if (!result)
+            {
+                TempData["Error"] = "No se pudo desactivar la lista de precios.";
+            }
+            else
+            {
+                TempData["Success"] = "Lista de precios desactivada exitosamente.";
+            }
+            return RedirectToAction(nameof(Index));
+        }
+
+        // ==================== Gestión de Items ====================
+
+        // GET: PriceList/ManageItems/5
+        public async Task<IActionResult> ManageItems(int? id)
+        {
+            if (id == null)
+            {
+                return NotFound();
+            }
+
+            var priceList = await _priceListService.GetPriceListByIdAsync(id.Value);
+            if (priceList == null)
+            {
+                return NotFound();
+            }
+
+            // Obtener productos disponibles que no están en la lista
+            var productsInList = priceList.PriceListItems?.Select(pli => pli.ProductId).ToList() ?? new List<int>();
+            var availableProducts = _context.Products
+                .Where(p => p.IsActive && !productsInList.Contains(p.Id))
+                .ToList();
+
+            ViewBag.AvailableProducts = new SelectList(availableProducts, "Id", "Name");
+            ViewBag.PricingTypes = Enum.GetValues(typeof(PricingType));
+
+            return View(priceList);
+        }
+
+        // POST: PriceList/AddItem
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> AddItem(int priceListId, int productId, decimal? pricePerSquareMeter, decimal? pricePerUnit, decimal? pricePerLinearMeter)
+        {
+            try
+            {
+                var item = new PriceListItem
+                {
+                    PriceListId = priceListId,
+                    ProductId = productId,
+                    PricePerSquareMeter = pricePerSquareMeter,
+                    PricePerUnit = pricePerUnit,
+                    PricePerLinearMeter = pricePerLinearMeter
+                };
+
+                await _priceListService.AddItemToPriceListAsync(item);
+                TempData["Success"] = "Producto agregado exitosamente a la lista de precios.";
+            }
+            catch (InvalidOperationException ex)
+            {
+                TempData["Error"] = ex.Message;
+            }
+
+            return RedirectToAction(nameof(ManageItems), new { id = priceListId });
+        }
+
+        // POST: PriceList/UpdateItem
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> UpdateItem(int itemId, int priceListId, decimal? pricePerSquareMeter, decimal? pricePerUnit, decimal? pricePerLinearMeter)
+        {
+            var updatedItem = new PriceListItem
+            {
+                PricePerSquareMeter = pricePerSquareMeter,
+                PricePerUnit = pricePerUnit,
+                PricePerLinearMeter = pricePerLinearMeter
+            };
+
+            var result = await _priceListService.UpdatePriceListItemAsync(itemId, updatedItem);
+            if (result == null)
+            {
+                TempData["Error"] = "No se pudo actualizar el precio del producto.";
+            }
+            else
+            {
+                TempData["Success"] = "Precio actualizado exitosamente.";
+            }
+
+            return RedirectToAction(nameof(ManageItems), new { id = priceListId });
+        }
+
+        // POST: PriceList/RemoveItem
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> RemoveItem(int itemId, int priceListId)
+        {
+            var result = await _priceListService.RemoveItemFromPriceListAsync(itemId);
+            if (!result)
+            {
+                TempData["Error"] = "No se pudo eliminar el producto de la lista.";
+            }
+            else
+            {
+                TempData["Success"] = "Producto eliminado de la lista exitosamente.";
+            }
+
+            return RedirectToAction(nameof(ManageItems), new { id = priceListId });
+        }
+
+        // ==================== Operaciones en Lote ====================
+
+        // GET: PriceList/BulkOperations/5
+        public async Task<IActionResult> BulkOperations(int? id)
+        {
+            if (id == null)
+            {
+                return NotFound();
+            }
+
+            var priceList = await _priceListService.GetPriceListByIdAsync(id.Value);
+            if (priceList == null)
+            {
+                return NotFound();
+            }
+
+            // Obtener otras listas de precios para copiar
+            var otherPriceLists = await _priceListService.GetAllPriceListsAsync();
+            ViewBag.OtherPriceLists = new SelectList(otherPriceLists.Where(pl => pl.Id != id.Value), "Id", "Name");
+
+            return View(priceList);
+        }
+
+        // POST: PriceList/ApplyPercentage
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ApplyPercentage(int priceListId, decimal percentage)
+        {
+            var itemsUpdated = await _priceListService.ApplyPercentageToAllItemsAsync(priceListId, percentage);
+            TempData["Success"] = $"Se aplicó {percentage}% a {itemsUpdated} productos.";
+            return RedirectToAction(nameof(BulkOperations), new { id = priceListId });
+        }
+
+        // POST: PriceList/CopyItems
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> CopyItems(int fromPriceListId, int toPriceListId)
+        {
+            var itemsCopied = await _priceListService.CopyPriceListItemsAsync(fromPriceListId, toPriceListId);
+            TempData["Success"] = $"Se copiaron {itemsCopied} productos a la lista de destino.";
+            return RedirectToAction(nameof(BulkOperations), new { id = toPriceListId });
+        }
+
+        // POST: PriceList/AddMultipleProducts
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> AddMultipleProducts(int priceListId, List<int> productIds, decimal? basePrice)
+        {
+            var itemsAdded = await _priceListService.AddMultipleProductsAsync(priceListId, productIds, basePrice);
+            TempData["Success"] = $"Se agregaron {itemsAdded} productos a la lista.";
+            return RedirectToAction(nameof(ManageItems), new { id = priceListId });
+        }
+
+        // ==================== Vistas Especializadas ====================
+
+        // GET: PriceList/ByStore/5
+        public async Task<IActionResult> ByStore(int? storeId)
+        {
+            if (storeId == null)
+            {
+                return NotFound();
+            }
+
+            var priceLists = await _priceListService.GetPriceListsForStoreAsync(storeId.Value);
+            var store = await _context.Stores.FindAsync(storeId.Value);
+
+            ViewBag.StoreName = store?.Name;
+            ViewBag.StoreId = storeId;
+
+            return View(priceLists);
+        }
+
+        // GET: PriceList/Global
+        public async Task<IActionResult> Global()
+        {
+            var globalPriceLists = await _priceListService.GetGlobalPriceListsAsync();
+            return View(globalPriceLists);
+        }
+
+        // GET: PriceList/ProductPrices/5
+        public async Task<IActionResult> ProductPrices(int? productId)
+        {
+            if (productId == null)
+            {
+                return NotFound();
+            }
+
+            var priceListItems = await _priceListService.GetPriceListsForProductAsync(productId.Value);
+            var product = await _context.Products.FindAsync(productId.Value);
+
+            ViewBag.ProductName = product?.Name;
+            ViewBag.ProductId = productId;
+
+            return View(priceListItems);
+        }
+    }
+}

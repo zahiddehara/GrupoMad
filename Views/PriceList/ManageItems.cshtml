@@ -1,0 +1,224 @@
+@model GrupoMad.Models.PriceList
+
+@{
+    ViewData["Title"] = "Gestionar Productos";
+    var availableProducts = ViewBag.AvailableProducts as SelectList;
+}
+
+<h1>Gestionar Productos - @Model.Name</h1>
+
+@if (Model.Store != null)
+{
+    <h5 class="text-muted">Tienda: @Model.Store.Name</h5>
+}
+else
+{
+    <h5 class="text-muted">Lista Global</h5>
+}
+
+@if (TempData["Success"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        @TempData["Success"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+
+@if (TempData["Error"] != null)
+{
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        @TempData["Error"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+
+<hr />
+
+<div class="row">
+    <!-- Productos en la lista -->
+    <div class="col-md-8">
+        <h3>Productos en la Lista</h3>
+
+        @if (Model.PriceListItems != null && Model.PriceListItems.Any())
+        {
+            <div class="table-responsive">
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>SKU</th>
+                            <th>Producto</th>
+                            <th>Tipo</th>
+                            <th>Precio m²</th>
+                            <th>Precio Unidad</th>
+                            <th>Precio Metro Lineal</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var item in Model.PriceListItems.OrderBy(p => p.Product.Name))
+                        {
+                            <tr>
+                                <td><code>@item.Product.SKU</code></td>
+                                <td><strong>@item.Product.Name</strong></td>
+                                <td>
+                                    @switch (item.Product.PricingType)
+                                    {
+                                        case GrupoMad.Models.PricingType.PerSquareMeter:
+                                            <span class="badge bg-info">m²</span>
+                                            break;
+                                        case GrupoMad.Models.PricingType.PerUnit:
+                                            <span class="badge bg-success">Unidad</span>
+                                            break;
+                                        case GrupoMad.Models.PricingType.PerLinearMeter:
+                                            <span class="badge bg-warning">Metro</span>
+                                            break;
+                                        case GrupoMad.Models.PricingType.PerRange:
+                                            <span class="badge bg-secondary">Rango</span>
+                                            break;
+                                    }
+                                </td>
+                                <td>
+                                    <form asp-action="UpdateItem" method="post" class="d-inline">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="itemId" value="@item.Id" />
+                                        <input type="hidden" name="priceListId" value="@Model.Id" />
+                                        <input type="hidden" name="pricePerUnit" value="@item.PricePerUnit" />
+                                        <input type="hidden" name="pricePerLinearMeter" value="@item.PricePerLinearMeter" />
+                                        <div class="input-group input-group-sm" style="width: 150px;">
+                                            <span class="input-group-text">$</span>
+                                            <input type="number" name="pricePerSquareMeter" value="@item.PricePerSquareMeter"
+                                                   class="form-control form-control-sm" step="0.01" min="0" />
+                                            <button type="submit" class="btn btn-primary btn-sm">💾</button>
+                                        </div>
+                                    </form>
+                                </td>
+                                <td>
+                                    <form asp-action="UpdateItem" method="post" class="d-inline">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="itemId" value="@item.Id" />
+                                        <input type="hidden" name="priceListId" value="@Model.Id" />
+                                        <input type="hidden" name="pricePerSquareMeter" value="@item.PricePerSquareMeter" />
+                                        <input type="hidden" name="pricePerLinearMeter" value="@item.PricePerLinearMeter" />
+                                        <div class="input-group input-group-sm" style="width: 150px;">
+                                            <span class="input-group-text">$</span>
+                                            <input type="number" name="pricePerUnit" value="@item.PricePerUnit"
+                                                   class="form-control form-control-sm" step="0.01" min="0" />
+                                            <button type="submit" class="btn btn-primary btn-sm">💾</button>
+                                        </div>
+                                    </form>
+                                </td>
+                                <td>
+                                    <form asp-action="UpdateItem" method="post" class="d-inline">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="itemId" value="@item.Id" />
+                                        <input type="hidden" name="priceListId" value="@Model.Id" />
+                                        <input type="hidden" name="pricePerSquareMeter" value="@item.PricePerSquareMeter" />
+                                        <input type="hidden" name="pricePerUnit" value="@item.PricePerUnit" />
+                                        <div class="input-group input-group-sm" style="width: 150px;">
+                                            <span class="input-group-text">$</span>
+                                            <input type="number" name="pricePerLinearMeter" value="@item.PricePerLinearMeter"
+                                                   class="form-control form-control-sm" step="0.01" min="0" />
+                                            <button type="submit" class="btn btn-primary btn-sm">💾</button>
+                                        </div>
+                                    </form>
+                                </td>
+                                <td>
+                                    <form asp-action="RemoveItem" method="post" style="display: inline;">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="itemId" value="@item.Id" />
+                                        <input type="hidden" name="priceListId" value="@Model.Id" />
+                                        <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('¿Eliminar este producto?');">
+                                            🗑️
+                                        </button>
+                                    </form>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+        else
+        {
+            <div class="alert alert-info">
+                No hay productos en esta lista.
+            </div>
+        }
+    </div>
+
+    <!-- Agregar producto -->
+    <div class="col-md-4">
+        <h3>Agregar Producto</h3>
+
+        @if (availableProducts != null && availableProducts.Any())
+        {
+            <div class="card">
+                <div class="card-body">
+                    <form asp-action="AddItem" method="post">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="priceListId" value="@Model.Id" />
+
+                        <div class="mb-3">
+                            <label for="productId" class="form-label">Producto</label>
+                            <select name="productId" id="productId" class="form-select" required>
+                                <option value="">-- Seleccione un producto --</option>
+                                @foreach (var item in availableProducts)
+                                {
+                                    <option value="@item.Value">@item.Text</option>
+                                }
+                            </select>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="pricePerSquareMeter" class="form-label">Precio por m²</label>
+                            <div class="input-group">
+                                <span class="input-group-text">$</span>
+                                <input type="number" name="pricePerSquareMeter" id="pricePerSquareMeter"
+                                       class="form-control" step="0.01" min="0" />
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="pricePerUnit" class="form-label">Precio por Unidad</label>
+                            <div class="input-group">
+                                <span class="input-group-text">$</span>
+                                <input type="number" name="pricePerUnit" id="pricePerUnit"
+                                       class="form-control" step="0.01" min="0" />
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="pricePerLinearMeter" class="form-label">Precio por Metro Lineal</label>
+                            <div class="input-group">
+                                <span class="input-group-text">$</span>
+                                <input type="number" name="pricePerLinearMeter" id="pricePerLinearMeter"
+                                       class="form-control" step="0.01" min="0" />
+                            </div>
+                        </div>
+
+                        <small class="form-text text-muted mb-3 d-block">
+                            Complete solo los campos de precio necesarios según el tipo de producto
+                        </small>
+
+                        <button type="submit" class="btn btn-success w-100">
+                            Agregar Producto
+                        </button>
+                    </form>
+                </div>
+            </div>
+        }
+        else
+        {
+            <div class="alert alert-success">
+                Todos los productos disponibles ya están en esta lista.
+            </div>
+        }
+    </div>
+</div>
+
+<hr />
+<div>
+    <a asp-action="Details" asp-route-id="@Model.Id" class="btn btn-info">Ver Detalles</a>
+    <a asp-action="BulkOperations" asp-route-id="@Model.Id" class="btn btn-dark">Operaciones en Lote</a>
+    <a asp-action="Index" class="btn btn-secondary">Volver a la Lista</a>
+</div>

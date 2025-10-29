@@ -1,0 +1,170 @@
+@model GrupoMad.Models.PriceList
+
+@{
+    ViewData["Title"] = "Operaciones en Lote";
+    var otherPriceLists = ViewBag.OtherPriceLists as SelectList;
+}
+
+<h1>Operaciones en Lote - @Model.Name</h1>
+
+@if (Model.Store != null)
+{
+    <h5 class="text-muted">Tienda: @Model.Store.Name</h5>
+}
+else
+{
+    <h5 class="text-muted">Lista Global</h5>
+}
+
+@if (TempData["Success"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        @TempData["Success"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+
+@if (TempData["Error"] != null)
+{
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        @TempData["Error"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+
+<hr />
+
+<div class="row">
+    <!-- Aplicar Porcentaje -->
+    <div class="col-md-6 mb-4">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h4 class="mb-0">Aplicar Porcentaje a Todos los Precios</h4>
+            </div>
+            <div class="card-body">
+                <p class="text-muted">
+                    Aplica un porcentaje de aumento o descuento a todos los precios de la lista.
+                </p>
+
+                <form asp-action="ApplyPercentage" method="post">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="priceListId" value="@Model.Id" />
+
+                    <div class="mb-3">
+                        <label for="percentage" class="form-label">Porcentaje</label>
+                        <div class="input-group">
+                            <input type="number" name="percentage" id="percentage"
+                                   class="form-control" step="0.01" required
+                                   placeholder="Ej: 10 para +10%, -5 para -5%" />
+                            <span class="input-group-text">%</span>
+                        </div>
+                        <small class="form-text text-muted">
+                            Use valores positivos para aumentar y negativos para disminuir
+                        </small>
+                    </div>
+
+                    <div class="alert alert-warning">
+                        <strong>Advertencia:</strong> Esta operación modificará todos los precios de la lista (@(Model.PriceListItems?.Count ?? 0) productos).
+                    </div>
+
+                    <button type="submit" class="btn btn-primary" onclick="return confirm('¿Está seguro de aplicar este porcentaje a todos los precios?');">
+                        Aplicar Porcentaje
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Copiar Items de otra lista -->
+    <div class="col-md-6 mb-4">
+        <div class="card">
+            <div class="card-header bg-success text-white">
+                <h4 class="mb-0">Copiar Productos de Otra Lista</h4>
+            </div>
+            <div class="card-body">
+                <p class="text-muted">
+                    Copia todos los productos y precios de otra lista a esta lista.
+                </p>
+
+                @if (otherPriceLists != null && otherPriceLists.Any())
+                {
+                    <form asp-action="CopyItems" method="post">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="toPriceListId" value="@Model.Id" />
+
+                        <div class="mb-3">
+                            <label for="fromPriceListId" class="form-label">Lista de Origen</label>
+                            <select name="fromPriceListId" id="fromPriceListId" class="form-select" required>
+                                <option value="">-- Seleccione una lista --</option>
+                                @foreach (var item in otherPriceLists)
+                                {
+                                    <option value="@item.Value">@item.Text</option>
+                                }
+                            </select>
+                        </div>
+
+                        <div class="alert alert-info">
+                            <strong>Nota:</strong> Solo se copiarán productos que no existan en esta lista.
+                        </div>
+
+                        <button type="submit" class="btn btn-success" onclick="return confirm('¿Copiar todos los productos de la lista seleccionada?');">
+                            Copiar Productos
+                        </button>
+                    </form>
+                }
+                else
+                {
+                    <div class="alert alert-warning">
+                        No hay otras listas de precios disponibles para copiar.
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Resumen de la lista actual -->
+<div class="row">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header bg-info text-white">
+                <h4 class="mb-0">Resumen de la Lista Actual</h4>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-3">
+                        <div class="text-center">
+                            <h3 class="text-primary">@(Model.PriceListItems?.Count ?? 0)</h3>
+                            <p class="text-muted">Productos Totales</p>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="text-center">
+                            <h3 class="text-success">@(Model.PriceListItems?.Count(p => p.PricePerSquareMeter.HasValue) ?? 0)</h3>
+                            <p class="text-muted">Con Precio por m²</p>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="text-center">
+                            <h3 class="text-warning">@(Model.PriceListItems?.Count(p => p.PricePerUnit.HasValue) ?? 0)</h3>
+                            <p class="text-muted">Con Precio por Unidad</p>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="text-center">
+                            <h3 class="text-info">@(Model.PriceListItems?.Count(p => p.PricePerLinearMeter.HasValue) ?? 0)</h3>
+                            <p class="text-muted">Con Precio por Metro</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<hr />
+<div class="mt-3">
+    <a asp-action="Details" asp-route-id="@Model.Id" class="btn btn-info">Ver Detalles</a>
+    <a asp-action="ManageItems" asp-route-id="@Model.Id" class="btn btn-secondary">Gestionar Productos</a>
+    <a asp-action="Index" class="btn btn-secondary">Volver a la Lista</a>
+</div>

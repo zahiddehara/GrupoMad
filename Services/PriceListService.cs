@@ -74,6 +74,17 @@ namespace GrupoMad.Services
             return true;
         }
 
+        public async Task<bool> ActivatePriceListAsync(int id)
+        {
+            var priceList = await _context.PriceLists.FindAsync(id);
+            if (priceList == null) return false;
+
+            priceList.IsActive = true;
+            priceList.UpdatedAt = DateTime.UtcNow;
+            await _context.SaveChangesAsync();
+            return true;
+        }
+
         public async Task<bool> DeactivatePriceListAsync(int id)
         {
             var priceList = await _context.PriceLists.FindAsync(id);

@@ -1,0 +1,85 @@
+@model IEnumerable<GrupoMad.Models.PriceList>
+
+@{
+    ViewData["Title"] = "Listas de Precios por Tienda";
+    var storeName = ViewBag.StoreName as string;
+    var storeId = ViewBag.StoreId as int?;
+}
+
+<h1>Listas de Precios - @storeName</h1>
+<p class="text-muted">Incluye listas globales y específicas de esta tienda</p>
+
+<hr />
+
+<div class="mb-3">
+    <a asp-action="Create" class="btn btn-primary">Crear Nueva Lista</a>
+    <a asp-action="Index" class="btn btn-secondary">Ver Todas las Listas</a>
+</div>
+
+@if (Model.Any())
+{
+    <div class="row">
+        @foreach (var priceList in Model)
+        {
+            <div class="col-md-6 mb-3">
+                <div class="card @(priceList.IsActive ? "" : "border-danger")">
+                    <div class="card-header @(priceList.StoreId == null ? "bg-primary text-white" : "bg-warning")">
+                        <h5 class="mb-0">
+                            @priceList.Name
+                            @if (priceList.StoreId == null)
+                            {
+                                <span class="badge bg-light text-dark float-end">Global</span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-light text-dark float-end">Específica</span>
+                            }
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <dl class="row mb-0">
+                            <dt class="col-sm-4">Estado:</dt>
+                            <dd class="col-sm-8">
+                                @if (priceList.IsActive)
+                                {
+                                    <span class="badge bg-success">Activa</span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-danger">Inactiva</span>
+                                }
+                            </dd>
+
+                            <dt class="col-sm-4">Productos:</dt>
+                            <dd class="col-sm-8">
+                                @if (priceList.PriceListItems != null && priceList.PriceListItems.Any())
+                                {
+                                    <span class="badge bg-secondary">@priceList.PriceListItems.Count</span>
+                                }
+                                else
+                                {
+                                    <span class="text-muted">0</span>
+                                }
+                            </dd>
+
+                            <dt class="col-sm-4">Creada:</dt>
+                            <dd class="col-sm-8">@priceList.CreatedAt.ToString("dd/MM/yyyy")</dd>
+                        </dl>
+
+                        <div class="mt-3">
+                            <a asp-action="Details" asp-route-id="@priceList.Id" class="btn btn-sm btn-info">Detalles</a>
+                            <a asp-action="ManageItems" asp-route-id="@priceList.Id" class="btn btn-sm btn-secondary">Productos</a>
+                            <a asp-action="Edit" asp-route-id="@priceList.Id" class="btn btn-sm btn-warning">Editar</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+}
+else
+{
+    <div class="alert alert-info">
+        No hay listas de precios disponibles para esta tienda.
+    </div>
+}

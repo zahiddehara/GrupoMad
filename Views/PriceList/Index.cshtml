@@ -1,0 +1,126 @@
+@model IEnumerable<GrupoMad.Models.PriceList>
+
+@{
+    ViewData["Title"] = "Listas de Precios";
+}
+
+<h1>Listas de Precios</h1>
+
+@if (TempData["Success"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        @TempData["Success"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+
+@if (TempData["Error"] != null)
+{
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        @TempData["Error"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+
+<div class="mb-3">
+    <a asp-action="Create" class="btn btn-primary">Crear Nueva Lista de Precios</a>
+    <a asp-action="Global" class="btn btn-info">Ver Listas Globales</a>
+
+    @if (ViewBag.IncludeInactive)
+    {
+        <a asp-action="Index" asp-route-includeInactive="false" class="btn btn-secondary">Ocultar Inactivas</a>
+    }
+    else
+    {
+        <a asp-action="Index" asp-route-includeInactive="true" class="btn btn-secondary">Mostrar Inactivas</a>
+    }
+</div>
+
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th>Nombre</th>
+            <th>Tienda</th>
+            <th>Items</th>
+            <th>Estado</th>
+            <th>Fecha Creación</th>
+            <th>Acciones</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var item in Model)
+        {
+            <tr>
+                <td><strong>@item.Name</strong></td>
+                <td>
+                    @if (item.Store != null)
+                    {
+                        <span class="badge bg-warning">@item.Store.Name</span>
+                    }
+                    else
+                    {
+                        <span class="badge bg-primary">Global</span>
+                    }
+                </td>
+                <td>
+                    @if (item.PriceListItems != null && item.PriceListItems.Any())
+                    {
+                        <span class="badge bg-secondary">@item.PriceListItems.Count productos</span>
+                    }
+                    else
+                    {
+                        <span class="text-muted">Sin productos</span>
+                    }
+                </td>
+                <td>
+                    @if (item.IsActive)
+                    {
+                        <span class="badge bg-success">Activa</span>
+                    }
+                    else
+                    {
+                        <span class="badge bg-danger">Inactiva</span>
+                    }
+                </td>
+                <td>@item.CreatedAt.ToString("dd/MM/yyyy")</td>
+                <td>
+                    <a asp-action="Details" asp-route-id="@item.Id" class="btn btn-sm btn-info">Detalles</a>
+                    <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-sm btn-warning">Editar</a>
+                    <a asp-action="ManageItems" asp-route-id="@item.Id" class="btn btn-sm btn-secondary">Productos</a>
+                    <a asp-action="BulkOperations" asp-route-id="@item.Id" class="btn btn-sm btn-dark">Operaciones</a>
+
+                    @if (item.IsActive)
+                    {
+                        <form asp-action="Deactivate" method="post" style="display: inline;">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="id" value="@item.Id" />
+                            <button type="submit" class="btn btn-sm btn-warning" onclick="return confirm('¿Desactivar esta lista?');">
+                                Desactivar
+                            </button>
+                        </form>
+                    }
+
+                    @if (!item.IsActive)
+                    {
+                        <form asp-action="Activate" method="post" style="display: inline;">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="id" value="@item.Id" />
+                            <button type="submit" class="btn btn-sm btn-secondary" onclick="return confirm('¿Activar esta lista?');">
+                                Activar
+                            </button>
+                        </form>
+                    }
+
+                    <a asp-action="Delete" asp-route-id="@item.Id" class="btn btn-sm btn-danger">Eliminar</a>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+@if (!Model.Any())
+{
+    <div class="alert alert-info">
+        No hay listas de precios registradas.
+    </div>
+}

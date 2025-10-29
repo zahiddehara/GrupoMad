@@ -1,0 +1,73 @@
+@model GrupoMad.Models.PriceList
+
+@{
+    ViewData["Title"] = "Eliminar Lista de Precios";
+}
+
+<h1>Eliminar Lista de Precios</h1>
+
+<div class="alert alert-danger">
+    <h4>¿Está seguro que desea eliminar esta lista de precios?</h4>
+</div>
+
+<hr />
+<div class="row">
+    <div class="col-md-6">
+        <dl class="row">
+            <dt class="col-sm-4">Nombre</dt>
+            <dd class="col-sm-8"><strong>@Model.Name</strong></dd>
+
+            <dt class="col-sm-4">Tienda</dt>
+            <dd class="col-sm-8">
+                @if (Model.Store != null)
+                {
+                    <span class="badge bg-warning">@Model.Store.Name</span>
+                }
+                else
+                {
+                    <span class="badge bg-primary">Global</span>
+                }
+            </dd>
+
+            <dt class="col-sm-4">Estado</dt>
+            <dd class="col-sm-8">
+                @if (Model.IsActive)
+                {
+                    <span class="badge bg-success">Activa</span>
+                }
+                else
+                {
+                    <span class="badge bg-danger">Inactiva</span>
+                }
+            </dd>
+
+            <dt class="col-sm-4">Total de Productos</dt>
+            <dd class="col-sm-8">
+                @if (Model.PriceListItems != null && Model.PriceListItems.Any())
+                {
+                    <span class="badge bg-secondary">@Model.PriceListItems.Count productos</span>
+                }
+                else
+                {
+                    <span class="text-muted">Sin productos</span>
+                }
+            </dd>
+
+            <dt class="col-sm-4">Fecha de Creación</dt>
+            <dd class="col-sm-8">@Model.CreatedAt.ToString("dd/MM/yyyy")</dd>
+        </dl>
+    </div>
+</div>
+
+@if (Model.PriceListItems != null && Model.PriceListItems.Any())
+{
+    <div class="alert alert-warning">
+        <strong>Advertencia:</strong> Esta lista contiene @Model.PriceListItems.Count productos. Todos los precios asociados se eliminarán permanentemente.
+    </div>
+}
+
+<form asp-action="Delete">
+    <input type="hidden" asp-for="Id" />
+    <button type="submit" class="btn btn-danger">Eliminar Definitivamente</button>
+    <a asp-action="Index" class="btn btn-secondary">Cancelar</a>
+</form>

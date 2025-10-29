@@ -12,7 +12,7 @@ namespace GrupoMad.Models
 
         public int? StoreId { get; set; }
 
-        public Store Store { get; set; }
+        public Store? Store { get; set; }
 
         public bool IsActive { get; set; } = true;
 
@@ -20,7 +20,7 @@ namespace GrupoMad.Models
 
         public DateTime? UpdatedAt { get; set; }
 
-        public List<PriceListItem> PriceListItems { get; set; }
+        public List<PriceListItem>? PriceListItems { get; set; }
     }
 
     public class PriceListItem
@@ -30,12 +30,12 @@ namespace GrupoMad.Models
         [Required]
         public int PriceListId { get; set; }
 
-        public PriceList PriceList { get; set; }
+        public PriceList? PriceList { get; set; }
 
         [Required]
         public int ProductId { get; set; }
 
-        public Product Product { get; set; }
+        public Product? Product { get; set; }
 
         [Column(TypeName = "decimal(18,2)")]
         public decimal? PricePerSquareMeter { get; set; }

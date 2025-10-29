@@ -1,0 +1,123 @@
+@model IEnumerable<GrupoMad.Models.PriceListItem>
+
+@{
+    ViewData["Title"] = "Precios del Producto";
+    var productName = ViewBag.ProductName as string;
+    var productId = ViewBag.ProductId as int?;
+}
+
+<h1>Precios del Producto</h1>
+<h3 class="text-muted">@productName</h3>
+
+<hr />
+
+<div class="mb-3">
+    <a asp-controller="Product" asp-action="Details" asp-route-id="@productId" class="btn btn-info">Ver Producto</a>
+    <a asp-action="Index" class="btn btn-secondary">Ver Todas las Listas</a>
+</div>
+
+@if (Model.Any())
+{
+    <div class="table-responsive">
+        <table class="table table-striped table-hover">
+            <thead class="table-dark">
+                <tr>
+                    <th>Lista de Precios</th>
+                    <th>Tienda</th>
+                    <th>Estado Lista</th>
+                    <th>Precio por m²</th>
+                    <th>Precio por Unidad</th>
+                    <th>Precio por Metro Lineal</th>
+                    <th>Fecha Creación</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var item in Model)
+                {
+                    <tr>
+                        <td>
+                            <strong>@item.PriceList.Name</strong>
+                        </td>
+                        <td>
+                            @if (item.PriceList.Store != null)
+                            {
+                                <span class="badge bg-warning">@item.PriceList.Store.Name</span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-primary">Global</span>
+                            }
+                        </td>
+                        <td>
+                            @if (item.PriceList.IsActive)
+                            {
+                                <span class="badge bg-success">Activa</span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-danger">Inactiva</span>
+                            }
+                        </td>
+                        <td>
+                            @if (item.PricePerSquareMeter.HasValue)
+                            {
+                                <strong class="text-success">@item.PricePerSquareMeter.Value.ToString("C")</strong>
+                            }
+                            else
+                            {
+                                <span class="text-muted">-</span>
+                            }
+                        </td>
+                        <td>
+                            @if (item.PricePerUnit.HasValue)
+                            {
+                                <strong class="text-success">@item.PricePerUnit.Value.ToString("C")</strong>
+                            }
+                            else
+                            {
+                                <span class="text-muted">-</span>
+                            }
+                        </td>
+                        <td>
+                            @if (item.PricePerLinearMeter.HasValue)
+                            {
+                                <strong class="text-success">@item.PricePerLinearMeter.Value.ToString("C")</strong>
+                            }
+                            else
+                            {
+                                <span class="text-muted">-</span>
+                            }
+                        </td>
+                        <td>@item.CreatedAt.ToString("dd/MM/yyyy")</td>
+                        <td>
+                            <a asp-action="Details" asp-route-id="@item.PriceList.Id" class="btn btn-sm btn-info">Ver Lista</a>
+                            <a asp-action="ManageItems" asp-route-id="@item.PriceList.Id" class="btn btn-sm btn-secondary">Editar</a>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+
+    <div class="alert alert-info mt-3">
+        <strong>Total:</strong> Este producto está en <strong>@Model.Count()</strong> lista(s) de precios.
+    </div>
+}
+else
+{
+    <div class="alert alert-warning">
+        <h4 class="alert-heading">Sin precios definidos</h4>
+        <p>Este producto no está incluido en ninguna lista de precios.</p>
+        <hr>
+        <p class="mb-0">
+            <a asp-action="Index" class="btn btn-primary">Ir a las listas de precios</a>
+        </p>
+    </div>
+}
+
+<hr />
+<div>
+    <a asp-controller="Product" asp-action="Details" asp-route-id="@productId" class="btn btn-info">Volver al Producto</a>
+    <a asp-controller="Product" asp-action="Index" class="btn btn-secondary">Todos los Productos</a>
+</div>
