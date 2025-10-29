@@ -163,3 +163,31 @@ else
     <a asp-action="BulkOperations" asp-route-id="@Model.Id" class="btn btn-dark">Operaciones en Lote</a>
     <a asp-action="Index" class="btn btn-secondary">Volver a la Lista</a>
 </div>
+<hr />
+<div>
+@if (Model.IsActive)
+{
+    <form asp-action="Deactivate" method="post" style="display: inline;">
+        @Html.AntiForgeryToken()
+        <input type="hidden" name="id" value="@Model.Id" />
+        <button type="submit" class="btn btn-sm btn-warning" onclick="return confirm('¿Desactivar esta lista?');">
+            Desactivar
+        </button>
+    </form>
+}
+
+@if (!Model.IsActive)
+{
+    <form asp-action="Activate" method="post" style="display: inline;">
+        @Html.AntiForgeryToken()
+        <input type="hidden" name="id" value="@Model.Id" />
+        <button type="submit" class="btn btn-sm btn-secondary" onclick="return confirm('¿Activar esta lista?');">
+            Activar
+        </button>
+    </form>
+}
+</div>
+<hr />
+<div>
+    <a asp-action="Delete" asp-route-id="@Model.Id" class="btn btn-sm btn-danger">Eliminar</a>
+</div>

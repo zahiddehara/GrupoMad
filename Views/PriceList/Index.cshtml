@@ -88,30 +88,6 @@
                     <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-sm btn-warning">Editar</a>
                     <a asp-action="ManageItems" asp-route-id="@item.Id" class="btn btn-sm btn-secondary">Productos</a>
                     <a asp-action="BulkOperations" asp-route-id="@item.Id" class="btn btn-sm btn-dark">Operaciones</a>
-
-                    @if (item.IsActive)
-                    {
-                        <form asp-action="Deactivate" method="post" style="display: inline;">
-                            @Html.AntiForgeryToken()
-                            <input type="hidden" name="id" value="@item.Id" />
-                            <button type="submit" class="btn btn-sm btn-warning" onclick="return confirm('¿Desactivar esta lista?');">
-                                Desactivar
-                            </button>
-                        </form>
-                    }
-
-                    @if (!item.IsActive)
-                    {
-                        <form asp-action="Activate" method="post" style="display: inline;">
-                            @Html.AntiForgeryToken()
-                            <input type="hidden" name="id" value="@item.Id" />
-                            <button type="submit" class="btn btn-sm btn-secondary" onclick="return confirm('¿Activar esta lista?');">
-                                Activar
-                            </button>
-                        </form>
-                    }
-
-                    <a asp-action="Delete" asp-route-id="@item.Id" class="btn btn-sm btn-danger">Eliminar</a>
                 </td>
             </tr>
         }
