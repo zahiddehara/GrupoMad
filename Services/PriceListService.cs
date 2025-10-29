@@ -250,6 +250,20 @@ namespace GrupoMad.Services
                 .ToListAsync();
         }
 
+        // Obtener todos los precios de un producto agrupados por tienda
+        public async Task<List<PriceListItem>> GetProductPricesByStoreAsync(int productId)
+        {
+            return await _context.PriceListItems
+                .Where(pli => pli.ProductId == productId && pli.PriceList.IsActive)
+                .Include(pli => pli.Product)
+                .Include(pli => pli.PriceList)
+                    .ThenInclude(pl => pl.Store)
+                .OrderBy(pli => pli.PriceList.StoreId.HasValue ? 1 : 0) // Globales primero
+                .ThenBy(pli => pli.PriceList.Store.Name)
+                .ThenBy(pli => pli.PriceList.Name)
+                .ToListAsync();
+        }
+
         // Obtener el precio según el tipo de producto
         public async Task<decimal?> GetProductPriceAsync(int priceListId, int productId)
         {

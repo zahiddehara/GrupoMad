@@ -1,0 +1,309 @@
+@{
+    ViewData["Title"] = "Precios por Tienda";
+    var product = ViewBag.Product as GrupoMad.Models.Product;
+    var priceItems = ViewBag.PriceItems as List<GrupoMad.Models.PriceListItem>;
+}
+
+<h1>Precios por Tienda</h1>
+
+<hr />
+
+<!-- Información del Producto -->
+<div class="card mb-4">
+    <div class="card-header bg-primary text-white">
+        <h4 class="mb-0">@product.Name</h4>
+    </div>
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-6">
+                <dl class="row mb-0">
+                    <dt class="col-sm-4">SKU:</dt>
+                    <dd class="col-sm-8"><code>@product.SKU</code></dd>
+
+                    <dt class="col-sm-4">Tipo:</dt>
+                    <dd class="col-sm-8">
+                        @switch (product.ProductType)
+                        {
+                            case GrupoMad.Models.ProductType.Accessory:
+                                <span class="badge bg-info">Accesorio</span>
+                                break;
+                            case GrupoMad.Models.ProductType.Blind:
+                                <span class="badge bg-success">Persiana</span>
+                                break;
+                            default:
+                                <span class="badge bg-secondary">@product.ProductType</span>
+                                break;
+                        }
+                    </dd>
+                </dl>
+            </div>
+            <div class="col-md-6">
+                <dl class="row mb-0">
+                    <dt class="col-sm-5">Tipo de Precio:</dt>
+                    <dd class="col-sm-7">
+                        @switch (product.PricingType)
+                        {
+                            case GrupoMad.Models.PricingType.PerSquareMeter:
+                                <span class="badge bg-info">Por m²</span>
+                                break;
+                            case GrupoMad.Models.PricingType.PerUnit:
+                                <span class="badge bg-success">Por Unidad</span>
+                                break;
+                            case GrupoMad.Models.PricingType.PerLinearMeter:
+                                <span class="badge bg-warning">Por Metro Lineal</span>
+                                break;
+                            case GrupoMad.Models.PricingType.PerRange:
+                                <span class="badge bg-secondary">Por Rango</span>
+                                break;
+                        }
+                    </dd>
+
+                    <dt class="col-sm-5">Total Listas:</dt>
+                    <dd class="col-sm-7">
+                        <strong>@priceItems.Count</strong> lista(s) de precios
+                    </dd>
+                </dl>
+            </div>
+        </div>
+    </div>
+</div>
+
+@if (priceItems != null && priceItems.Any())
+{
+    <!-- Agrupar por tipo (Global vs Específicas) -->
+    var globalPrices = priceItems.Where(p => p.PriceList.StoreId == null).ToList();
+    var storePrices = priceItems.Where(p => p.PriceList.StoreId != null).ToList();
+
+    @if (globalPrices.Any())
+    {
+        <div class="card mb-4">
+            <div class="card-header bg-primary text-white">
+                <h4 class="mb-0">📋 Listas Globales (Todas las Tiendas)</h4>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Lista de Precios</th>
+                                <th>Precio por m²</th>
+                                <th>Precio por Unidad</th>
+                                <th>Precio por Metro Lineal</th>
+                                <th class="text-center">Precio Aplicable</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var item in globalPrices)
+                            {
+                                // Calcular el precio aplicable según el tipo
+                                var applicablePrice = product.PricingType switch
+                                {
+                                    GrupoMad.Models.PricingType.PerSquareMeter => item.PricePerSquareMeter,
+                                    GrupoMad.Models.PricingType.PerUnit => item.PricePerUnit,
+                                    GrupoMad.Models.PricingType.PerLinearMeter => item.PricePerLinearMeter,
+                                    GrupoMad.Models.PricingType.PerRange => item.PricePerSquareMeter,
+                                    _ => null
+                                };
+
+                                <tr>
+                                    <td>
+                                        <strong>@item.PriceList.Name</strong>
+                                        <br />
+                                        <span class="badge bg-primary">Global</span>
+                                    </td>
+                                    <td>
+                                        @if (item.PricePerSquareMeter.HasValue)
+                                        {
+                                            <span>@item.PricePerSquareMeter.Value.ToString("C")</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="text-muted">-</span>
+                                        }
+                                    </td>
+                                    <td>
+                                        @if (item.PricePerUnit.HasValue)
+                                        {
+                                            <span>@item.PricePerUnit.Value.ToString("C")</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="text-muted">-</span>
+                                        }
+                                    </td>
+                                    <td>
+                                        @if (item.PricePerLinearMeter.HasValue)
+                                        {
+                                            <span>@item.PricePerLinearMeter.Value.ToString("C")</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="text-muted">-</span>
+                                        }
+                                    </td>
+                                    <td class="text-center">
+                                        @if (applicablePrice.HasValue)
+                                        {
+                                            <strong class="text-success fs-5">@applicablePrice.Value.ToString("C")</strong>
+                                        }
+                                        else
+                                        {
+                                            <span class="text-muted">No definido</span>
+                                        }
+                                    </td>
+                                    <td>
+                                        <a asp-controller="PriceList" asp-action="Details" asp-route-id="@item.PriceList.Id" class="btn btn-sm btn-info">
+                                            Ver Lista
+                                        </a>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    }
+
+    @if (storePrices.Any())
+    {
+        <!-- Agrupar por tienda -->
+        var pricesByStore = storePrices.GroupBy(p => p.PriceList.Store?.Name ?? "Sin Tienda");
+
+        <div class="card mb-4">
+            <div class="card-header bg-warning">
+                <h4 class="mb-0">🏪 Listas Específicas por Tienda</h4>
+            </div>
+            <div class="card-body">
+                @foreach (var storeGroup in pricesByStore)
+                {
+                    <h5 class="mt-3 mb-3">
+                        <span class="badge bg-warning text-dark">@storeGroup.Key</span>
+                    </h5>
+
+                    <div class="table-responsive mb-4">
+                        <table class="table table-hover table-sm">
+                            <thead>
+                                <tr>
+                                    <th>Lista de Precios</th>
+                                    <th>Precio por m²</th>
+                                    <th>Precio por Unidad</th>
+                                    <th>Precio por Metro Lineal</th>
+                                    <th class="text-center">Precio Aplicable</th>
+                                    <th>Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var item in storeGroup)
+                                {
+                                    // Calcular el precio aplicable según el tipo
+                                    var applicablePrice = product.PricingType switch
+                                    {
+                                        GrupoMad.Models.PricingType.PerSquareMeter => item.PricePerSquareMeter,
+                                        GrupoMad.Models.PricingType.PerUnit => item.PricePerUnit,
+                                        GrupoMad.Models.PricingType.PerLinearMeter => item.PricePerLinearMeter,
+                                        GrupoMad.Models.PricingType.PerRange => item.PricePerSquareMeter,
+                                        _ => null
+                                    };
+
+                                    <tr>
+                                        <td><strong>@item.PriceList.Name</strong></td>
+                                        <td>
+                                            @if (item.PricePerSquareMeter.HasValue)
+                                            {
+                                                <span>@item.PricePerSquareMeter.Value.ToString("C")</span>
+                                            }
+                                            else
+                                            {
+                                                <span class="text-muted">-</span>
+                                            }
+                                        </td>
+                                        <td>
+                                            @if (item.PricePerUnit.HasValue)
+                                            {
+                                                <span>@item.PricePerUnit.Value.ToString("C")</span>
+                                            }
+                                            else
+                                            {
+                                                <span class="text-muted">-</span>
+                                            }
+                                        </td>
+                                        <td>
+                                            @if (item.PricePerLinearMeter.HasValue)
+                                            {
+                                                <span>@item.PricePerLinearMeter.Value.ToString("C")</span>
+                                            }
+                                            else
+                                            {
+                                                <span class="text-muted">-</span>
+                                            }
+                                        </td>
+                                        <td class="text-center">
+                                            @if (applicablePrice.HasValue)
+                                            {
+                                                <strong class="text-success fs-5">@applicablePrice.Value.ToString("C")</strong>
+                                            }
+                                            else
+                                            {
+                                                <span class="text-muted">No definido</span>
+                                            }
+                                        </td>
+                                        <td>
+                                            <a asp-controller="PriceList" asp-action="Details" asp-route-id="@item.PriceList.Id" class="btn btn-sm btn-info">
+                                                Ver Lista
+                                            </a>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+            </div>
+        </div>
+    }
+
+    <!-- Resumen -->
+    <div class="card mb-4 border-info">
+        <div class="card-header bg-info text-white">
+            <h5 class="mb-0">📊 Resumen</h5>
+        </div>
+        <div class="card-body">
+            <div class="row text-center">
+                <div class="col-md-4">
+                    <h3 class="text-primary">@globalPrices.Count</h3>
+                    <p class="text-muted mb-0">Lista(s) Global(es)</p>
+                </div>
+                <div class="col-md-4">
+                    <h3 class="text-warning">@storePrices.Count</h3>
+                    <p class="text-muted mb-0">Lista(s) por Tienda</p>
+                </div>
+                <div class="col-md-4">
+                    <h3 class="text-success">@priceItems.Count</h3>
+                    <p class="text-muted mb-0">Total de Listas</p>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+else
+{
+    <div class="alert alert-warning">
+        <h5 class="alert-heading">Sin Precios Definidos</h5>
+        <p>Este producto no está incluido en ninguna lista de precios activa.</p>
+        <hr>
+        <p class="mb-0">
+            <a asp-controller="PriceList" asp-action="Index" class="btn btn-primary">Ir a Listas de Precios</a>
+        </p>
+    </div>
+}
+
+<!-- Botones de Navegación -->
+<div class="mt-4">
+    <a asp-action="Details" asp-route-id="@product.Id" class="btn btn-info">Ver Detalles del Producto</a>
+    <a asp-action="GlobalPrice" asp-route-id="@product.Id" class="btn btn-success">Ver Solo Precio Global</a>
+    <a asp-action="Edit" asp-route-id="@product.Id" class="btn btn-warning">Editar Producto</a>
+    <a asp-controller="PriceList" asp-action="Index" class="btn btn-secondary">Ver Listas de Precios</a>
+    <a asp-action="Index" class="btn btn-secondary">Volver a Productos</a>
+</div>

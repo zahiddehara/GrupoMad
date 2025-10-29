@@ -279,6 +279,28 @@ namespace GrupoMad.Controllers
 
             return View();
         }
+
+        // GET: Product/PricesByStore/5
+        public async Task<IActionResult> PricesByStore(int? id)
+        {
+            if (id == null)
+            {
+                return NotFound();
+            }
+
+            var product = await _productService.GetProductByIdAsync(id.Value);
+            if (product == null)
+            {
+                return NotFound();
+            }
+
+            var priceItems = await _priceListService.GetProductPricesByStoreAsync(id.Value);
+
+            ViewBag.Product = product;
+            ViewBag.PriceItems = priceItems;
+
+            return View();
+        }
     }
 
     // ViewModel para crear productos
