@@ -41,5 +41,13 @@ dotnet aspnet-codegenerator controller -name StoreController -m Store -dc Applic
 # convertir a lf
 dos2unix archivo.cs
 
+# 🚀 Para actualizar la aplicación después de cambios:
+
+## En el VPS
+cd /var/www/GrupoMad
+git pull origin main
+dotnet publish -c Release -o /var/www/GrupoMad/publish
+sudo systemctl restart grupomad-erp.service
+
 ## Crear nuevo controller (Todavia no se comprueba)
 dotnet new mvccontroller -n ProductController -o Controllers
