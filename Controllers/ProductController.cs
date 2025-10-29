@@ -9,11 +9,13 @@ namespace GrupoMad.Controllers
     public class ProductController : Controller
     {
         private readonly ProductService _productService;
+        private readonly PriceListService _priceListService;
         private readonly ApplicationDbContext _context;
 
-        public ProductController(ProductService productService, ApplicationDbContext context)
+        public ProductController(ProductService productService, PriceListService priceListService, ApplicationDbContext context)
         {
             _productService = productService;
+            _priceListService = priceListService;
             _context = context;
         }
 
@@ -252,6 +254,30 @@ namespace GrupoMad.Controllers
         {
             await _productService.RemoveColorFromProductAsync(productId, colorId);
             return RedirectToAction(nameof(ManageColors), new { id = productId });
+        }
+
+        // GET: Product/GlobalPrice/5
+        public async Task<IActionResult> GlobalPrice(int? id)
+        {
+            if (id == null)
+            {
+                return NotFound();
+            }
+
+            var product = await _productService.GetProductByIdAsync(id.Value);
+            if (product == null)
+            {
+                return NotFound();
+            }
+
+            var priceItem = await _priceListService.GetProductPriceFromGlobalListAsync(id.Value);
+            var priceValue = await _priceListService.GetProductPriceValueFromGlobalListAsync(id.Value);
+
+            ViewBag.Product = product;
+            ViewBag.PriceItem = priceItem;
+            ViewBag.PriceValue = priceValue;
+
+            return View();
         }
     }
 

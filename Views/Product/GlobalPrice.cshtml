@@ -1,0 +1,209 @@
+@{
+    ViewData["Title"] = "Precio Global del Producto";
+    var product = ViewBag.Product as GrupoMad.Models.Product;
+    var priceItem = ViewBag.PriceItem as GrupoMad.Models.PriceListItem;
+    var priceValue = ViewBag.PriceValue as decimal?;
+}
+
+<h1>Precio Global del Producto</h1>
+
+<hr />
+
+<!-- Información del Producto -->
+<div class="card mb-4">
+    <div class="card-header bg-primary text-white">
+        <h4 class="mb-0">Información del Producto</h4>
+    </div>
+    <div class="card-body">
+        <dl class="row mb-0">
+            <dt class="col-sm-3">SKU:</dt>
+            <dd class="col-sm-9"><code>@product.SKU</code></dd>
+
+            <dt class="col-sm-3">Nombre:</dt>
+            <dd class="col-sm-9"><strong>@product.Name</strong></dd>
+
+            @if (!string.IsNullOrEmpty(product.Description))
+            {
+                <dt class="col-sm-3">Descripción:</dt>
+                <dd class="col-sm-9">@product.Description</dd>
+            }
+
+            <dt class="col-sm-3">Tipo de Producto:</dt>
+            <dd class="col-sm-9">
+                @switch (product.ProductType)
+                {
+                    case GrupoMad.Models.ProductType.Accessory:
+                        <span class="badge bg-info">Accesorio</span>
+                        break;
+                    case GrupoMad.Models.ProductType.Blind:
+                        <span class="badge bg-success">Persiana</span>
+                        break;
+                    default:
+                        <span class="badge bg-secondary">@product.ProductType</span>
+                        break;
+                }
+            </dd>
+
+            <dt class="col-sm-3">Tipo de Precio:</dt>
+            <dd class="col-sm-9">
+                @switch (product.PricingType)
+                {
+                    case GrupoMad.Models.PricingType.PerSquareMeter:
+                        <span class="badge bg-info">Por Metro Cuadrado (m²)</span>
+                        break;
+                    case GrupoMad.Models.PricingType.PerUnit:
+                        <span class="badge bg-success">Por Unidad</span>
+                        break;
+                    case GrupoMad.Models.PricingType.PerLinearMeter:
+                        <span class="badge bg-warning">Por Metro Lineal</span>
+                        break;
+                    case GrupoMad.Models.PricingType.PerRange:
+                        <span class="badge bg-secondary">Por Rango</span>
+                        break;
+                }
+            </dd>
+        </dl>
+    </div>
+</div>
+
+<!-- Precio desde Lista Global -->
+<div class="card mb-4">
+    <div class="card-header bg-success text-white">
+        <h4 class="mb-0">Precio desde Lista Global</h4>
+    </div>
+    <div class="card-body">
+        @if (priceItem != null)
+        {
+            <div class="row">
+                <div class="col-md-6">
+                    <dl class="row">
+                        <dt class="col-sm-5">Lista de Precios:</dt>
+                        <dd class="col-sm-7">
+                            <strong>@priceItem.PriceList.Name</strong>
+                            <span class="badge bg-primary ms-2">Global</span>
+                        </dd>
+
+                        <dt class="col-sm-5">Estado:</dt>
+                        <dd class="col-sm-7">
+                            @if (priceItem.PriceList.IsActive)
+                            {
+                                <span class="badge bg-success">Activa</span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-danger">Inactiva</span>
+                            }
+                        </dd>
+                    </dl>
+                </div>
+
+                <div class="col-md-6">
+                    <div class="alert alert-success mb-0">
+                        <h5 class="alert-heading">Precio Aplicable</h5>
+                        @if (priceValue.HasValue)
+                        {
+                            <h2 class="mb-0">@priceValue.Value.ToString("C")</h2>
+                            <small class="text-muted">
+                                @switch (product.PricingType)
+                                {
+                                    case GrupoMad.Models.PricingType.PerSquareMeter:
+                                        @:por m²
+                                        break;
+                                    case GrupoMad.Models.PricingType.PerUnit:
+                                        @:por unidad
+                                        break;
+                                    case GrupoMad.Models.PricingType.PerLinearMeter:
+                                        @:por metro lineal
+                                        break;
+                                    case GrupoMad.Models.PricingType.PerRange:
+                                        @:por rango
+                                        break;
+                                }
+                            </small>
+                        }
+                        else
+                        {
+                            <p class="mb-0 text-muted">Precio no definido</p>
+                        }
+                    </div>
+                </div>
+            </div>
+
+            <hr />
+
+            <h5>Detalles de Precios en la Lista</h5>
+            <div class="table-responsive">
+                <table class="table table-sm">
+                    <thead>
+                        <tr>
+                            <th>Precio por m²</th>
+                            <th>Precio por Unidad</th>
+                            <th>Precio por Metro Lineal</th>
+                            <th>Fecha de Creación</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>
+                                @if (priceItem.PricePerSquareMeter.HasValue)
+                                {
+                                    <strong>@priceItem.PricePerSquareMeter.Value.ToString("C")</strong>
+                                }
+                                else
+                                {
+                                    <span class="text-muted">-</span>
+                                }
+                            </td>
+                            <td>
+                                @if (priceItem.PricePerUnit.HasValue)
+                                {
+                                    <strong>@priceItem.PricePerUnit.Value.ToString("C")</strong>
+                                }
+                                else
+                                {
+                                    <span class="text-muted">-</span>
+                                }
+                            </td>
+                            <td>
+                                @if (priceItem.PricePerLinearMeter.HasValue)
+                                {
+                                    <strong>@priceItem.PricePerLinearMeter.Value.ToString("C")</strong>
+                                }
+                                else
+                                {
+                                    <span class="text-muted">-</span>
+                                }
+                            </td>
+                            <td>@priceItem.CreatedAt.ToString("dd/MM/yyyy")</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="mt-3">
+                <a asp-controller="PriceList" asp-action="Details" asp-route-id="@priceItem.PriceList.Id" class="btn btn-info">
+                    Ver Lista de Precios Completa
+                </a>
+            </div>
+        }
+        else
+        {
+            <div class="alert alert-warning">
+                <h5 class="alert-heading">Sin Precio Global</h5>
+                <p>Este producto no tiene un precio definido en ninguna lista de precios global.</p>
+                <hr>
+                <p class="mb-0">
+                    <a asp-controller="PriceList" asp-action="Index" class="btn btn-primary">Ver Listas de Precios</a>
+                </p>
+            </div>
+        }
+    </div>
+</div>
+
+<!-- Botones de Navegación -->
+<div>
+    <a asp-action="Details" asp-route-id="@product.Id" class="btn btn-info">Ver Detalles del Producto</a>
+    <a asp-action="Edit" asp-route-id="@product.Id" class="btn btn-warning">Editar Producto</a>
+    <a asp-controller="PriceList" asp-action="ProductPrices" asp-route-productId="@product.Id" class="btn btn-secondary">Ver Todas las Listas con este Producto</a>
+    <a asp-action="Index" class="btn btn-secondary">Volver a Productos</a>
+</div>

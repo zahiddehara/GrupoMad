@@ -197,6 +197,36 @@ namespace GrupoMad.Services
                 .FirstOrDefaultAsync(pli => pli.PriceListId == priceListId && pli.ProductId == productId);
         }
 
+        // Obtener el precio de un producto desde una lista de precios global (sin StoreId)
+        // Retorna el PriceListItem con el precio según el PricingType del producto
+        public async Task<PriceListItem?> GetProductPriceFromGlobalListAsync(int productId)
+        {
+            return await _context.PriceListItems
+                .Include(pli => pli.Product)
+                .Include(pli => pli.PriceList)
+                .Where(pli => pli.ProductId == productId && pli.PriceList.StoreId == null && pli.PriceList.IsActive)
+                .OrderBy(pli => pli.PriceList.Name)
+                .FirstOrDefaultAsync();
+        }
+
+        // Obtener el precio correcto de un producto según su PricingType desde una lista global
+        public async Task<decimal?> GetProductPriceValueFromGlobalListAsync(int productId)
+        {
+            var item = await GetProductPriceFromGlobalListAsync(productId);
+
+            if (item == null) return null;
+
+            // Retornar el precio según el tipo de producto
+            return item.Product.PricingType switch
+            {
+                PricingType.PerSquareMeter => item.PricePerSquareMeter,
+                PricingType.PerUnit => item.PricePerUnit,
+                PricingType.PerLinearMeter => item.PricePerLinearMeter,
+                PricingType.PerRange => item.PricePerSquareMeter, // O la lógica que necesites para rangos
+                _ => null
+            };
+        }
+
         // Obtener todos los productos con precios en una lista
         public async Task<List<PriceListItem>> GetProductsInPriceListAsync(int priceListId)
         {
