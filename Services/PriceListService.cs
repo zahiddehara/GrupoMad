@@ -38,7 +38,6 @@ namespace GrupoMad.Services
                 .Include(pl => pl.PriceListItems)
                     .ThenInclude(pli => pli.Product)
                         .ThenInclude(p => p.ProductColors)
-                            .ThenInclude(pc => pc.Color)
                 .FirstOrDefaultAsync(pl => pl.Id == id);
         }
 
@@ -140,7 +139,6 @@ namespace GrupoMad.Services
             return await _context.PriceListItems
                 .Include(pli => pli.Product)
                     .ThenInclude(p => p.ProductColors)
-                        .ThenInclude(pc => pc.Color)
                 .Include(pli => pli.PriceList)
                 .FirstOrDefaultAsync(pli => pli.Id == id);
         }
@@ -234,7 +232,6 @@ namespace GrupoMad.Services
                 .Where(pli => pli.PriceListId == priceListId)
                 .Include(pli => pli.Product)
                     .ThenInclude(p => p.ProductColors)
-                        .ThenInclude(pc => pc.Color)
                 .OrderBy(pli => pli.Product.Name)
                 .ToListAsync();
         }

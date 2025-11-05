@@ -84,11 +84,11 @@
                 <div class="d-flex flex-wrap gap-2">
                     @foreach (var pc in Model.ProductColors)
                     {
-                        <div class="card" style="width: 150px;">
+                        <div class="card" style="width: 180px;">
                             <div class="card-body p-2">
                                 <p class="card-text mb-0">
-                                    <strong>@pc.Color.Name</strong><br />
-                                    <small class="text-muted">@pc.Color.Code</small>
+                                    <strong>@pc.Name</strong><br />
+                                    <small class="text-muted">SKU: @pc.SKU</small>
                                 </p>
                             </div>
                         </div>

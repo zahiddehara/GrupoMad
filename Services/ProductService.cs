@@ -20,7 +20,6 @@ namespace GrupoMad.Services
             var query = _context.Products
                 .Include(p => p.Store)
                 .Include(p => p.ProductColors)
-                    .ThenInclude(pc => pc.Color)
                 .AsQueryable();
 
             if (!includeInactive)
@@ -36,7 +35,6 @@ namespace GrupoMad.Services
             return await _context.Products
                 .Include(p => p.Store)
                 .Include(p => p.ProductColors)
-                    .ThenInclude(pc => pc.Color)
                 .FirstOrDefaultAsync(p => p.Id == id);
         }
 
@@ -45,7 +43,6 @@ namespace GrupoMad.Services
             return await _context.Products
                 .Include(p => p.Store)
                 .Include(p => p.ProductColors)
-                    .ThenInclude(pc => pc.Color)
                 .FirstOrDefaultAsync(p => p.SKU == sku);
         }
 
@@ -98,28 +95,20 @@ namespace GrupoMad.Services
 
         // ==================== Gestión de Colores ====================
 
-        public async Task<List<Color>> GetProductColorsAsync(int productId)
+        public async Task<List<ProductColor>> GetProductColorsAsync(int productId)
         {
             var product = await _context.Products
                 .Include(p => p.ProductColors)
-                    .ThenInclude(pc => pc.Color)
                 .FirstOrDefaultAsync(p => p.Id == productId);
 
-            return product?.ProductColors.Select(pc => pc.Color).ToList() ?? new List<Color>();
+            return product?.ProductColors ?? new List<ProductColor>();
         }
 
-        public async Task<bool> AddColorToProductAsync(int productId, int colorId, string sku)
+        public async Task<bool> AddColorToProductAsync(int productId, string colorName, string sku)
         {
             var product = await _context.Products.FindAsync(productId);
-            var color = await _context.Colors.FindAsync(colorId);
 
-            if (product == null || color == null) return false;
-
-            // Verificar si la relación ya existe
-            var exists = await _context.ProductColors
-                .AnyAsync(pc => pc.ProductId == productId && pc.ColorId == colorId);
-
-            if (exists) return false;
+            if (product == null) return false;
 
             // Verificar que el SKU sea único
             var skuExists = await _context.ProductColors
@@ -130,42 +119,51 @@ namespace GrupoMad.Services
             _context.ProductColors.Add(new ProductColor
             {
                 ProductId = productId,
-                ColorId = colorId,
-                SKU = sku
+                Name = colorName,
+                SKU = sku,
+                CreatedAt = DateTime.UtcNow
             });
 
             await _context.SaveChangesAsync();
             return true;
         }
 
-        public async Task<bool> AddMultipleColorsToProductAsync(int productId, List<int> colorIds)
+        public async Task<bool> AddMultipleColorsToProductAsync(int productId, List<string> colorNames)
         {
             var product = await _context.Products.FindAsync(productId);
             if (product == null) return false;
 
-            foreach (var colorId in colorIds)
+            foreach (var colorName in colorNames)
             {
-                var exists = await _context.ProductColors
-                    .AnyAsync(pc => pc.ProductId == productId && pc.ColorId == colorId);
+                // Generar un SKU automático (puedes cambiar esta lógica según tus necesidades)
+                var baseSku = $"{product.SKU}-{colorName.Replace(" ", "").ToUpper()}";
+                var sku = baseSku;
+                var counter = 1;
 
-                if (!exists)
+                // Asegurar que el SKU sea único
+                while (await _context.ProductColors.AnyAsync(pc => pc.SKU == sku))
                 {
-                    _context.ProductColors.Add(new ProductColor
-                    {
-                        ProductId = productId,
-                        ColorId = colorId
-                    });
+                    sku = $"{baseSku}-{counter}";
+                    counter++;
                 }
+
+                _context.ProductColors.Add(new ProductColor
+                {
+                    ProductId = productId,
+                    Name = colorName,
+                    SKU = sku,
+                    CreatedAt = DateTime.UtcNow
+                });
             }
 
             await _context.SaveChangesAsync();
             return true;
         }
 
-        public async Task<bool> RemoveColorFromProductAsync(int productId, int colorId)
+        public async Task<bool> RemoveColorFromProductAsync(int productColorId)
         {
             var productColor = await _context.ProductColors
-                .FirstOrDefaultAsync(pc => pc.ProductId == productId && pc.ColorId == colorId);
+                .FirstOrDefaultAsync(pc => pc.Id == productColorId);
 
             if (productColor == null) return false;
 
@@ -174,30 +172,40 @@ namespace GrupoMad.Services
             return true;
         }
 
-        public async Task<bool> UpdateProductColorSKUAsync(int productId, int colorId, string newSku)
+        public async Task<bool> UpdateProductColorAsync(int productColorId, string? newName, string? newSku)
         {
             var productColor = await _context.ProductColors
-                .FirstOrDefaultAsync(pc => pc.ProductId == productId && pc.ColorId == colorId);
+                .FirstOrDefaultAsync(pc => pc.Id == productColorId);
 
             if (productColor == null) return false;
 
-            // Verificar que el nuevo SKU sea único
-            var skuExists = await _context.ProductColors
-                .AnyAsync(pc => pc.SKU == newSku && (pc.ProductId != productId || pc.ColorId != colorId));
+            // Verificar que el nuevo SKU sea único si se proporciona
+            if (!string.IsNullOrEmpty(newSku) && newSku != productColor.SKU)
+            {
+                var skuExists = await _context.ProductColors
+                    .AnyAsync(pc => pc.SKU == newSku && pc.Id != productColorId);
 
-            if (skuExists) return false;
+                if (skuExists) return false;
 
-            productColor.SKU = newSku;
+                productColor.SKU = newSku;
+            }
+
+            // Actualizar nombre si se proporciona
+            if (!string.IsNullOrEmpty(newName))
+            {
+                productColor.Name = newName;
+            }
+
+            productColor.UpdatedAt = DateTime.UtcNow;
             await _context.SaveChangesAsync();
             return true;
         }
 
-        public async Task<ProductColor?> GetProductColorAsync(int productId, int colorId)
+        public async Task<ProductColor?> GetProductColorAsync(int productColorId)
         {
             return await _context.ProductColors
                 .Include(pc => pc.Product)
-                .Include(pc => pc.Color)
-                .FirstOrDefaultAsync(pc => pc.ProductId == productId && pc.ColorId == colorId);
+                .FirstOrDefaultAsync(pc => pc.Id == productColorId);
         }
 
         // ==================== Búsqueda y Filtrado ====================
@@ -208,17 +216,15 @@ namespace GrupoMad.Services
                 .Where(p => p.ProductType == productType && p.IsActive)
                 .Include(p => p.Store)
                 .Include(p => p.ProductColors)
-                    .ThenInclude(pc => pc.Color)
                 .ToListAsync();
         }
 
-        public async Task<List<Product>> GetProductsByColorAsync(int colorId)
+        public async Task<List<Product>> GetProductsByColorNameAsync(string colorName)
         {
             return await _context.Products
-                .Where(p => p.ProductColors.Any(pc => pc.ColorId == colorId) && p.IsActive)
+                .Where(p => p.ProductColors.Any(pc => pc.Name.Contains(colorName)) && p.IsActive)
                 .Include(p => p.Store)
                 .Include(p => p.ProductColors)
-                    .ThenInclude(pc => pc.Color)
                 .ToListAsync();
         }
 
@@ -228,7 +234,6 @@ namespace GrupoMad.Services
                 .Where(p => p.StoreId == storeId && p.IsActive)
                 .Include(p => p.Store)
                 .Include(p => p.ProductColors)
-                    .ThenInclude(pc => pc.Color)
                 .ToListAsync();
         }
 
@@ -241,7 +246,6 @@ namespace GrupoMad.Services
                             p.IsActive)
                 .Include(p => p.Store)
                 .Include(p => p.ProductColors)
-                    .ThenInclude(pc => pc.Color)
                 .ToListAsync();
         }
 
@@ -254,7 +258,6 @@ namespace GrupoMad.Services
                 .Where(p => p.IsActive && (p.StoreId == null || p.StoreId == storeId))
                 .Include(p => p.Store)
                 .Include(p => p.ProductColors)
-                    .ThenInclude(pc => pc.Color)
                 .OrderBy(p => p.Name)
                 .ToListAsync();
         }
@@ -265,7 +268,6 @@ namespace GrupoMad.Services
             return await _context.Products
                 .Where(p => p.IsActive && p.StoreId == null)
                 .Include(p => p.ProductColors)
-                    .ThenInclude(pc => pc.Color)
                 .OrderBy(p => p.Name)
                 .ToListAsync();
         }
@@ -277,7 +279,6 @@ namespace GrupoMad.Services
                 .Where(p => p.IsActive && p.StoreId == storeId)
                 .Include(p => p.Store)
                 .Include(p => p.ProductColors)
-                    .ThenInclude(pc => pc.Color)
                 .OrderBy(p => p.Name)
                 .ToListAsync();
         }

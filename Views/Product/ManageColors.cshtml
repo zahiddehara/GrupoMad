@@ -2,7 +2,6 @@
 
 @{
     ViewData["Title"] = "Gestionar Colores";
-    var availableColors = ViewBag.AvailableColors as List<GrupoMad.Models.Color>;
 }
 
 <h1>Gestionar Colores - @Model.Name</h1>
@@ -38,8 +37,8 @@
                     <thead>
                         <tr>
                             <th>Color</th>
-                            <th>Código Color</th>
                             <th>SKU Variante</th>
+                            <th>Fecha Creación</th>
                             <th>Acciones</th>
                         </tr>
                     </thead>
@@ -47,24 +46,38 @@
                         @foreach (var pc in Model.ProductColors)
                         {
                             <tr>
-                                <td><strong>@pc.Color.Name</strong></td>
-                                <td><small class="text-muted">@pc.Color.Code</small></td>
                                 <td>
-                                    <form asp-action="UpdateColorSKU" method="post" class="d-inline-flex gap-2">
+                                    <form asp-action="UpdateColor" method="post" class="d-inline-flex gap-2">
                                         @Html.AntiForgeryToken()
                                         <input type="hidden" name="productId" value="@Model.Id" />
-                                        <input type="hidden" name="colorId" value="@pc.Color.Id" />
-                                        <input type="text" name="sku" value="@pc.SKU" class="form-control form-control-sm" style="width: 150px;" required />
-                                        <button type="submit" class="btn btn-sm btn-primary">Actualizar</button>
+                                        <input type="hidden" name="productColorId" value="@pc.Id" />
+                                        <input type="text" name="colorName" value="@pc.Name" class="form-control form-control-sm" style="width: 150px;" required />
+                                        <button type="submit" class="btn btn-sm btn-primary btn-sm" title="Actualizar nombre">
+                                            <i class="bi bi-check"></i>
+                                        </button>
                                     </form>
+                                </td>
+                                <td>
+                                    <form asp-action="UpdateColor" method="post" class="d-inline-flex gap-2">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="productId" value="@Model.Id" />
+                                        <input type="hidden" name="productColorId" value="@pc.Id" />
+                                        <input type="text" name="sku" value="@pc.SKU" class="form-control form-control-sm" style="width: 200px;" required />
+                                        <button type="submit" class="btn btn-sm btn-primary" title="Actualizar SKU">
+                                            <i class="bi bi-check"></i>
+                                        </button>
+                                    </form>
+                                </td>
+                                <td>
+                                    <small class="text-muted">@pc.CreatedAt.ToString("dd/MM/yyyy")</small>
                                 </td>
                                 <td>
                                     <form asp-action="RemoveColor" method="post" style="display: inline;">
                                         @Html.AntiForgeryToken()
                                         <input type="hidden" name="productId" value="@Model.Id" />
-                                        <input type="hidden" name="colorId" value="@pc.Color.Id" />
+                                        <input type="hidden" name="productColorId" value="@pc.Id" />
                                         <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('¿Eliminar este color?');">
-                                            Eliminar
+                                            <i class="bi bi-trash"></i>
                                         </button>
                                     </form>
                                 </td>
@@ -82,56 +95,40 @@
         }
     </div>
 
-    <!-- Colores disponibles para agregar -->
+    <!-- Agregar nuevo color -->
     <div class="col-md-5">
         <h3>Agregar Color</h3>
 
-        @{
-            var assignedColorIds = Model.ProductColors?.Select(pc => pc.ColorId).ToList() ?? new List<int>();
-            var colorsToAdd = availableColors?.Where(c => !assignedColorIds.Contains(c.Id)).ToList();
-        }
+        <div class="card">
+            <div class="card-body">
+                <form asp-action="AddColor" method="post">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="productId" value="@Model.Id" />
 
-        @if (colorsToAdd != null && colorsToAdd.Any())
-        {
-            <div class="card">
-                <div class="card-body">
-                    <form asp-action="AddColor" method="post">
-                        @Html.AntiForgeryToken()
-                        <input type="hidden" name="productId" value="@Model.Id" />
+                    <div class="mb-3">
+                        <label for="colorName" class="form-label">Nombre del Color</label>
+                        <input type="text" name="colorName" id="colorName" class="form-control" required
+                               placeholder="Ej: Rojo, Azul, Negro..." />
+                        <small class="form-text text-muted">
+                            Ingrese el nombre del color para este producto
+                        </small>
+                    </div>
 
-                        <div class="mb-3">
-                            <label for="colorId" class="form-label">Seleccionar Color</label>
-                            <select name="colorId" id="colorId" class="form-select" required>
-                                <option value="">-- Seleccione un color --</option>
-                                @foreach (var color in colorsToAdd)
-                                {
-                                    <option value="@color.Id">@color.Name (@color.Code)</option>
-                                }
-                            </select>
-                        </div>
+                    <div class="mb-3">
+                        <label for="sku" class="form-label">SKU de la Variante</label>
+                        <input type="text" name="sku" id="sku" class="form-control" required
+                               placeholder="Ej: @(Model.SKU)-ROJO" />
+                        <small class="form-text text-muted">
+                            Ingrese un SKU único para esta combinación producto-color
+                        </small>
+                    </div>
 
-                        <div class="mb-3">
-                            <label for="sku" class="form-label">SKU de la Variante</label>
-                            <input type="text" name="sku" id="sku" class="form-control" required
-                                   placeholder="Ej: @(Model.SKU)-COLOR" />
-                            <small class="form-text text-muted">
-                                Ingrese un SKU único para esta combinación producto-color
-                            </small>
-                        </div>
-
-                        <button type="submit" class="btn btn-success">
-                            <i class="bi bi-plus-circle"></i> Agregar Color
-                        </button>
-                    </form>
-                </div>
+                    <button type="submit" class="btn btn-success">
+                        <i class="bi bi-plus-circle"></i> Agregar Color
+                    </button>
+                </form>
             </div>
-        }
-        else
-        {
-            <div class="alert alert-success">
-                Todos los colores disponibles ya están asignados a este producto.
-            </div>
-        }
+        </div>
     </div>
 </div>
 

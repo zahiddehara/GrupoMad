@@ -191,28 +191,31 @@ namespace GrupoMad.Controllers
                 return NotFound();
             }
 
-            var allColors = _context.Colors.Where(c => c.IsActive).ToList();
-            ViewBag.AvailableColors = allColors;
-
             return View(product);
         }
 
         // POST: Product/AddColor
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> AddColor(int productId, int colorId, string sku)
+        public async Task<IActionResult> AddColor(int productId, string colorName, string sku)
         {
+            if (string.IsNullOrWhiteSpace(colorName))
+            {
+                TempData["Error"] = "El nombre del color es requerido.";
+                return RedirectToAction(nameof(ManageColors), new { id = productId });
+            }
+
             if (string.IsNullOrWhiteSpace(sku))
             {
                 TempData["Error"] = "El SKU es requerido.";
                 return RedirectToAction(nameof(ManageColors), new { id = productId });
             }
 
-            var result = await _productService.AddColorToProductAsync(productId, colorId, sku);
+            var result = await _productService.AddColorToProductAsync(productId, colorName, sku);
 
             if (!result)
             {
-                TempData["Error"] = "No se pudo agregar el color. Verifica que el SKU sea único y que el color no esté ya asignado.";
+                TempData["Error"] = "No se pudo agregar el color. Verifica que el SKU sea único.";
             }
             else
             {
@@ -222,26 +225,26 @@ namespace GrupoMad.Controllers
             return RedirectToAction(nameof(ManageColors), new { id = productId });
         }
 
-        // POST: Product/UpdateColorSKU
+        // POST: Product/UpdateColor
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> UpdateColorSKU(int productId, int colorId, string sku)
+        public async Task<IActionResult> UpdateColor(int productId, int productColorId, string? colorName, string? sku)
         {
-            if (string.IsNullOrWhiteSpace(sku))
+            if (string.IsNullOrWhiteSpace(colorName) && string.IsNullOrWhiteSpace(sku))
             {
-                TempData["Error"] = "El SKU es requerido.";
+                TempData["Error"] = "Debes proporcionar al menos el nombre del color o el SKU.";
                 return RedirectToAction(nameof(ManageColors), new { id = productId });
             }
 
-            var result = await _productService.UpdateProductColorSKUAsync(productId, colorId, sku);
+            var result = await _productService.UpdateProductColorAsync(productColorId, colorName, sku);
 
             if (!result)
             {
-                TempData["Error"] = "No se pudo actualizar el SKU. Verifica que sea único.";
+                TempData["Error"] = "No se pudo actualizar el color. Verifica que el SKU sea único.";
             }
             else
             {
-                TempData["Success"] = "SKU actualizado exitosamente.";
+                TempData["Success"] = "Color actualizado exitosamente.";
             }
 
             return RedirectToAction(nameof(ManageColors), new { id = productId });
@@ -250,9 +253,10 @@ namespace GrupoMad.Controllers
         // POST: Product/RemoveColor
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> RemoveColor(int productId, int colorId)
+        public async Task<IActionResult> RemoveColor(int productId, int productColorId)
         {
-            await _productService.RemoveColorFromProductAsync(productId, colorId);
+            await _productService.RemoveColorFromProductAsync(productColorId);
+            TempData["Success"] = "Color eliminado exitosamente.";
             return RedirectToAction(nameof(ManageColors), new { id = productId });
         }
 

@@ -56,14 +56,22 @@ namespace GrupoMad.Models
 
     public class ProductColor
     {
-        public int ProductId { get; set; }
-        public Product Product { get; set; }
-
-        public int ColorId { get; set; }
-        public Color Color { get; set; }
+        public int Id { get; set; }
 
         [Required]
         public string SKU { get; set; }
+
+        public int ProductId { get; set; }
+        public Product Product { get; set; }
+
+        [Required]
+        public string Name { get; set; }
+
+        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+
+        public DateTime? UpdatedAt { get; set; }
+
+
     }
 
     public class AccessoryProduct : Product
