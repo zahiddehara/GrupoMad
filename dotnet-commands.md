@@ -44,10 +44,12 @@ dos2unix archivo.cs
 # 🚀 Para actualizar la aplicación después de cambios:
 
 ## En el VPS
+sudo systemctl stop grupomad-erp.service
 cd /var/www/GrupoMad
 git pull origin main
+dotnet ef database update
 dotnet publish -c Release -o /var/www/GrupoMad/publish
-sudo systemctl restart grupomad-erp.service
+sudo systemctl start grupomad-erp.service
 
 ## Crear nuevo controller (Todavia no se comprueba)
 dotnet new mvccontroller -n ProductController -o Controllers
