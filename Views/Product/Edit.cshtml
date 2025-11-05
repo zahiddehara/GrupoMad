@@ -1,4 +1,4 @@
-@model GrupoMad.Models.Product
+@model GrupoMad.Controllers.ProductEditViewModel
 
 @{
     ViewData["Title"] = "Editar Producto";
@@ -38,11 +38,11 @@
                 <small class="form-text text-muted">El tipo de producto no se puede cambiar después de crearlo</small>
             </div>
 
-            <div class="form-group mb-3">
-                <label asp-for="PricingType" class="control-label">Tipo de Precio</label>
-                <select asp-for="PricingType" class="form-control" asp-items="ViewBag.PricingTypes"></select>
-                <span asp-validation-for="PricingType" class="text-danger"></span>
-            </div>
+            <!-- <div class="form-group mb-3"> -->
+            <!--     <label asp-for="PricingType" class="control-label">Tipo de Precio</label> -->
+            <!--     <select asp-for="PricingType" class="form-control" asp-items="ViewBag.PricingTypes"></select> -->
+            <!--     <span asp-validation-for="PricingType" class="text-danger"></span> -->
+            <!-- </div> -->
 
             <div class="form-group mb-3">
                 <label asp-for="StoreId" class="control-label">Tienda</label>

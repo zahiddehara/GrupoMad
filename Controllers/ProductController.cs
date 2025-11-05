@@ -112,17 +112,29 @@ namespace GrupoMad.Controllers
                 return NotFound();
             }
 
+            var viewModel = new ProductEditViewModel
+            {
+                Id = product.Id,
+                SKU = product.SKU,
+                Name = product.Name,
+                Description = product.Description,
+                ProductType = product.ProductType,
+                PricingType = product.PricingType,
+                StoreId = product.StoreId,
+                IsActive = product.IsActive
+            };
+
             ViewData["StoreId"] = new SelectList(_context.Stores, "Id", "Name", product.StoreId);
             ViewData["PricingTypes"] = new SelectList(Enum.GetValues(typeof(PricingType)), product.PricingType);
-            return View(product);
+            return View(viewModel);
         }
 
         // POST: Product/Edit/5
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("Id,SKU,Name,Description,ProductType,PricingType,StoreId,IsActive")] Product product)
+        public async Task<IActionResult> Edit(int id, [Bind("Id,SKU,Name,Description,ProductType,PricingType,StoreId,IsActive")] ProductEditViewModel model)
         {
-            if (id != product.Id)
+            if (id != model.Id)
             {
                 return NotFound();
             }
@@ -130,15 +142,30 @@ namespace GrupoMad.Controllers
             if (ModelState.IsValid)
             {
                 // Verificar que el SKU sea único (excluyendo el producto actual)
-                if (!await _productService.IsSKUUniqueAsync(product.SKU, product.Id))
+                if (!await _productService.IsSKUUniqueAsync(model.SKU, model.Id))
                 {
                     ModelState.AddModelError("SKU", "Este SKU ya existe.");
-                    ViewData["StoreId"] = new SelectList(_context.Stores, "Id", "Name", product.StoreId);
-                    ViewData["PricingTypes"] = new SelectList(Enum.GetValues(typeof(PricingType)), product.PricingType);
-                    return View(product);
+                    ViewData["StoreId"] = new SelectList(_context.Stores, "Id", "Name", model.StoreId);
+                    ViewData["PricingTypes"] = new SelectList(Enum.GetValues(typeof(PricingType)), model.PricingType);
+                    return View(model);
                 }
 
-                var result = await _productService.UpdateProductAsync(id, product);
+                // Obtener el producto existente
+                var existingProduct = await _productService.GetProductByIdAsync(id);
+                if (existingProduct == null)
+                {
+                    return NotFound();
+                }
+
+                // Actualizar las propiedades del producto existente
+                existingProduct.SKU = model.SKU;
+                existingProduct.Name = model.Name;
+                existingProduct.Description = model.Description;
+                existingProduct.PricingType = model.PricingType;
+                existingProduct.StoreId = model.StoreId;
+                existingProduct.IsActive = model.IsActive;
+
+                var result = await _productService.UpdateProductAsync(id, existingProduct);
                 if (result == null)
                 {
                     return NotFound();
@@ -146,9 +173,9 @@ namespace GrupoMad.Controllers
                 return RedirectToAction(nameof(Index));
             }
 
-            ViewData["StoreId"] = new SelectList(_context.Stores, "Id", "Name", product.StoreId);
-            ViewData["PricingTypes"] = new SelectList(Enum.GetValues(typeof(PricingType)), product.PricingType);
-            return View(product);
+            ViewData["StoreId"] = new SelectList(_context.Stores, "Id", "Name", model.StoreId);
+            ViewData["PricingTypes"] = new SelectList(Enum.GetValues(typeof(PricingType)), model.PricingType);
+            return View(model);
         }
 
         // GET: Product/Delete/5
@@ -317,5 +344,18 @@ namespace GrupoMad.Controllers
         public PricingType PricingType { get; set; }
         public int? StoreId { get; set; }
         public bool IsActive { get; set; } = true;
+    }
+
+    // ViewModel para editar productos
+    public class ProductEditViewModel
+    {
+        public int Id { get; set; }
+        public string SKU { get; set; }
+        public string Name { get; set; }
+        public string? Description { get; set; }
+        public ProductType ProductType { get; set; }
+        public PricingType PricingType { get; set; }
+        public int? StoreId { get; set; }
+        public bool IsActive { get; set; }
     }
 }
