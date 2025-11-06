@@ -168,6 +168,7 @@ namespace GrupoMad.Services
             item.PricePerSquareMeter = updatedItem.PricePerSquareMeter;
             item.PricePerUnit = updatedItem.PricePerUnit;
             item.PricePerLinearMeter = updatedItem.PricePerLinearMeter;
+            item.DiscountedPrice = updatedItem.DiscountedPrice;
             item.UpdatedAt = DateTime.UtcNow;
 
             await _context.SaveChangesAsync();
@@ -360,6 +361,7 @@ namespace GrupoMad.Services
                         PricePerSquareMeter = sourceItem.PricePerSquareMeter,
                         PricePerUnit = sourceItem.PricePerUnit,
                         PricePerLinearMeter = sourceItem.PricePerLinearMeter,
+                        DiscountedPrice = sourceItem.DiscountedPrice,
                         CreatedAt = DateTime.UtcNow
                     });
                     copied++;

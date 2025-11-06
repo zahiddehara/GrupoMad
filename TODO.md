@@ -57,42 +57,27 @@ El campo "ControlSide" no iria en la tabla Product
 - Lado de control (izquierdo o derecho)
 
 
-# Una vez eliminando los colores, revisar:
+# Logica para aplicar descuento
 
-⏺ Basándome en la búsqueda, estos son los archivos críticos que debes revisar:
+  Para la lógica de aplicar el descuento según el tipo de precio activo, podrías crear un
+  método helper en tu PriceListItem o en tu lógica de negocio:
 
-  1. Base de datos y configuración:
+  // Ejemplo de método helper
+  public decimal GetFinalPrice()
+  {
+      decimal basePrice = 0;
 
-  - Data/ApplicationDbContext.cs - Remover configuración de la tabla Color
-  - Nueva migración necesaria - Para agregar campos nuevos a ProductColor y remover
-  tabla Color
+      if (PricePerUnit.HasValue)
+          basePrice = PricePerUnit.Value;
+      else if (PricePerSquareMeter.HasValue)
+          basePrice = PricePerSquareMeter.Value;
+      else if (PricePerLinearMeter.HasValue)
+          basePrice = PricePerLinearMeter.Value;
 
-  2. Modelo obsoleto:
+      // Aplicar descuento si existe
+      if (DiscountAmount.HasValue)
+          basePrice -= DiscountAmount.Value;
 
-  - Models/Color.cs - Eliminar este archivo (ya no lo necesitas)
-
-  3. Controlador obsoleto:
-
-  - Controllers/ColorController.cs - Eliminar o revisar (ya no necesitas gestión
-  separada de colores)
-
-  4. Vistas obsoletas de Color:
-
-  - Views/Color/Index.cshtml
-  - Views/Color/Create.cshtml
-  - Views/Color/Edit.cshtml
-  - Views/Color/Details.cshtml
-  - Views/Color/Delete.cshtml
-  Acción: Eliminar toda la carpeta Views/Color/
-
-  5. Archivos que usan Color:
-
-  - Controllers/ProductController.cs - Revisar método ManageColors
-  - Services/ProductService.cs - Revisar lógica de colores
-  - Services/PriceListService.cs - Verificar si usa Color
-  - Views/Product/ManageColors.cshtml - Actualizar para trabajar sin tabla Color
-  separada
-
-
- dotnet ef migrations add RefactorProductColorEmbedColorName
+      return basePrice > 0 ? basePrice : 0; // Evitar precios negativos
+  }
 

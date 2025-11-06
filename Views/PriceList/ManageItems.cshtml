@@ -51,6 +51,8 @@ else
                             <th>Precio m²</th>
                             <th>Precio Unidad</th>
                             <th>Precio Metro Lineal</th>
+                            <th>Precio c/Descuento</th>
+                            <th>Ahorro</th>
                             <th>Acciones</th>
                         </tr>
                     </thead>
@@ -84,6 +86,7 @@ else
                                         <input type="hidden" name="priceListId" value="@Model.Id" />
                                         <input type="hidden" name="pricePerUnit" value="@item.PricePerUnit" />
                                         <input type="hidden" name="pricePerLinearMeter" value="@item.PricePerLinearMeter" />
+                                        <input type="hidden" name="discountedPrice" value="@item.DiscountedPrice" />
                                         <div class="input-group input-group-sm" style="width: 150px;">
                                             <span class="input-group-text">$</span>
                                             <input type="number" name="pricePerSquareMeter" value="@item.PricePerSquareMeter"
@@ -99,6 +102,7 @@ else
                                         <input type="hidden" name="priceListId" value="@Model.Id" />
                                         <input type="hidden" name="pricePerSquareMeter" value="@item.PricePerSquareMeter" />
                                         <input type="hidden" name="pricePerLinearMeter" value="@item.PricePerLinearMeter" />
+                                        <input type="hidden" name="discountedPrice" value="@item.DiscountedPrice" />
                                         <div class="input-group input-group-sm" style="width: 150px;">
                                             <span class="input-group-text">$</span>
                                             <input type="number" name="pricePerUnit" value="@item.PricePerUnit"
@@ -114,6 +118,7 @@ else
                                         <input type="hidden" name="priceListId" value="@Model.Id" />
                                         <input type="hidden" name="pricePerSquareMeter" value="@item.PricePerSquareMeter" />
                                         <input type="hidden" name="pricePerUnit" value="@item.PricePerUnit" />
+                                        <input type="hidden" name="discountedPrice" value="@item.DiscountedPrice" />
                                         <div class="input-group input-group-sm" style="width: 150px;">
                                             <span class="input-group-text">$</span>
                                             <input type="number" name="pricePerLinearMeter" value="@item.PricePerLinearMeter"
@@ -121,6 +126,35 @@ else
                                             <button type="submit" class="btn btn-primary btn-sm">💾</button>
                                         </div>
                                     </form>
+                                </td>
+                                <td>
+                                    <form asp-action="UpdateItem" method="post" class="d-inline">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="itemId" value="@item.Id" />
+                                        <input type="hidden" name="priceListId" value="@Model.Id" />
+                                        <input type="hidden" name="pricePerSquareMeter" value="@item.PricePerSquareMeter" />
+                                        <input type="hidden" name="pricePerUnit" value="@item.PricePerUnit" />
+                                        <input type="hidden" name="pricePerLinearMeter" value="@item.PricePerLinearMeter" />
+                                        <div class="input-group input-group-sm" style="width: 150px;">
+                                            <span class="input-group-text">$</span>
+                                            <input type="number" name="discountedPrice" value="@item.DiscountedPrice"
+                                                   class="form-control form-control-sm" step="0.01" min="0" />
+                                            <button type="submit" class="btn btn-primary btn-sm">💾</button>
+                                        </div>
+                                    </form>
+                                </td>
+                                <td>
+                                    @{
+                                        var discountApplied = item.GetDiscountApplied();
+                                    }
+                                    @if (discountApplied > 0)
+                                    {
+                                        <span class="badge bg-success">-$@discountApplied.ToString("N2")</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted">-</span>
+                                    }
                                 </td>
                                 <td>
                                     <form asp-action="RemoveItem" method="post" style="display: inline;">
@@ -194,6 +228,16 @@ else
                                 <input type="number" name="pricePerLinearMeter" id="pricePerLinearMeter"
                                        class="form-control" step="0.01" min="0" />
                             </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="discountedPrice" class="form-label">Precio con Descuento</label>
+                            <div class="input-group">
+                                <span class="input-group-text">$</span>
+                                <input type="number" name="discountedPrice" id="discountedPrice"
+                                       class="form-control" step="0.01" min="0" />
+                            </div>
+                            <small class="form-text text-muted">Opcional: precio especial con descuento (debe ser menor al precio regular)</small>
                         </div>
 
                         <small class="form-text text-muted mb-3 d-block">

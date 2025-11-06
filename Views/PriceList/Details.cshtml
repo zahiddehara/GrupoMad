@@ -77,6 +77,8 @@
                     <th>Precio por m²</th>
                     <th>Precio por Unidad</th>
                     <th>Precio por Metro Lineal</th>
+                    <th>Precio c/Descuento</th>
+                    <th>Ahorro</th>
                     <th>Colores</th>
                 </tr>
             </thead>
@@ -127,6 +129,29 @@
                             @if (item.PricePerLinearMeter.HasValue)
                             {
                                 <strong>@item.PricePerLinearMeter.Value.ToString("C")</strong>
+                            }
+                            else
+                            {
+                                <span class="text-muted">-</span>
+                            }
+                        </td>
+                        <td>
+                            @if (item.DiscountedPrice.HasValue)
+                            {
+                                <strong class="text-success">@item.DiscountedPrice.Value.ToString("C")</strong>
+                            }
+                            else
+                            {
+                                <span class="text-muted">-</span>
+                            }
+                        </td>
+                        <td>
+                            @{
+                                var discountApplied = item.GetDiscountApplied();
+                            }
+                            @if (discountApplied > 0)
+                            {
+                                <span class="badge bg-success">-@discountApplied.ToString("C")</span>
                             }
                             else
                             {
