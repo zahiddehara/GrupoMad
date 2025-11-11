@@ -21,6 +21,8 @@ namespace GrupoMad.Services
                 .Include(pl => pl.Store)
                 .Include(pl => pl.PriceListItems)
                     .ThenInclude(pli => pli.Product)
+                .Include(pl => pl.PriceListItems)
+                    .ThenInclude(pli => pli.Discounts)
                 .AsQueryable();
 
             if (!includeInactive)
@@ -38,6 +40,8 @@ namespace GrupoMad.Services
                 .Include(pl => pl.PriceListItems)
                     .ThenInclude(pli => pli.Product)
                         .ThenInclude(p => p.ProductColors)
+                .Include(pl => pl.PriceListItems)
+                    .ThenInclude(pli => pli.Discounts)
                 .FirstOrDefaultAsync(pl => pl.Id == id);
         }
 
@@ -105,6 +109,8 @@ namespace GrupoMad.Services
                 .Include(pl => pl.Store)
                 .Include(pl => pl.PriceListItems)
                     .ThenInclude(pli => pli.Product)
+                .Include(pl => pl.PriceListItems)
+                    .ThenInclude(pli => pli.Discounts)
                 .OrderBy(pl => pl.Name)
                 .ToListAsync();
         }
@@ -116,6 +122,8 @@ namespace GrupoMad.Services
                 .Where(pl => pl.IsActive && pl.StoreId == null)
                 .Include(pl => pl.PriceListItems)
                     .ThenInclude(pli => pli.Product)
+                .Include(pl => pl.PriceListItems)
+                    .ThenInclude(pli => pli.Discounts)
                 .OrderBy(pl => pl.Name)
                 .ToListAsync();
         }
@@ -128,6 +136,8 @@ namespace GrupoMad.Services
                 .Include(pl => pl.Store)
                 .Include(pl => pl.PriceListItems)
                     .ThenInclude(pli => pli.Product)
+                .Include(pl => pl.PriceListItems)
+                    .ThenInclude(pli => pli.Discounts)
                 .OrderBy(pl => pl.Name)
                 .ToListAsync();
         }
@@ -140,6 +150,7 @@ namespace GrupoMad.Services
                 .Include(pli => pli.Product)
                     .ThenInclude(p => p.ProductColors)
                 .Include(pli => pli.PriceList)
+                .Include(pli => pli.Discounts)
                 .FirstOrDefaultAsync(pli => pli.Id == id);
         }
 
@@ -168,7 +179,6 @@ namespace GrupoMad.Services
             item.PricePerSquareMeter = updatedItem.PricePerSquareMeter;
             item.PricePerUnit = updatedItem.PricePerUnit;
             item.PricePerLinearMeter = updatedItem.PricePerLinearMeter;
-            item.DiscountedPrice = updatedItem.DiscountedPrice;
             item.UpdatedAt = DateTime.UtcNow;
 
             await _context.SaveChangesAsync();
@@ -193,6 +203,7 @@ namespace GrupoMad.Services
             return await _context.PriceListItems
                 .Include(pli => pli.Product)
                 .Include(pli => pli.PriceList)
+                .Include(pli => pli.Discounts)
                 .FirstOrDefaultAsync(pli => pli.PriceListId == priceListId && pli.ProductId == productId);
         }
 
@@ -203,6 +214,7 @@ namespace GrupoMad.Services
             return await _context.PriceListItems
                 .Include(pli => pli.Product)
                 .Include(pli => pli.PriceList)
+                .Include(pli => pli.Discounts)
                 .Where(pli => pli.ProductId == productId && pli.PriceList.StoreId == null && pli.PriceList.IsActive)
                 .OrderBy(pli => pli.PriceList.Name)
                 .FirstOrDefaultAsync();
@@ -233,6 +245,7 @@ namespace GrupoMad.Services
                 .Where(pli => pli.PriceListId == priceListId)
                 .Include(pli => pli.Product)
                     .ThenInclude(p => p.ProductColors)
+                .Include(pli => pli.Discounts)
                 .OrderBy(pli => pli.Product.Name)
                 .ToListAsync();
         }
@@ -244,6 +257,7 @@ namespace GrupoMad.Services
                 .Where(pli => pli.ProductId == productId)
                 .Include(pli => pli.PriceList)
                     .ThenInclude(pl => pl.Store)
+                .Include(pli => pli.Discounts)
                 .OrderBy(pli => pli.PriceList.Name)
                 .ToListAsync();
         }
@@ -256,6 +270,7 @@ namespace GrupoMad.Services
                 .Include(pli => pli.Product)
                 .Include(pli => pli.PriceList)
                     .ThenInclude(pl => pl.Store)
+                .Include(pli => pli.Discounts)
                 .OrderBy(pli => pli.PriceList.StoreId.HasValue ? 1 : 0) // Globales primero
                 .ThenBy(pli => pli.PriceList.Store.Name)
                 .ThenBy(pli => pli.PriceList.Name)
@@ -267,19 +282,13 @@ namespace GrupoMad.Services
         {
             var item = await _context.PriceListItems
                 .Include(pli => pli.Product)
+                .Include(pli => pli.Discounts)
                 .FirstOrDefaultAsync(pli => pli.PriceListId == priceListId && pli.ProductId == productId);
 
             if (item == null) return null;
 
-            // Retornar el precio según el tipo de producto
-            return item.Product.PricingType switch
-            {
-                PricingType.PerSquareMeter => item.PricePerSquareMeter,
-                PricingType.PerUnit => item.PricePerUnit,
-                PricingType.PerLinearMeter => item.PricePerLinearMeter,
-                PricingType.PerRange => item.PricePerSquareMeter, // O la lógica que necesites para rangos
-                _ => null
-            };
+            // Retornar el precio final (con descuento si aplica)
+            return item.GetFinalPrice();
         }
 
         // ==================== Operaciones en Lote ====================
@@ -361,7 +370,6 @@ namespace GrupoMad.Services
                         PricePerSquareMeter = sourceItem.PricePerSquareMeter,
                         PricePerUnit = sourceItem.PricePerUnit,
                         PricePerLinearMeter = sourceItem.PricePerLinearMeter,
-                        DiscountedPrice = sourceItem.DiscountedPrice,
                         CreatedAt = DateTime.UtcNow
                     });
                     copied++;

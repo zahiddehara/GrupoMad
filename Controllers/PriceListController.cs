@@ -219,7 +219,7 @@ namespace GrupoMad.Controllers
         // POST: PriceList/AddItem
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> AddItem(int priceListId, int productId, decimal? pricePerSquareMeter, decimal? pricePerUnit, decimal? pricePerLinearMeter, decimal? discountedPrice)
+        public async Task<IActionResult> AddItem(int priceListId, int productId, decimal? pricePerSquareMeter, decimal? pricePerUnit, decimal? pricePerLinearMeter)
         {
             try
             {
@@ -229,8 +229,7 @@ namespace GrupoMad.Controllers
                     ProductId = productId,
                     PricePerSquareMeter = pricePerSquareMeter,
                     PricePerUnit = pricePerUnit,
-                    PricePerLinearMeter = pricePerLinearMeter,
-                    DiscountedPrice = discountedPrice
+                    PricePerLinearMeter = pricePerLinearMeter
                 };
 
                 await _priceListService.AddItemToPriceListAsync(item);
@@ -247,14 +246,13 @@ namespace GrupoMad.Controllers
         // POST: PriceList/UpdateItem
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> UpdateItem(int itemId, int priceListId, decimal? pricePerSquareMeter, decimal? pricePerUnit, decimal? pricePerLinearMeter, decimal? discountedPrice)
+        public async Task<IActionResult> UpdateItem(int itemId, int priceListId, decimal? pricePerSquareMeter, decimal? pricePerUnit, decimal? pricePerLinearMeter)
         {
             var updatedItem = new PriceListItem
             {
                 PricePerSquareMeter = pricePerSquareMeter,
                 PricePerUnit = pricePerUnit,
-                PricePerLinearMeter = pricePerLinearMeter,
-                DiscountedPrice = discountedPrice
+                PricePerLinearMeter = pricePerLinearMeter
             };
 
             var result = await _priceListService.UpdatePriceListItemAsync(itemId, updatedItem);
@@ -382,6 +380,113 @@ namespace GrupoMad.Controllers
             ViewBag.ProductId = productId;
 
             return View(priceListItems);
+        }
+
+        // ==================== Gestión de Descuentos ====================
+
+        // GET: PriceList/ManageDiscounts/5
+        public async Task<IActionResult> ManageDiscounts(int? itemId)
+        {
+            if (itemId == null)
+            {
+                return NotFound();
+            }
+
+            var priceListItem = await _priceListService.GetPriceListItemByIdAsync(itemId.Value);
+            if (priceListItem == null)
+            {
+                return NotFound();
+            }
+
+            return View(priceListItem);
+        }
+
+        // POST: PriceList/AddDiscount
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> AddDiscount(int priceListItemId, decimal discountedPrice, DateTime validFrom, DateTime validUntil, int priority)
+        {
+            try
+            {
+                var discount = new PriceListItemDiscount
+                {
+                    PriceListItemId = priceListItemId,
+                    DiscountedPrice = discountedPrice,
+                    ValidFrom = validFrom,
+                    ValidUntil = validUntil,
+                    Priority = priority,
+                    CreatedAt = DateTime.UtcNow
+                };
+
+                _context.PriceListItemDiscounts.Add(discount);
+                await _context.SaveChangesAsync();
+
+                TempData["Success"] = "Descuento agregado exitosamente.";
+            }
+            catch (Exception ex)
+            {
+                TempData["Error"] = $"Error al agregar descuento: {ex.Message}";
+            }
+
+            return RedirectToAction(nameof(ManageDiscounts), new { itemId = priceListItemId });
+        }
+
+        // POST: PriceList/UpdateDiscount
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> UpdateDiscount(int discountId, int priceListItemId, decimal discountedPrice, DateTime validFrom, DateTime validUntil, int priority)
+        {
+            try
+            {
+                var discount = await _context.PriceListItemDiscounts.FindAsync(discountId);
+                if (discount == null)
+                {
+                    TempData["Error"] = "Descuento no encontrado.";
+                    return RedirectToAction(nameof(ManageDiscounts), new { itemId = priceListItemId });
+                }
+
+                discount.DiscountedPrice = discountedPrice;
+                discount.ValidFrom = validFrom;
+                discount.ValidUntil = validUntil;
+                discount.Priority = priority;
+                discount.UpdatedAt = DateTime.UtcNow;
+
+                await _context.SaveChangesAsync();
+                TempData["Success"] = "Descuento actualizado exitosamente.";
+            }
+            catch (Exception ex)
+            {
+                TempData["Error"] = $"Error al actualizar descuento: {ex.Message}";
+            }
+
+            return RedirectToAction(nameof(ManageDiscounts), new { itemId = priceListItemId });
+        }
+
+        // POST: PriceList/DeleteDiscount
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> DeleteDiscount(int discountId, int priceListItemId)
+        {
+            try
+            {
+                var discount = await _context.PriceListItemDiscounts.FindAsync(discountId);
+                if (discount != null)
+                {
+                    _context.PriceListItemDiscounts.Remove(discount);
+                    await _context.SaveChangesAsync();
+                    TempData["Success"] = "Descuento eliminado exitosamente.";
+                }
+                else
+                {
+                    TempData["Error"] = "Descuento no encontrado.";
+                }
+            }
+            catch (Exception ex)
+            {
+                TempData["Error"] = $"Error al eliminar descuento: {ex.Message}";
+            }
+
+            return RedirectToAction(nameof(ManageDiscounts), new { itemId = priceListItemId });
         }
     }
 }

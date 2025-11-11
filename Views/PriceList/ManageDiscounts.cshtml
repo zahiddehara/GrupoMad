@@ -1,0 +1,269 @@
+@model GrupoMad.Models.PriceListItem
+
+@{
+    ViewData["Title"] = "Gestionar Descuentos";
+}
+
+<h1>Gestionar Descuentos</h1>
+
+<div class="card mb-4">
+    <div class="card-header">
+        <h5>Información del Producto</h5>
+    </div>
+    <div class="card-body">
+        <dl class="row">
+            <dt class="col-sm-3">Producto</dt>
+            <dd class="col-sm-9"><strong>@Model.Product.Name</strong> <code>(@Model.Product.SKU)</code></dd>
+
+            <dt class="col-sm-3">Lista de Precios</dt>
+            <dd class="col-sm-9">@Model.PriceList.Name</dd>
+
+            <dt class="col-sm-3">Precio Base</dt>
+            <dd class="col-sm-9">
+                @{
+                    var basePrice = Model.GetBasePrice();
+                }
+                @if (basePrice.HasValue)
+                {
+                    <strong class="text-primary">@basePrice.Value.ToString("C")</strong>
+                }
+                else
+                {
+                    <span class="text-muted">No definido</span>
+                }
+            </dd>
+
+            <dt class="col-sm-3">Precio Final Actual</dt>
+            <dd class="col-sm-9">
+                @{
+                    var finalPrice = Model.GetFinalPrice();
+                }
+                @if (finalPrice.HasValue)
+                {
+                    <strong class="text-success">@finalPrice.Value.ToString("C")</strong>
+                }
+                else
+                {
+                    <span class="text-muted">No definido</span>
+                }
+            </dd>
+        </dl>
+    </div>
+</div>
+
+@if (TempData["Success"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        @TempData["Success"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+
+@if (TempData["Error"] != null)
+{
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        @TempData["Error"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+
+<hr />
+
+<div class="row">
+    <!-- Descuentos existentes -->
+    <div class="col-md-8">
+        <h3>Descuentos Configurados</h3>
+
+        @if (Model.Discounts != null && Model.Discounts.Any())
+        {
+            <div class="table-responsive">
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>Prioridad</th>
+                            <th>Precio con Descuento</th>
+                            <th>Vigente Desde</th>
+                            <th>Vigente Hasta</th>
+                            <th>Estado</th>
+                            <th>Ahorro</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var discount in Model.Discounts.OrderBy(d => d.Priority))
+                        {
+                            var isActive = discount.ValidFrom <= DateTime.UtcNow && discount.ValidUntil >= DateTime.UtcNow;
+                            var itemBasePrice = Model.GetBasePrice();
+                            var savings = itemBasePrice.HasValue && itemBasePrice.Value > discount.DiscountedPrice
+                                ? itemBasePrice.Value - discount.DiscountedPrice
+                                : 0;
+
+                            <tr class="@(isActive ? "table-success" : "")">
+                                <td>
+                                    <form asp-action="UpdateDiscount" method="post" class="d-inline">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="discountId" value="@discount.Id" />
+                                        <input type="hidden" name="priceListItemId" value="@Model.Id" />
+                                        <input type="hidden" name="discountedPrice" value="@discount.DiscountedPrice" />
+                                        <input type="hidden" name="validFrom" value="@discount.ValidFrom.ToString("yyyy-MM-dd")" />
+                                        <input type="hidden" name="validUntil" value="@discount.ValidUntil.ToString("yyyy-MM-dd")" />
+                                        <div class="input-group input-group-sm" style="width: 100px;">
+                                            <input type="number" name="priority" value="@discount.Priority"
+                                                   class="form-control form-control-sm" min="1" required />
+                                            <button type="submit" class="btn btn-primary btn-sm">💾</button>
+                                        </div>
+                                    </form>
+                                </td>
+                                <td>
+                                    <form asp-action="UpdateDiscount" method="post" class="d-inline">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="discountId" value="@discount.Id" />
+                                        <input type="hidden" name="priceListItemId" value="@Model.Id" />
+                                        <input type="hidden" name="priority" value="@discount.Priority" />
+                                        <input type="hidden" name="validFrom" value="@discount.ValidFrom.ToString("yyyy-MM-dd")" />
+                                        <input type="hidden" name="validUntil" value="@discount.ValidUntil.ToString("yyyy-MM-dd")" />
+                                        <div class="input-group input-group-sm" style="width: 150px;">
+                                            <span class="input-group-text">$</span>
+                                            <input type="number" name="discountedPrice" value="@discount.DiscountedPrice"
+                                                   class="form-control form-control-sm" step="0.01" min="0" required />
+                                            <button type="submit" class="btn btn-primary btn-sm">💾</button>
+                                        </div>
+                                    </form>
+                                </td>
+                                <td>
+                                    <form asp-action="UpdateDiscount" method="post" class="d-inline">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="discountId" value="@discount.Id" />
+                                        <input type="hidden" name="priceListItemId" value="@Model.Id" />
+                                        <input type="hidden" name="priority" value="@discount.Priority" />
+                                        <input type="hidden" name="discountedPrice" value="@discount.DiscountedPrice" />
+                                        <input type="hidden" name="validUntil" value="@discount.ValidUntil.ToString("yyyy-MM-dd")" />
+                                        <div class="input-group input-group-sm" style="width: 180px;">
+                                            <input type="date" name="validFrom" value="@discount.ValidFrom.ToString("yyyy-MM-dd")"
+                                                   class="form-control form-control-sm" required />
+                                            <button type="submit" class="btn btn-primary btn-sm">💾</button>
+                                        </div>
+                                    </form>
+                                </td>
+                                <td>
+                                    <form asp-action="UpdateDiscount" method="post" class="d-inline">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="discountId" value="@discount.Id" />
+                                        <input type="hidden" name="priceListItemId" value="@Model.Id" />
+                                        <input type="hidden" name="priority" value="@discount.Priority" />
+                                        <input type="hidden" name="discountedPrice" value="@discount.DiscountedPrice" />
+                                        <input type="hidden" name="validFrom" value="@discount.ValidFrom.ToString("yyyy-MM-dd")" />
+                                        <div class="input-group input-group-sm" style="width: 180px;">
+                                            <input type="date" name="validUntil" value="@discount.ValidUntil.ToString("yyyy-MM-dd")"
+                                                   class="form-control form-control-sm" required />
+                                            <button type="submit" class="btn btn-primary btn-sm">💾</button>
+                                        </div>
+                                    </form>
+                                </td>
+                                <td>
+                                    @if (isActive)
+                                    {
+                                        <span class="badge bg-success">Activo</span>
+                                    }
+                                    else if (discount.ValidUntil < DateTime.UtcNow)
+                                    {
+                                        <span class="badge bg-secondary">Expirado</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-info">Futuro</span>
+                                    }
+                                </td>
+                                <td>
+                                    @if (savings > 0)
+                                    {
+                                        <span class="badge bg-success">-@savings.ToString("C")</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted">-</span>
+                                    }
+                                </td>
+                                <td>
+                                    <form asp-action="DeleteDiscount" method="post" style="display: inline;">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="discountId" value="@discount.Id" />
+                                        <input type="hidden" name="priceListItemId" value="@Model.Id" />
+                                        <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('¿Eliminar este descuento?');">
+                                            🗑️
+                                        </button>
+                                    </form>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+        else
+        {
+            <div class="alert alert-info">
+                No hay descuentos configurados para este producto.
+            </div>
+        }
+    </div>
+
+    <!-- Agregar nuevo descuento -->
+    <div class="col-md-4">
+        <h3>Agregar Descuento</h3>
+
+        <div class="card">
+            <div class="card-body">
+                <form asp-action="AddDiscount" method="post">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="priceListItemId" value="@Model.Id" />
+
+                    <div class="mb-3">
+                        <label for="discountedPrice" class="form-label">Precio con Descuento</label>
+                        <div class="input-group">
+                            <span class="input-group-text">$</span>
+                            <input type="number" name="discountedPrice" id="discountedPrice"
+                                   class="form-control" step="0.01" min="0" required />
+                        </div>
+                        <small class="form-text text-muted">Precio especial con descuento aplicado</small>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="validFrom" class="form-label">Vigente Desde</label>
+                        <input type="date" name="validFrom" id="validFrom"
+                               class="form-control" value="@DateTime.Now.ToString("yyyy-MM-dd")" required />
+                        <small class="form-text text-muted">Fecha de inicio del descuento</small>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="validUntil" class="form-label">Vigente Hasta</label>
+                        <input type="date" name="validUntil" id="validUntil"
+                               class="form-control" value="@DateTime.Now.AddMonths(1).ToString("yyyy-MM-dd")" required />
+                        <small class="form-text text-muted">Fecha de fin del descuento</small>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="priority" class="form-label">Prioridad</label>
+                        <input type="number" name="priority" id="priority"
+                               class="form-control" value="1" min="1" required />
+                        <small class="form-text text-muted">Menor número = mayor prioridad (1 es la más alta)</small>
+                    </div>
+
+                    <button type="submit" class="btn btn-success w-100">
+                        Agregar Descuento
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <div class="alert alert-info mt-3">
+            <strong>💡 Tip:</strong> Si hay múltiples descuentos vigentes al mismo tiempo, se aplicará el de menor número de prioridad.
+        </div>
+    </div>
+</div>
+
+<hr />
+<div>
+    <a asp-action="ManageItems" asp-route-id="@Model.PriceListId" class="btn btn-secondary">Volver a Gestionar Productos</a>
+    <a asp-action="Details" asp-route-id="@Model.PriceListId" class="btn btn-info">Ver Lista de Precios</a>
+</div>

@@ -51,8 +51,8 @@ else
                             <th>Precio m²</th>
                             <th>Precio Unidad</th>
                             <th>Precio Metro Lineal</th>
-                            <th>Precio c/Descuento</th>
-                            <th>Ahorro</th>
+                            <th>Precio Final</th>
+                            <th>Descuentos Activos</th>
                             <th>Acciones</th>
                         </tr>
                     </thead>
@@ -86,7 +86,6 @@ else
                                         <input type="hidden" name="priceListId" value="@Model.Id" />
                                         <input type="hidden" name="pricePerUnit" value="@item.PricePerUnit" />
                                         <input type="hidden" name="pricePerLinearMeter" value="@item.PricePerLinearMeter" />
-                                        <input type="hidden" name="discountedPrice" value="@item.DiscountedPrice" />
                                         <div class="input-group input-group-sm" style="width: 150px;">
                                             <span class="input-group-text">$</span>
                                             <input type="number" name="pricePerSquareMeter" value="@item.PricePerSquareMeter"
@@ -102,7 +101,6 @@ else
                                         <input type="hidden" name="priceListId" value="@Model.Id" />
                                         <input type="hidden" name="pricePerSquareMeter" value="@item.PricePerSquareMeter" />
                                         <input type="hidden" name="pricePerLinearMeter" value="@item.PricePerLinearMeter" />
-                                        <input type="hidden" name="discountedPrice" value="@item.DiscountedPrice" />
                                         <div class="input-group input-group-sm" style="width: 150px;">
                                             <span class="input-group-text">$</span>
                                             <input type="number" name="pricePerUnit" value="@item.PricePerUnit"
@@ -118,7 +116,6 @@ else
                                         <input type="hidden" name="priceListId" value="@Model.Id" />
                                         <input type="hidden" name="pricePerSquareMeter" value="@item.PricePerSquareMeter" />
                                         <input type="hidden" name="pricePerUnit" value="@item.PricePerUnit" />
-                                        <input type="hidden" name="discountedPrice" value="@item.DiscountedPrice" />
                                         <div class="input-group input-group-sm" style="width: 150px;">
                                             <span class="input-group-text">$</span>
                                             <input type="number" name="pricePerLinearMeter" value="@item.PricePerLinearMeter"
@@ -128,28 +125,12 @@ else
                                     </form>
                                 </td>
                                 <td>
-                                    <form asp-action="UpdateItem" method="post" class="d-inline">
-                                        @Html.AntiForgeryToken()
-                                        <input type="hidden" name="itemId" value="@item.Id" />
-                                        <input type="hidden" name="priceListId" value="@Model.Id" />
-                                        <input type="hidden" name="pricePerSquareMeter" value="@item.PricePerSquareMeter" />
-                                        <input type="hidden" name="pricePerUnit" value="@item.PricePerUnit" />
-                                        <input type="hidden" name="pricePerLinearMeter" value="@item.PricePerLinearMeter" />
-                                        <div class="input-group input-group-sm" style="width: 150px;">
-                                            <span class="input-group-text">$</span>
-                                            <input type="number" name="discountedPrice" value="@item.DiscountedPrice"
-                                                   class="form-control form-control-sm" step="0.01" min="0" />
-                                            <button type="submit" class="btn btn-primary btn-sm">💾</button>
-                                        </div>
-                                    </form>
-                                </td>
-                                <td>
                                     @{
-                                        var discountApplied = item.GetDiscountApplied();
+                                        var finalPrice = item.GetFinalPrice();
                                     }
-                                    @if (discountApplied > 0)
+                                    @if (finalPrice.HasValue)
                                     {
-                                        <span class="badge bg-success">-$@discountApplied.ToString("N2")</span>
+                                        <strong class="text-primary">$@finalPrice.Value.ToString("N2")</strong>
                                     }
                                     else
                                     {
@@ -157,6 +138,26 @@ else
                                     }
                                 </td>
                                 <td>
+                                    @{
+                                        var activeDiscount = item.GetActiveDiscount();
+                                        var discountApplied = item.GetDiscountApplied();
+                                    }
+                                    @if (activeDiscount != null && discountApplied > 0)
+                                    {
+                                        <span class="badge bg-success" title="Descuento vigente hasta @activeDiscount.ValidUntil.ToString("dd/MM/yyyy")">
+                                            -$@discountApplied.ToString("N2")
+                                            <small>(P@(activeDiscount.Priority))</small>
+                                        </span>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted">-</span>
+                                    }
+                                </td>
+                                <td>
+                                    <a asp-action="ManageDiscounts" asp-route-itemId="@item.Id" class="btn btn-sm btn-light" title="Gestionar Descuentos">
+                                        Descuentos
+                                    </a>
                                     <form asp-action="RemoveItem" method="post" style="display: inline;">
                                         @Html.AntiForgeryToken()
                                         <input type="hidden" name="itemId" value="@item.Id" />
@@ -230,18 +231,9 @@ else
                             </div>
                         </div>
 
-                        <div class="mb-3">
-                            <label for="discountedPrice" class="form-label">Precio con Descuento</label>
-                            <div class="input-group">
-                                <span class="input-group-text">$</span>
-                                <input type="number" name="discountedPrice" id="discountedPrice"
-                                       class="form-control" step="0.01" min="0" />
-                            </div>
-                            <small class="form-text text-muted">Opcional: precio especial con descuento (debe ser menor al precio regular)</small>
-                        </div>
-
                         <small class="form-text text-muted mb-3 d-block">
-                            Complete solo los campos de precio necesarios según el tipo de producto
+                            Complete solo los campos de precio necesarios según el tipo de producto.
+                            Los descuentos se gestionan por separado.
                         </small>
 
                         <button type="submit" class="btn btn-success w-100">

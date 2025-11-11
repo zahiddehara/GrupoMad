@@ -77,8 +77,8 @@
                     <th>Precio por m²</th>
                     <th>Precio por Unidad</th>
                     <th>Precio por Metro Lineal</th>
-                    <th>Precio c/Descuento</th>
-                    <th>Ahorro</th>
+                    <th>Precio Final</th>
+                    <th>Descuentos Activos</th>
                     <th>Colores</th>
                 </tr>
             </thead>
@@ -136,9 +136,12 @@
                             }
                         </td>
                         <td>
-                            @if (item.DiscountedPrice.HasValue)
+                            @{
+                                var finalPrice = item.GetFinalPrice();
+                            }
+                            @if (finalPrice.HasValue)
                             {
-                                <strong class="text-success">@item.DiscountedPrice.Value.ToString("C")</strong>
+                                <strong class="text-primary">@finalPrice.Value.ToString("C")</strong>
                             }
                             else
                             {
@@ -147,15 +150,23 @@
                         </td>
                         <td>
                             @{
+                                var activeDiscount = item.GetActiveDiscount();
                                 var discountApplied = item.GetDiscountApplied();
                             }
-                            @if (discountApplied > 0)
+                            @if (activeDiscount != null && discountApplied > 0)
                             {
-                                <span class="badge bg-success">-@discountApplied.ToString("C")</span>
+                                <div>
+                                    <span class="badge bg-success">-@discountApplied.ToString("C")</span>
+                                    <br />
+                                    <small class="text-muted">
+                                        Prioridad @activeDiscount.Priority<br />
+                                        Vigente: @activeDiscount.ValidFrom.ToString("dd/MM/yy") - @activeDiscount.ValidUntil.ToString("dd/MM/yy")
+                                    </small>
+                                </div>
                             }
                             else
                             {
-                                <span class="text-muted">-</span>
+                                <span class="text-muted">Sin descuento</span>
                             }
                         </td>
                         <td>

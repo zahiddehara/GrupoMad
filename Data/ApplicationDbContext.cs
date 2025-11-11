@@ -48,6 +48,7 @@ namespace GrupoMad.Data
         public DbSet<ProductColor> ProductColors { get; set; }
         public DbSet<PriceList> PriceLists { get; set; }
         public DbSet<PriceListItem> PriceListItems { get; set; }
+        public DbSet<PriceListItemDiscount> PriceListItemDiscounts { get; set; }
 
         public DbSet<AccessoryProduct> Accessories { get; set; }
         public DbSet<BlindProduct> Blinds { get; set; }
