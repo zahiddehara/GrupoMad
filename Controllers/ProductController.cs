@@ -47,14 +47,14 @@ namespace GrupoMad.Controllers
         public IActionResult Create()
         {
             ViewData["StoreId"] = new SelectList(_context.Stores, "Id", "Name");
-            ViewData["ProductTypes"] = new SelectList(Enum.GetValues(typeof(ProductType)));
+            ViewData["ProductTypes"] = new SelectList(_context.ProductTypes.Where(pt => pt.IsActive), "Id", "Name");
             return View();
         }
 
         // POST: Product/Create
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("SKU,Name,Description,ProductType,StoreId,IsActive")] ProductCreateViewModel model)
+        public async Task<IActionResult> Create([Bind("SKU,Name,Description,ProductTypeId,StoreId,IsActive")] ProductCreateViewModel model)
         {
             if (ModelState.IsValid)
             {
@@ -63,30 +63,18 @@ namespace GrupoMad.Controllers
                 {
                     ModelState.AddModelError("SKU", "Este SKU ya existe.");
                     ViewData["StoreId"] = new SelectList(_context.Stores, "Id", "Name", model.StoreId);
-                    ViewData["ProductTypes"] = new SelectList(Enum.GetValues(typeof(ProductType)));
+                    ViewData["ProductTypes"] = new SelectList(_context.ProductTypes.Where(pt => pt.IsActive), "Id", "Name", model.ProductTypeId);
                     return View(model);
                 }
 
-                // Crear instancia concreta según el tipo
-                Product product = model.ProductType switch
+                var product = new Product
                 {
-                    ProductType.Accessory => new AccessoryProduct
-                    {
-                        SKU = model.SKU,
-                        Name = model.Name,
-                        Description = model.Description,
-                        StoreId = model.StoreId,
-                        IsActive = model.IsActive
-                    },
-                    ProductType.Blind => new BlindProduct
-                    {
-                        SKU = model.SKU,
-                        Name = model.Name,
-                        Description = model.Description,
-                        StoreId = model.StoreId,
-                        IsActive = model.IsActive
-                    },
-                    _ => throw new ArgumentException("Tipo de producto no válido")
+                    SKU = model.SKU,
+                    Name = model.Name,
+                    Description = model.Description,
+                    ProductTypeId = model.ProductTypeId,
+                    StoreId = model.StoreId,
+                    IsActive = model.IsActive
                 };
 
                 await _productService.CreateProductAsync(product);
@@ -94,7 +82,7 @@ namespace GrupoMad.Controllers
             }
 
             ViewData["StoreId"] = new SelectList(_context.Stores, "Id", "Name", model.StoreId);
-            ViewData["ProductTypes"] = new SelectList(Enum.GetValues(typeof(ProductType)));
+            ViewData["ProductTypes"] = new SelectList(_context.ProductTypes.Where(pt => pt.IsActive), "Id", "Name", model.ProductTypeId);
             return View(model);
         }
 
@@ -118,21 +106,20 @@ namespace GrupoMad.Controllers
                 SKU = product.SKU,
                 Name = product.Name,
                 Description = product.Description,
-                ProductType = product.ProductType,
-                PricingType = product.PricingType,
+                ProductTypeId = product.ProductTypeId,
                 StoreId = product.StoreId,
                 IsActive = product.IsActive
             };
 
             ViewData["StoreId"] = new SelectList(_context.Stores, "Id", "Name", product.StoreId);
-            ViewData["PricingTypes"] = new SelectList(Enum.GetValues(typeof(PricingType)), product.PricingType);
+            ViewData["ProductTypes"] = new SelectList(_context.ProductTypes.Where(pt => pt.IsActive), "Id", "Name", product.ProductTypeId);
             return View(viewModel);
         }
 
         // POST: Product/Edit/5
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("Id,SKU,Name,Description,ProductType,PricingType,StoreId,IsActive")] ProductEditViewModel model)
+        public async Task<IActionResult> Edit(int id, [Bind("Id,SKU,Name,Description,ProductTypeId,StoreId,IsActive")] ProductEditViewModel model)
         {
             if (id != model.Id)
             {
@@ -146,7 +133,7 @@ namespace GrupoMad.Controllers
                 {
                     ModelState.AddModelError("SKU", "Este SKU ya existe.");
                     ViewData["StoreId"] = new SelectList(_context.Stores, "Id", "Name", model.StoreId);
-                    ViewData["PricingTypes"] = new SelectList(Enum.GetValues(typeof(PricingType)), model.PricingType);
+                    ViewData["ProductTypes"] = new SelectList(_context.ProductTypes.Where(pt => pt.IsActive), "Id", "Name", model.ProductTypeId);
                     return View(model);
                 }
 
@@ -161,7 +148,7 @@ namespace GrupoMad.Controllers
                 existingProduct.SKU = model.SKU;
                 existingProduct.Name = model.Name;
                 existingProduct.Description = model.Description;
-                existingProduct.PricingType = model.PricingType;
+                existingProduct.ProductTypeId = model.ProductTypeId;
                 existingProduct.StoreId = model.StoreId;
                 existingProduct.IsActive = model.IsActive;
 
@@ -174,7 +161,7 @@ namespace GrupoMad.Controllers
             }
 
             ViewData["StoreId"] = new SelectList(_context.Stores, "Id", "Name", model.StoreId);
-            ViewData["PricingTypes"] = new SelectList(Enum.GetValues(typeof(PricingType)), model.PricingType);
+            ViewData["ProductTypes"] = new SelectList(_context.ProductTypes.Where(pt => pt.IsActive), "Id", "Name", model.ProductTypeId);
             return View(model);
         }
 
@@ -340,8 +327,7 @@ namespace GrupoMad.Controllers
         public string SKU { get; set; }
         public string Name { get; set; }
         public string? Description { get; set; }
-        public ProductType ProductType { get; set; }
-        public PricingType PricingType { get; set; }
+        public int ProductTypeId { get; set; }
         public int? StoreId { get; set; }
         public bool IsActive { get; set; } = true;
     }
@@ -353,8 +339,7 @@ namespace GrupoMad.Controllers
         public string SKU { get; set; }
         public string Name { get; set; }
         public string? Description { get; set; }
-        public ProductType ProductType { get; set; }
-        public PricingType PricingType { get; set; }
+        public int ProductTypeId { get; set; }
         public int? StoreId { get; set; }
         public bool IsActive { get; set; }
     }

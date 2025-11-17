@@ -23,14 +23,7 @@
                 @{
                     var basePrice = Model.GetBasePrice();
                 }
-                @if (basePrice.HasValue)
-                {
-                    <strong class="text-primary">@basePrice.Value.ToString("C")</strong>
-                }
-                else
-                {
-                    <span class="text-muted">No definido</span>
-                }
+                <strong class="text-primary">@basePrice.ToString("C")</strong>
             </dd>
 
             <dt class="col-sm-3">Precio Final Actual</dt>
@@ -38,14 +31,7 @@
                 @{
                     var finalPrice = Model.GetFinalPrice();
                 }
-                @if (finalPrice.HasValue)
-                {
-                    <strong class="text-success">@finalPrice.Value.ToString("C")</strong>
-                }
-                else
-                {
-                    <span class="text-muted">No definido</span>
-                }
+                <strong class="text-success">@finalPrice.ToString("C")</strong>
             </dd>
         </dl>
     </div>
@@ -94,8 +80,8 @@
                         {
                             var isActive = discount.ValidFrom <= DateTime.UtcNow && discount.ValidUntil >= DateTime.UtcNow;
                             var itemBasePrice = Model.GetBasePrice();
-                            var savings = itemBasePrice.HasValue && itemBasePrice.Value > discount.DiscountedPrice
-                                ? itemBasePrice.Value - discount.DiscountedPrice
+                            var savings = itemBasePrice > discount.DiscountedPrice
+                                ? itemBasePrice - discount.DiscountedPrice
                                 : 0;
 
                             <tr class="@(isActive ? "table-success" : "")">

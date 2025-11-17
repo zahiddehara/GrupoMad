@@ -30,36 +30,35 @@
 
             <dt class="col-sm-3">Tipo de Producto:</dt>
             <dd class="col-sm-9">
-                @switch (product.ProductType)
+                @if (product.ProductType != null)
                 {
-                    case GrupoMad.Models.ProductType.Accessory:
-                        <span class="badge bg-info">Accesorio</span>
-                        break;
-                    case GrupoMad.Models.ProductType.Blind:
-                        <span class="badge bg-success">Persiana</span>
-                        break;
-                    default:
-                        <span class="badge bg-secondary">@product.ProductType</span>
-                        break;
+                    <span class="badge bg-info">@product.ProductType.Name</span>
+                }
+                else
+                {
+                    <span class="badge bg-secondary">Sin tipo</span>
                 }
             </dd>
 
             <dt class="col-sm-3">Tipo de Precio:</dt>
             <dd class="col-sm-9">
-                @switch (product.PricingType)
+                @if (product.ProductType != null)
                 {
-                    case GrupoMad.Models.PricingType.PerSquareMeter:
-                        <span class="badge bg-info">Por Metro Cuadrado (m²)</span>
-                        break;
-                    case GrupoMad.Models.PricingType.PerUnit:
-                        <span class="badge bg-success">Por Unidad</span>
-                        break;
-                    case GrupoMad.Models.PricingType.PerLinearMeter:
-                        <span class="badge bg-warning">Por Metro Lineal</span>
-                        break;
-                    case GrupoMad.Models.PricingType.PerRange:
-                        <span class="badge bg-secondary">Por Rango</span>
-                        break;
+                    @switch (product.ProductType.PricingType)
+                    {
+                        case GrupoMad.Models.PricingType.PerSquareMeter:
+                            <span class="badge bg-info">Por Metro Cuadrado (m²)</span>
+                            break;
+                        case GrupoMad.Models.PricingType.PerUnit:
+                            <span class="badge bg-success">Por Unidad</span>
+                            break;
+                        case GrupoMad.Models.PricingType.PerLinearMeter:
+                            <span class="badge bg-warning">Por Metro Lineal</span>
+                            break;
+                        case GrupoMad.Models.PricingType.PerRange:
+                            <span class="badge bg-secondary">Por Rango</span>
+                            break;
+                    }
                 }
             </dd>
         </dl>
@@ -104,20 +103,23 @@
                         {
                             <h2 class="mb-0">@priceValue.Value.ToString("C")</h2>
                             <small class="text-muted">
-                                @switch (product.PricingType)
+                                @if (product.ProductType != null)
                                 {
-                                    case GrupoMad.Models.PricingType.PerSquareMeter:
-                                        @:por m²
-                                        break;
-                                    case GrupoMad.Models.PricingType.PerUnit:
-                                        @:por unidad
-                                        break;
-                                    case GrupoMad.Models.PricingType.PerLinearMeter:
-                                        @:por metro lineal
-                                        break;
-                                    case GrupoMad.Models.PricingType.PerRange:
-                                        @:por rango
-                                        break;
+                                    @switch (product.ProductType.PricingType)
+                                    {
+                                        case GrupoMad.Models.PricingType.PerSquareMeter:
+                                            @:por m²
+                                            break;
+                                        case GrupoMad.Models.PricingType.PerUnit:
+                                            @:por unidad
+                                            break;
+                                        case GrupoMad.Models.PricingType.PerLinearMeter:
+                                            @:por metro lineal
+                                            break;
+                                        case GrupoMad.Models.PricingType.PerRange:
+                                            @:por rango
+                                            break;
+                                    }
                                 }
                             </small>
                         }
@@ -136,18 +138,21 @@
                 <table class="table table-sm">
                     <thead>
                         <tr>
-                            <th>Precio por m²</th>
-                            <th>Precio por Unidad</th>
-                            <th>Precio por Metro Lineal</th>
+                            <th>Precio Base</th>
+                            <th>Variante</th>
+                            <th>Precio Final</th>
                             <th>Fecha de Creación</th>
                         </tr>
                     </thead>
                     <tbody>
                         <tr>
                             <td>
-                                @if (priceItem.PricePerSquareMeter.HasValue)
+                                <strong>@priceItem.Price.ToString("C")</strong>
+                            </td>
+                            <td>
+                                @if (!string.IsNullOrEmpty(priceItem.Variant))
                                 {
-                                    <strong>@priceItem.PricePerSquareMeter.Value.ToString("C")</strong>
+                                    <span class="badge bg-info">@priceItem.Variant</span>
                                 }
                                 else
                                 {
@@ -155,24 +160,10 @@
                                 }
                             </td>
                             <td>
-                                @if (priceItem.PricePerUnit.HasValue)
-                                {
-                                    <strong>@priceItem.PricePerUnit.Value.ToString("C")</strong>
+                                @{
+                                    var itemFinalPrice = priceItem.GetFinalPrice();
                                 }
-                                else
-                                {
-                                    <span class="text-muted">-</span>
-                                }
-                            </td>
-                            <td>
-                                @if (priceItem.PricePerLinearMeter.HasValue)
-                                {
-                                    <strong>@priceItem.PricePerLinearMeter.Value.ToString("C")</strong>
-                                }
-                                else
-                                {
-                                    <span class="text-muted">-</span>
-                                }
+                                <strong class="text-primary">@itemFinalPrice.ToString("C")</strong>
                             </td>
                             <td>@priceItem.CreatedAt.ToString("dd/MM/yyyy")</td>
                         </tr>

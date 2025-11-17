@@ -20,10 +20,24 @@
         <dd class="col-sm-9">@(Model.Description ?? "Sin descripción")</dd>
 
         <dt class="col-sm-3">Tipo de Producto</dt>
-        <dd class="col-sm-9">@Model.ProductType</dd>
+        <dd class="col-sm-9">
+            @if (Model.ProductType != null)
+            {
+                @Model.ProductType.Name
+            }
+            else
+            {
+                <span class="text-muted">Sin tipo</span>
+            }
+        </dd>
 
         <dt class="col-sm-3">Tipo de Precio</dt>
-        <dd class="col-sm-9">@Model.PricingType</dd>
+        <dd class="col-sm-9">
+            @if (Model.ProductType != null)
+            {
+                @Model.ProductType.PricingType
+            }
+        </dd>
 
         <dt class="col-sm-3">Tienda</dt>
         <dd class="col-sm-9">

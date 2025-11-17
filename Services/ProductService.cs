@@ -19,6 +19,7 @@ namespace GrupoMad.Services
         {
             var query = _context.Products
                 .Include(p => p.Store)
+                .Include(p => p.ProductType)
                 .Include(p => p.ProductColors)
                 .AsQueryable();
 
@@ -34,6 +35,7 @@ namespace GrupoMad.Services
         {
             return await _context.Products
                 .Include(p => p.Store)
+                .Include(p => p.ProductType)
                 .Include(p => p.ProductColors)
                 .FirstOrDefaultAsync(p => p.Id == id);
         }
@@ -42,6 +44,7 @@ namespace GrupoMad.Services
         {
             return await _context.Products
                 .Include(p => p.Store)
+                .Include(p => p.ProductType)
                 .Include(p => p.ProductColors)
                 .FirstOrDefaultAsync(p => p.SKU == sku);
         }
@@ -62,8 +65,7 @@ namespace GrupoMad.Services
             product.SKU = updatedProduct.SKU;
             product.Name = updatedProduct.Name;
             product.Description = updatedProduct.Description;
-            product.ProductType = updatedProduct.ProductType;
-            product.PricingType = updatedProduct.PricingType;
+            product.ProductTypeId = updatedProduct.ProductTypeId;
             product.StoreId = updatedProduct.StoreId;
             product.IsActive = updatedProduct.IsActive;
             product.UpdatedAt = DateTime.UtcNow;
@@ -210,11 +212,12 @@ namespace GrupoMad.Services
 
         // ==================== Búsqueda y Filtrado ====================
 
-        public async Task<List<Product>> GetProductsByTypeAsync(ProductType productType)
+        public async Task<List<Product>> GetProductsByTypeAsync(int productTypeId)
         {
             return await _context.Products
-                .Where(p => p.ProductType == productType && p.IsActive)
+                .Where(p => p.ProductTypeId == productTypeId && p.IsActive)
                 .Include(p => p.Store)
+                .Include(p => p.ProductType)
                 .Include(p => p.ProductColors)
                 .ToListAsync();
         }
@@ -224,6 +227,7 @@ namespace GrupoMad.Services
             return await _context.Products
                 .Where(p => p.ProductColors.Any(pc => pc.Name.Contains(colorName)) && p.IsActive)
                 .Include(p => p.Store)
+                .Include(p => p.ProductType)
                 .Include(p => p.ProductColors)
                 .ToListAsync();
         }
@@ -233,6 +237,7 @@ namespace GrupoMad.Services
             return await _context.Products
                 .Where(p => p.StoreId == storeId && p.IsActive)
                 .Include(p => p.Store)
+                .Include(p => p.ProductType)
                 .Include(p => p.ProductColors)
                 .ToListAsync();
         }
@@ -245,6 +250,7 @@ namespace GrupoMad.Services
                             (p.Description != null && p.Description.Contains(searchTerm))) &&
                             p.IsActive)
                 .Include(p => p.Store)
+                .Include(p => p.ProductType)
                 .Include(p => p.ProductColors)
                 .ToListAsync();
         }
@@ -257,6 +263,7 @@ namespace GrupoMad.Services
             return await _context.Products
                 .Where(p => p.IsActive && (p.StoreId == null || p.StoreId == storeId))
                 .Include(p => p.Store)
+                .Include(p => p.ProductType)
                 .Include(p => p.ProductColors)
                 .OrderBy(p => p.Name)
                 .ToListAsync();
@@ -267,6 +274,7 @@ namespace GrupoMad.Services
         {
             return await _context.Products
                 .Where(p => p.IsActive && p.StoreId == null)
+                .Include(p => p.ProductType)
                 .Include(p => p.ProductColors)
                 .OrderBy(p => p.Name)
                 .ToListAsync();
@@ -278,6 +286,7 @@ namespace GrupoMad.Services
             return await _context.Products
                 .Where(p => p.IsActive && p.StoreId == storeId)
                 .Include(p => p.Store)
+                .Include(p => p.ProductType)
                 .Include(p => p.ProductColors)
                 .OrderBy(p => p.Name)
                 .ToListAsync();

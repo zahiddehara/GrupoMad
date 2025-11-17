@@ -2,17 +2,6 @@ using System.ComponentModel.DataAnnotations;
 
 namespace GrupoMad.Models
 {
-    public enum ProductType
-    {
-        Accessory,
-        // Curtain,
-        // Awning,
-        // CurtainRod,
-        // Panel,
-        // Wave
-        Blind
-    }
-
     public enum PricingType
     {
         PerSquareMeter,
@@ -21,7 +10,28 @@ namespace GrupoMad.Models
         PerLinearMeter
     }
 
-    public abstract class Product
+    public class ProductType
+    {
+        public int Id { get; set; }
+
+        [Required]
+        public string Name { get; set; }
+
+        public string? Description { get; set; }
+
+        [Required]
+        public PricingType PricingType { get; set; }
+
+        public bool IsActive { get; set; } = true;
+
+        public List<Product> Products { get; set; } = new List<Product>();
+
+        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+
+        public DateTime? UpdatedAt { get; set; }
+    }
+
+    public class Product
     {
         public int Id { get; set; }
 
@@ -34,10 +44,9 @@ namespace GrupoMad.Models
         public string? Description { get; set; }
 
         [Required]
-        public ProductType ProductType { get; set; }
+        public int ProductTypeId { get; set; }
 
-        [Required]
-        public PricingType PricingType { get; set; }
+        public ProductType ProductType { get; set; }
 
         public int? StoreId { get; set; }
 
@@ -70,25 +79,5 @@ namespace GrupoMad.Models
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
         public DateTime? UpdatedAt { get; set; }
-
-
-    }
-
-    public class AccessoryProduct : Product
-    {
-        public AccessoryProduct()
-        {
-            ProductType = ProductType.Accessory;
-            PricingType = PricingType.PerUnit;
-        }
-    }
-
-    public class BlindProduct : Product
-    {
-        public BlindProduct()
-        {
-            ProductType = ProductType.Blind;
-            PricingType = PricingType.PerSquareMeter;
-        }
     }
 }

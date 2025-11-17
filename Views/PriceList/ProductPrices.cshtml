@@ -25,9 +25,9 @@
                     <th>Lista de Precios</th>
                     <th>Tienda</th>
                     <th>Estado Lista</th>
-                    <th>Precio por m²</th>
-                    <th>Precio por Unidad</th>
-                    <th>Precio por Metro Lineal</th>
+                    <th>Precio Base</th>
+                    <th>Variante</th>
+                    <th>Precio Final</th>
                     <th>Fecha Creación</th>
                     <th>Acciones</th>
                 </tr>
@@ -60,9 +60,12 @@
                             }
                         </td>
                         <td>
-                            @if (item.PricePerSquareMeter.HasValue)
+                            <strong class="text-success">@item.Price.ToString("C")</strong>
+                        </td>
+                        <td>
+                            @if (!string.IsNullOrEmpty(item.Variant))
                             {
-                                <strong class="text-success">@item.PricePerSquareMeter.Value.ToString("C")</strong>
+                                <span class="badge bg-info">@item.Variant</span>
                             }
                             else
                             {
@@ -70,24 +73,10 @@
                             }
                         </td>
                         <td>
-                            @if (item.PricePerUnit.HasValue)
-                            {
-                                <strong class="text-success">@item.PricePerUnit.Value.ToString("C")</strong>
+                            @{
+                                var finalPrice = item.GetFinalPrice();
                             }
-                            else
-                            {
-                                <span class="text-muted">-</span>
-                            }
-                        </td>
-                        <td>
-                            @if (item.PricePerLinearMeter.HasValue)
-                            {
-                                <strong class="text-success">@item.PricePerLinearMeter.Value.ToString("C")</strong>
-                            }
-                            else
-                            {
-                                <span class="text-muted">-</span>
-                            }
+                            <strong class="text-primary">@finalPrice.ToString("C")</strong>
                         </td>
                         <td>@item.CreatedAt.ToString("dd/MM/yyyy")</td>
                         <td>

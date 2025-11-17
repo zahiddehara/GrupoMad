@@ -22,17 +22,13 @@
 
                     <dt class="col-sm-4">Tipo:</dt>
                     <dd class="col-sm-8">
-                        @switch (product.ProductType)
+                        @if (product.ProductType != null)
                         {
-                            case GrupoMad.Models.ProductType.Accessory:
-                                <span class="badge bg-info">Accesorio</span>
-                                break;
-                            case GrupoMad.Models.ProductType.Blind:
-                                <span class="badge bg-success">Persiana</span>
-                                break;
-                            default:
-                                <span class="badge bg-secondary">@product.ProductType</span>
-                                break;
+                            <span class="badge bg-info">@product.ProductType.Name</span>
+                        }
+                        else
+                        {
+                            <span class="badge bg-secondary">Sin tipo</span>
                         }
                     </dd>
                 </dl>
@@ -41,20 +37,23 @@
                 <dl class="row mb-0">
                     <dt class="col-sm-5">Tipo de Precio:</dt>
                     <dd class="col-sm-7">
-                        @switch (product.PricingType)
+                        @if (product.ProductType != null)
                         {
-                            case GrupoMad.Models.PricingType.PerSquareMeter:
-                                <span class="badge bg-info">Por m²</span>
-                                break;
-                            case GrupoMad.Models.PricingType.PerUnit:
-                                <span class="badge bg-success">Por Unidad</span>
-                                break;
-                            case GrupoMad.Models.PricingType.PerLinearMeter:
-                                <span class="badge bg-warning">Por Metro Lineal</span>
-                                break;
-                            case GrupoMad.Models.PricingType.PerRange:
-                                <span class="badge bg-secondary">Por Rango</span>
-                                break;
+                            @switch (product.ProductType.PricingType)
+                            {
+                                case GrupoMad.Models.PricingType.PerSquareMeter:
+                                    <span class="badge bg-info">Por m²</span>
+                                    break;
+                                case GrupoMad.Models.PricingType.PerUnit:
+                                    <span class="badge bg-success">Por Unidad</span>
+                                    break;
+                                case GrupoMad.Models.PricingType.PerLinearMeter:
+                                    <span class="badge bg-warning">Por Metro Lineal</span>
+                                    break;
+                                case GrupoMad.Models.PricingType.PerRange:
+                                    <span class="badge bg-secondary">Por Rango</span>
+                                    break;
+                            }
                         }
                     </dd>
 
@@ -86,26 +85,15 @@
                         <thead>
                             <tr>
                                 <th>Lista de Precios</th>
-                                <th>Precio por m²</th>
-                                <th>Precio por Unidad</th>
-                                <th>Precio por Metro Lineal</th>
-                                <th class="text-center">Precio Aplicable</th>
+                                <th>Precio Base</th>
+                                <th>Variante</th>
+                                <th class="text-center">Precio Final</th>
                                 <th>Acciones</th>
                             </tr>
                         </thead>
                         <tbody>
                             @foreach (var item in globalPrices)
                             {
-                                // Calcular el precio aplicable según el tipo
-                                var applicablePrice = product.PricingType switch
-                                {
-                                    GrupoMad.Models.PricingType.PerSquareMeter => item.PricePerSquareMeter,
-                                    GrupoMad.Models.PricingType.PerUnit => item.PricePerUnit,
-                                    GrupoMad.Models.PricingType.PerLinearMeter => item.PricePerLinearMeter,
-                                    GrupoMad.Models.PricingType.PerRange => item.PricePerSquareMeter,
-                                    _ => null
-                                };
-
                                 <tr>
                                     <td>
                                         <strong>@item.PriceList.Name</strong>
@@ -113,29 +101,12 @@
                                         <span class="badge bg-primary">Global</span>
                                     </td>
                                     <td>
-                                        @if (item.PricePerSquareMeter.HasValue)
-                                        {
-                                            <span>@item.PricePerSquareMeter.Value.ToString("C")</span>
-                                        }
-                                        else
-                                        {
-                                            <span class="text-muted">-</span>
-                                        }
+                                        <span>@item.Price.ToString("C")</span>
                                     </td>
                                     <td>
-                                        @if (item.PricePerUnit.HasValue)
+                                        @if (!string.IsNullOrEmpty(item.Variant))
                                         {
-                                            <span>@item.PricePerUnit.Value.ToString("C")</span>
-                                        }
-                                        else
-                                        {
-                                            <span class="text-muted">-</span>
-                                        }
-                                    </td>
-                                    <td>
-                                        @if (item.PricePerLinearMeter.HasValue)
-                                        {
-                                            <span>@item.PricePerLinearMeter.Value.ToString("C")</span>
+                                            <span class="badge bg-info">@item.Variant</span>
                                         }
                                         else
                                         {
@@ -143,14 +114,10 @@
                                         }
                                     </td>
                                     <td class="text-center">
-                                        @if (applicablePrice.HasValue)
-                                        {
-                                            <strong class="text-success fs-5">@applicablePrice.Value.ToString("C")</strong>
+                                        @{
+                                            var finalPrice = item.GetFinalPrice();
                                         }
-                                        else
-                                        {
-                                            <span class="text-muted">No definido</span>
-                                        }
+                                        <strong class="text-success fs-5">@finalPrice.ToString("C")</strong>
                                     </td>
                                     <td>
                                         <a asp-controller="PriceList" asp-action="Details" asp-route-id="@item.PriceList.Id" class="btn btn-sm btn-info">
@@ -187,52 +154,24 @@
                             <thead>
                                 <tr>
                                     <th>Lista de Precios</th>
-                                    <th>Precio por m²</th>
-                                    <th>Precio por Unidad</th>
-                                    <th>Precio por Metro Lineal</th>
-                                    <th class="text-center">Precio Aplicable</th>
+                                    <th>Precio Base</th>
+                                    <th>Variante</th>
+                                    <th class="text-center">Precio Final</th>
                                     <th>Acciones</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 @foreach (var item in storeGroup)
                                 {
-                                    // Calcular el precio aplicable según el tipo
-                                    var applicablePrice = product.PricingType switch
-                                    {
-                                        GrupoMad.Models.PricingType.PerSquareMeter => item.PricePerSquareMeter,
-                                        GrupoMad.Models.PricingType.PerUnit => item.PricePerUnit,
-                                        GrupoMad.Models.PricingType.PerLinearMeter => item.PricePerLinearMeter,
-                                        GrupoMad.Models.PricingType.PerRange => item.PricePerSquareMeter,
-                                        _ => null
-                                    };
-
                                     <tr>
                                         <td><strong>@item.PriceList.Name</strong></td>
                                         <td>
-                                            @if (item.PricePerSquareMeter.HasValue)
-                                            {
-                                                <span>@item.PricePerSquareMeter.Value.ToString("C")</span>
-                                            }
-                                            else
-                                            {
-                                                <span class="text-muted">-</span>
-                                            }
+                                            <span>@item.Price.ToString("C")</span>
                                         </td>
                                         <td>
-                                            @if (item.PricePerUnit.HasValue)
+                                            @if (!string.IsNullOrEmpty(item.Variant))
                                             {
-                                                <span>@item.PricePerUnit.Value.ToString("C")</span>
-                                            }
-                                            else
-                                            {
-                                                <span class="text-muted">-</span>
-                                            }
-                                        </td>
-                                        <td>
-                                            @if (item.PricePerLinearMeter.HasValue)
-                                            {
-                                                <span>@item.PricePerLinearMeter.Value.ToString("C")</span>
+                                                <span class="badge bg-info">@item.Variant</span>
                                             }
                                             else
                                             {
@@ -240,14 +179,10 @@
                                             }
                                         </td>
                                         <td class="text-center">
-                                            @if (applicablePrice.HasValue)
-                                            {
-                                                <strong class="text-success fs-5">@applicablePrice.Value.ToString("C")</strong>
+                                            @{
+                                                var finalPrice = item.GetFinalPrice();
                                             }
-                                            else
-                                            {
-                                                <span class="text-muted">No definido</span>
-                                            }
+                                            <strong class="text-success fs-5">@finalPrice.ToString("C")</strong>
                                         </td>
                                         <td>
                                             <a asp-controller="PriceList" asp-action="Details" asp-route-id="@item.PriceList.Id" class="btn btn-sm btn-info">

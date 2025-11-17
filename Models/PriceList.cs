@@ -37,14 +37,15 @@ namespace GrupoMad.Models
 
         public Product? Product { get; set; }
 
+        [Required]
         [Column(TypeName = "decimal(18,2)")]
-        public decimal? PricePerSquareMeter { get; set; }
+        public decimal Price { get; set; }
 
-        [Column(TypeName = "decimal(18,2)")]
-        public decimal? PricePerUnit { get; set; }
-
-        [Column(TypeName = "decimal(18,2)")]
-        public decimal? PricePerLinearMeter { get; set; }
+        /// <summary>
+        /// Variante del producto (ej: "3 vías", "4 vías", "5 vías").
+        /// Null si el producto no tiene variantes.
+        /// </summary>
+        public string? Variant { get; set; }
 
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
@@ -55,26 +56,17 @@ namespace GrupoMad.Models
         // Métodos helper para cálculo de precios
 
         /// <summary>
-        /// Obtiene el precio base según el tipo de pricing del producto
+        /// Obtiene el precio base
         /// </summary>
-        public decimal? GetBasePrice()
+        public decimal GetBasePrice()
         {
-            if (Product == null) return null;
-
-            return Product.PricingType switch
-            {
-                PricingType.PerUnit => PricePerUnit,
-                PricingType.PerSquareMeter => PricePerSquareMeter,
-                PricingType.PerLinearMeter => PricePerLinearMeter,
-                PricingType.PerRange => PricePerSquareMeter, // O la lógica que necesites para rangos
-                _ => null
-            };
+            return Price;
         }
 
         /// <summary>
         /// Obtiene el precio final: busca el descuento vigente de mayor prioridad, si no hay retorna el precio base
         /// </summary>
-        public decimal? GetFinalPrice(DateTime? date = null)
+        public decimal GetFinalPrice(DateTime? date = null)
         {
             var checkDate = date ?? DateTime.UtcNow;
 
@@ -96,10 +88,10 @@ namespace GrupoMad.Models
             var basePrice = GetBasePrice();
             var finalPrice = GetFinalPrice(date);
 
-            // Solo hay descuento si ambos precios existen y el precio final es menor que el base
-            if (basePrice.HasValue && finalPrice.HasValue && finalPrice.Value < basePrice.Value)
+            // Solo hay descuento si el precio final es menor que el base
+            if (finalPrice < basePrice)
             {
-                return basePrice.Value - finalPrice.Value;
+                return basePrice - finalPrice;
             }
 
             return 0;

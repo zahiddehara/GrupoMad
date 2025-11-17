@@ -176,9 +176,8 @@ namespace GrupoMad.Services
             var item = await _context.PriceListItems.FindAsync(id);
             if (item == null) return null;
 
-            item.PricePerSquareMeter = updatedItem.PricePerSquareMeter;
-            item.PricePerUnit = updatedItem.PricePerUnit;
-            item.PricePerLinearMeter = updatedItem.PricePerLinearMeter;
+            item.Price = updatedItem.Price;
+            item.Variant = updatedItem.Variant;
             item.UpdatedAt = DateTime.UtcNow;
 
             await _context.SaveChangesAsync();
@@ -227,15 +226,8 @@ namespace GrupoMad.Services
 
             if (item == null) return null;
 
-            // Retornar el precio según el tipo de producto
-            return item.Product.PricingType switch
-            {
-                PricingType.PerSquareMeter => item.PricePerSquareMeter,
-                PricingType.PerUnit => item.PricePerUnit,
-                PricingType.PerLinearMeter => item.PricePerLinearMeter,
-                PricingType.PerRange => item.PricePerSquareMeter, // O la lógica que necesites para rangos
-                _ => null
-            };
+            // Retornar el precio directamente (ya no depende del tipo)
+            return item.Price;
         }
 
         // Obtener todos los productos con precios en una lista
@@ -314,25 +306,9 @@ namespace GrupoMad.Services
                         {
                             PriceListId = priceListId,
                             ProductId = productId,
+                            Price = basePrice ?? 0,
                             CreatedAt = DateTime.UtcNow
                         };
-
-                        // Asignar precio base según el tipo de producto
-                        if (basePrice.HasValue)
-                        {
-                            switch (product.PricingType)
-                            {
-                                case PricingType.PerSquareMeter:
-                                    item.PricePerSquareMeter = basePrice;
-                                    break;
-                                case PricingType.PerUnit:
-                                    item.PricePerUnit = basePrice;
-                                    break;
-                                case PricingType.PerLinearMeter:
-                                    item.PricePerLinearMeter = basePrice;
-                                    break;
-                            }
-                        }
 
                         _context.PriceListItems.Add(item);
                         added++;
@@ -367,9 +343,8 @@ namespace GrupoMad.Services
                     {
                         PriceListId = toPriceListId,
                         ProductId = sourceItem.ProductId,
-                        PricePerSquareMeter = sourceItem.PricePerSquareMeter,
-                        PricePerUnit = sourceItem.PricePerUnit,
-                        PricePerLinearMeter = sourceItem.PricePerLinearMeter,
+                        Price = sourceItem.Price,
+                        Variant = sourceItem.Variant,
                         CreatedAt = DateTime.UtcNow
                     });
                     copied++;
@@ -394,16 +369,7 @@ namespace GrupoMad.Services
             foreach (var item in items)
             {
                 var multiplier = 1 + (percentage / 100);
-
-                if (item.PricePerSquareMeter.HasValue)
-                    item.PricePerSquareMeter = Math.Round(item.PricePerSquareMeter.Value * multiplier, 2);
-
-                if (item.PricePerUnit.HasValue)
-                    item.PricePerUnit = Math.Round(item.PricePerUnit.Value * multiplier, 2);
-
-                if (item.PricePerLinearMeter.HasValue)
-                    item.PricePerLinearMeter = Math.Round(item.PricePerLinearMeter.Value * multiplier, 2);
-
+                item.Price = Math.Round(item.Price * multiplier, 2);
                 item.UpdatedAt = DateTime.UtcNow;
             }
 

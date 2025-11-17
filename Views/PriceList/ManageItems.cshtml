@@ -48,9 +48,8 @@ else
                             <th>SKU</th>
                             <th>Producto</th>
                             <th>Tipo</th>
-                            <th>Precio m²</th>
-                            <th>Precio Unidad</th>
-                            <th>Precio Metro Lineal</th>
+                            <th>Precio Base</th>
+                            <th>Variante</th>
                             <th>Precio Final</th>
                             <th>Descuentos Activos</th>
                             <th>Acciones</th>
@@ -63,20 +62,23 @@ else
                                 <td><code>@item.Product.SKU</code></td>
                                 <td><strong>@item.Product.Name</strong></td>
                                 <td>
-                                    @switch (item.Product.PricingType)
+                                    @if (item.Product.ProductType != null)
                                     {
-                                        case GrupoMad.Models.PricingType.PerSquareMeter:
-                                            <span class="badge bg-info">m²</span>
-                                            break;
-                                        case GrupoMad.Models.PricingType.PerUnit:
-                                            <span class="badge bg-success">Unidad</span>
-                                            break;
-                                        case GrupoMad.Models.PricingType.PerLinearMeter:
-                                            <span class="badge bg-warning">Metro</span>
-                                            break;
-                                        case GrupoMad.Models.PricingType.PerRange:
-                                            <span class="badge bg-secondary">Rango</span>
-                                            break;
+                                        @switch (item.Product.ProductType.PricingType)
+                                        {
+                                            case GrupoMad.Models.PricingType.PerSquareMeter:
+                                                <span class="badge bg-info">m²</span>
+                                                break;
+                                            case GrupoMad.Models.PricingType.PerUnit:
+                                                <span class="badge bg-success">Unidad</span>
+                                                break;
+                                            case GrupoMad.Models.PricingType.PerLinearMeter:
+                                                <span class="badge bg-warning">Metro</span>
+                                                break;
+                                            case GrupoMad.Models.PricingType.PerRange:
+                                                <span class="badge bg-secondary">Rango</span>
+                                                break;
+                                        }
                                     }
                                 </td>
                                 <td>
@@ -84,12 +86,11 @@ else
                                         @Html.AntiForgeryToken()
                                         <input type="hidden" name="itemId" value="@item.Id" />
                                         <input type="hidden" name="priceListId" value="@Model.Id" />
-                                        <input type="hidden" name="pricePerUnit" value="@item.PricePerUnit" />
-                                        <input type="hidden" name="pricePerLinearMeter" value="@item.PricePerLinearMeter" />
+                                        <input type="hidden" name="variant" value="@item.Variant" />
                                         <div class="input-group input-group-sm" style="width: 150px;">
                                             <span class="input-group-text">$</span>
-                                            <input type="number" name="pricePerSquareMeter" value="@item.PricePerSquareMeter"
-                                                   class="form-control form-control-sm" step="0.01" min="0" />
+                                            <input type="number" name="price" value="@item.Price"
+                                                   class="form-control form-control-sm" step="0.01" min="0" required />
                                             <button type="submit" class="btn btn-primary btn-sm">💾</button>
                                         </div>
                                     </form>
@@ -99,27 +100,10 @@ else
                                         @Html.AntiForgeryToken()
                                         <input type="hidden" name="itemId" value="@item.Id" />
                                         <input type="hidden" name="priceListId" value="@Model.Id" />
-                                        <input type="hidden" name="pricePerSquareMeter" value="@item.PricePerSquareMeter" />
-                                        <input type="hidden" name="pricePerLinearMeter" value="@item.PricePerLinearMeter" />
-                                        <div class="input-group input-group-sm" style="width: 150px;">
-                                            <span class="input-group-text">$</span>
-                                            <input type="number" name="pricePerUnit" value="@item.PricePerUnit"
-                                                   class="form-control form-control-sm" step="0.01" min="0" />
-                                            <button type="submit" class="btn btn-primary btn-sm">💾</button>
-                                        </div>
-                                    </form>
-                                </td>
-                                <td>
-                                    <form asp-action="UpdateItem" method="post" class="d-inline">
-                                        @Html.AntiForgeryToken()
-                                        <input type="hidden" name="itemId" value="@item.Id" />
-                                        <input type="hidden" name="priceListId" value="@Model.Id" />
-                                        <input type="hidden" name="pricePerSquareMeter" value="@item.PricePerSquareMeter" />
-                                        <input type="hidden" name="pricePerUnit" value="@item.PricePerUnit" />
-                                        <div class="input-group input-group-sm" style="width: 150px;">
-                                            <span class="input-group-text">$</span>
-                                            <input type="number" name="pricePerLinearMeter" value="@item.PricePerLinearMeter"
-                                                   class="form-control form-control-sm" step="0.01" min="0" />
+                                        <input type="hidden" name="price" value="@item.Price" />
+                                        <div class="input-group input-group-sm" style="width: 120px;">
+                                            <input type="text" name="variant" value="@item.Variant"
+                                                   class="form-control form-control-sm" placeholder="Opcional" />
                                             <button type="submit" class="btn btn-primary btn-sm">💾</button>
                                         </div>
                                     </form>
@@ -128,14 +112,7 @@ else
                                     @{
                                         var finalPrice = item.GetFinalPrice();
                                     }
-                                    @if (finalPrice.HasValue)
-                                    {
-                                        <strong class="text-primary">$@finalPrice.Value.ToString("N2")</strong>
-                                    }
-                                    else
-                                    {
-                                        <span class="text-muted">-</span>
-                                    }
+                                    <strong class="text-primary">$@finalPrice.ToString("N2")</strong>
                                 </td>
                                 <td>
                                     @{
@@ -205,35 +182,28 @@ else
                         </div>
 
                         <div class="mb-3">
-                            <label for="pricePerSquareMeter" class="form-label">Precio por m²</label>
+                            <label for="price" class="form-label">Precio</label>
                             <div class="input-group">
                                 <span class="input-group-text">$</span>
-                                <input type="number" name="pricePerSquareMeter" id="pricePerSquareMeter"
-                                       class="form-control" step="0.01" min="0" />
+                                <input type="number" name="price" id="price"
+                                       class="form-control" step="0.01" min="0" required />
                             </div>
+                            <small class="form-text text-muted">
+                                Precio base del producto en esta lista
+                            </small>
                         </div>
 
                         <div class="mb-3">
-                            <label for="pricePerUnit" class="form-label">Precio por Unidad</label>
-                            <div class="input-group">
-                                <span class="input-group-text">$</span>
-                                <input type="number" name="pricePerUnit" id="pricePerUnit"
-                                       class="form-control" step="0.01" min="0" />
-                            </div>
-                        </div>
-
-                        <div class="mb-3">
-                            <label for="pricePerLinearMeter" class="form-label">Precio por Metro Lineal</label>
-                            <div class="input-group">
-                                <span class="input-group-text">$</span>
-                                <input type="number" name="pricePerLinearMeter" id="pricePerLinearMeter"
-                                       class="form-control" step="0.01" min="0" />
-                            </div>
+                            <label for="variant" class="form-label">Variante (Opcional)</label>
+                            <input type="text" name="variant" id="variant"
+                                   class="form-control" placeholder="Ej: 3 vías, 4 vías, etc." />
+                            <small class="form-text text-muted">
+                                Solo para productos con variantes
+                            </small>
                         </div>
 
                         <small class="form-text text-muted mb-3 d-block">
-                            Complete solo los campos de precio necesarios según el tipo de producto.
-                            Los descuentos se gestionan por separado.
+                            Los descuentos se gestionan por separado desde el botón "Descuentos".
                         </small>
 
                         <button type="submit" class="btn btn-success w-100">

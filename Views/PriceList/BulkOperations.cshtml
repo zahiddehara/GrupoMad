@@ -132,28 +132,22 @@ else
             </div>
             <div class="card-body">
                 <div class="row">
-                    <div class="col-md-3">
+                    <div class="col-md-4">
                         <div class="text-center">
                             <h3 class="text-primary">@(Model.PriceListItems?.Count ?? 0)</h3>
                             <p class="text-muted">Productos Totales</p>
                         </div>
                     </div>
-                    <div class="col-md-3">
+                    <div class="col-md-4">
                         <div class="text-center">
-                            <h3 class="text-success">@(Model.PriceListItems?.Count(p => p.PricePerSquareMeter.HasValue) ?? 0)</h3>
-                            <p class="text-muted">Con Precio por m²</p>
+                            <h3 class="text-success">@(Model.PriceListItems?.Count(p => p.Price > 0) ?? 0)</h3>
+                            <p class="text-muted">Con Precio Definido</p>
                         </div>
                     </div>
-                    <div class="col-md-3">
+                    <div class="col-md-4">
                         <div class="text-center">
-                            <h3 class="text-warning">@(Model.PriceListItems?.Count(p => p.PricePerUnit.HasValue) ?? 0)</h3>
-                            <p class="text-muted">Con Precio por Unidad</p>
-                        </div>
-                    </div>
-                    <div class="col-md-3">
-                        <div class="text-center">
-                            <h3 class="text-info">@(Model.PriceListItems?.Count(p => p.PricePerLinearMeter.HasValue) ?? 0)</h3>
-                            <p class="text-muted">Con Precio por Metro</p>
+                            <h3 class="text-info">@(Model.PriceListItems?.Count(p => !string.IsNullOrEmpty(p.Variant)) ?? 0)</h3>
+                            <p class="text-muted">Con Variantes</p>
                         </div>
                     </div>
                 </div>

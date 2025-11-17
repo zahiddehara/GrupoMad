@@ -20,36 +20,35 @@
 
         <dt class="col-sm-3">Tipo de Producto</dt>
         <dd class="col-sm-9">
-            @switch (Model.ProductType)
+            @if (Model.ProductType != null)
             {
-                case GrupoMad.Models.ProductType.Accessory:
-                    <span class="badge bg-info">Accesorio</span>
-                    break;
-                case GrupoMad.Models.ProductType.Blind:
-                    <span class="badge bg-success">Persiana</span>
-                    break;
-                default:
-                    <span class="badge bg-secondary">@Model.ProductType</span>
-                    break;
+                <span class="badge bg-info">@Model.ProductType.Name</span>
+            }
+            else
+            {
+                <span class="badge bg-secondary">Sin tipo</span>
             }
         </dd>
 
         <dt class="col-sm-3">Tipo de Precio</dt>
         <dd class="col-sm-9">
-            @switch (Model.PricingType)
+            @if (Model.ProductType != null)
             {
-                case GrupoMad.Models.PricingType.PerSquareMeter:
-                    @:Por Metro Cuadrado (m²)
-                    break;
-                case GrupoMad.Models.PricingType.PerUnit:
-                    @:Por Unidad
-                    break;
-                case GrupoMad.Models.PricingType.PerLinearMeter:
-                    @:Por Metro Lineal
-                    break;
-                case GrupoMad.Models.PricingType.PerRange:
-                    @:Por Rango
-                    break;
+                @switch (Model.ProductType.PricingType)
+                {
+                    case GrupoMad.Models.PricingType.PerSquareMeter:
+                        @:Por Metro Cuadrado (m²)
+                        break;
+                    case GrupoMad.Models.PricingType.PerUnit:
+                        @:Por Unidad
+                        break;
+                    case GrupoMad.Models.PricingType.PerLinearMeter:
+                        @:Por Metro Lineal
+                        break;
+                    case GrupoMad.Models.PricingType.PerRange:
+                        @:Por Rango
+                        break;
+                }
             }
         </dd>
 

@@ -219,7 +219,7 @@ namespace GrupoMad.Controllers
         // POST: PriceList/AddItem
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> AddItem(int priceListId, int productId, decimal? pricePerSquareMeter, decimal? pricePerUnit, decimal? pricePerLinearMeter)
+        public async Task<IActionResult> AddItem(int priceListId, int productId, decimal price, string? variant)
         {
             try
             {
@@ -227,9 +227,8 @@ namespace GrupoMad.Controllers
                 {
                     PriceListId = priceListId,
                     ProductId = productId,
-                    PricePerSquareMeter = pricePerSquareMeter,
-                    PricePerUnit = pricePerUnit,
-                    PricePerLinearMeter = pricePerLinearMeter
+                    Price = price,
+                    Variant = variant
                 };
 
                 await _priceListService.AddItemToPriceListAsync(item);
@@ -246,13 +245,12 @@ namespace GrupoMad.Controllers
         // POST: PriceList/UpdateItem
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> UpdateItem(int itemId, int priceListId, decimal? pricePerSquareMeter, decimal? pricePerUnit, decimal? pricePerLinearMeter)
+        public async Task<IActionResult> UpdateItem(int itemId, int priceListId, decimal price, string? variant)
         {
             var updatedItem = new PriceListItem
             {
-                PricePerSquareMeter = pricePerSquareMeter,
-                PricePerUnit = pricePerUnit,
-                PricePerLinearMeter = pricePerLinearMeter
+                Price = price,
+                Variant = variant
             };
 
             var result = await _priceListService.UpdatePriceListItemAsync(itemId, updatedItem);
