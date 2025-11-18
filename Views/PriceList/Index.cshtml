@@ -14,6 +14,22 @@
     </div>
 }
 
+@if (TempData["Info"] != null)
+{
+    <div class="alert alert-info alert-dismissible fade show" role="alert">
+        @TempData["Info"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+
+@if (TempData["Warning"] != null)
+{
+    <div class="alert alert-warning alert-dismissible fade show" role="alert">
+        @TempData["Warning"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+
 @if (TempData["Error"] != null)
 {
     <div class="alert alert-danger alert-dismissible fade show" role="alert">
@@ -23,16 +39,27 @@
 }
 
 <div class="mb-3">
-    <a asp-action="Create" class="btn btn-primary">Crear Nueva Lista de Precios</a>
-    <a asp-action="Global" class="btn btn-info">Ver Listas Globales</a>
+    <a asp-action="Create" class="btn btn-primary">
+        <i class="bi bi-plus-circle"></i> Crear Nueva Lista de Precios
+    </a>
+    <a asp-action="CreateByProductTypes" class="btn btn-success">
+        <i class="bi bi-grid-3x3-gap"></i> Crear por Tipos de Producto
+    </a>
+    <a asp-action="Global" class="btn btn-info">
+        <i class="bi bi-globe"></i> Ver Listas Globales
+    </a>
 
     @if (ViewBag.IncludeInactive)
     {
-        <a asp-action="Index" asp-route-includeInactive="false" class="btn btn-secondary">Ocultar Inactivas</a>
+        <a asp-action="Index" asp-route-includeInactive="false" class="btn btn-secondary">
+            <i class="bi bi-eye-slash"></i> Ocultar Inactivas
+        </a>
     }
     else
     {
-        <a asp-action="Index" asp-route-includeInactive="true" class="btn btn-secondary">Mostrar Inactivas</a>
+        <a asp-action="Index" asp-route-includeInactive="true" class="btn btn-secondary">
+            <i class="bi bi-eye"></i> Mostrar Inactivas
+        </a>
     }
 </div>
 

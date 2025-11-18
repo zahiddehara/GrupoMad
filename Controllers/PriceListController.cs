@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
+using Microsoft.EntityFrameworkCore;
 using GrupoMad.Services;
 using GrupoMad.Models;
 using GrupoMad.Data;
@@ -485,6 +486,111 @@ namespace GrupoMad.Controllers
             }
 
             return RedirectToAction(nameof(ManageDiscounts), new { itemId = priceListItemId });
+        }
+
+        // ==================== Crear PriceLists por ProductType ====================
+
+        // GET: PriceList/CreateByProductTypes
+        public async Task<IActionResult> CreateByProductTypes()
+        {
+            var productTypes = await _context.ProductTypes
+                .Include(pt => pt.Products.Where(p => p.IsActive))
+                .Where(pt => pt.IsActive)
+                .OrderBy(pt => pt.Name)
+                .ToListAsync();
+
+            // Verificar cuáles ProductTypes ya tienen PriceList
+            var existingPriceLists = await _context.PriceLists
+                .Where(pl => pl.StoreId == null) // Solo listas globales
+                .Select(pl => pl.Name)
+                .ToListAsync();
+
+            ViewBag.ExistingPriceLists = existingPriceLists;
+            return View(productTypes);
+        }
+
+        // POST: PriceList/CreateByProductTypes
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> CreateByProductTypes(decimal defaultPrice = 0)
+        {
+            try
+            {
+                var productTypes = await _context.ProductTypes
+                    .Include(pt => pt.Products.Where(p => p.IsActive))
+                    .Where(pt => pt.IsActive)
+                    .ToListAsync();
+
+                int createdCount = 0;
+                int skippedCount = 0;
+                var createdLists = new List<string>();
+
+                foreach (var productType in productTypes)
+                {
+                    // Nombre de la lista basado en ProductType
+                    string priceListName = $"Lista de {productType.Name}";
+
+                    // Verificar si ya existe una lista con este nombre
+                    if (await _priceListService.IsPriceListNameUniqueAsync(priceListName))
+                    {
+                        // Crear la PriceList
+                        var priceList = new PriceList
+                        {
+                            Name = priceListName,
+                            StoreId = null, // Global
+                            IsActive = true,
+                            CreatedAt = DateTime.UtcNow
+                        };
+
+                        var createdPriceList = await _priceListService.CreatePriceListAsync(priceList);
+
+                        // Agregar todos los productos de este ProductType
+                        int itemsAdded = 0;
+                        foreach (var product in productType.Products)
+                        {
+                            var priceListItem = new PriceListItem
+                            {
+                                PriceListId = createdPriceList.Id,
+                                ProductId = product.Id,
+                                Price = defaultPrice,
+                                CreatedAt = DateTime.UtcNow
+                            };
+
+                            await _priceListService.AddItemToPriceListAsync(priceListItem);
+                            itemsAdded++;
+                        }
+
+                        createdCount++;
+                        createdLists.Add($"{priceListName} ({itemsAdded} productos)");
+                    }
+                    else
+                    {
+                        skippedCount++;
+                    }
+                }
+
+                if (createdCount > 0)
+                {
+                    TempData["Success"] = $"Se crearon {createdCount} lista(s) de precios exitosamente: {string.Join(", ", createdLists)}";
+                }
+
+                if (skippedCount > 0)
+                {
+                    TempData["Info"] = $"Se omitieron {skippedCount} lista(s) porque ya existían con el mismo nombre.";
+                }
+
+                if (createdCount == 0 && skippedCount == 0)
+                {
+                    TempData["Warning"] = "No se encontraron tipos de producto activos para crear listas.";
+                }
+
+                return RedirectToAction(nameof(Index));
+            }
+            catch (Exception ex)
+            {
+                TempData["Error"] = $"Error al crear listas de precios: {ex.Message}";
+                return RedirectToAction(nameof(CreateByProductTypes));
+            }
         }
     }
 }

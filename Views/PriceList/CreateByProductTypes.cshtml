@@ -1,0 +1,176 @@
+@model IEnumerable<GrupoMad.Models.ProductType>
+
+@{
+    ViewData["Title"] = "Crear Listas de Precios por Tipo de Producto";
+    var existingPriceLists = ViewBag.ExistingPriceLists as List<string> ?? new List<string>();
+}
+
+<div class="container mt-4">
+    <h1>@ViewData["Title"]</h1>
+
+    <div class="alert alert-info" role="alert">
+        <h5 class="alert-heading">¿Qué hace esta función?</h5>
+        <p>Esta herramienta creará automáticamente una lista de precios <strong>global</strong> para cada tipo de producto activo.</p>
+        <hr>
+        <ul class="mb-0">
+            <li>Se creará una lista llamada "Lista de [Nombre del Tipo]" por cada tipo de producto</li>
+            <li>Cada lista contendrá automáticamente todos los productos activos de ese tipo</li>
+            <li>Las listas serán globales (no asociadas a ninguna tienda específica)</li>
+            <li>Los precios iniciales se establecerán en el valor que especifiques abajo</li>
+        </ul>
+    </div>
+
+    @if (!Model.Any())
+    {
+        <div class="alert alert-warning">
+            No hay tipos de producto activos para crear listas de precios.
+            <a asp-controller="ProductType" asp-action="Create" class="alert-link">Crear un tipo de producto</a>
+        </div>
+        <a asp-action="Index" class="btn btn-secondary">Volver al Listado</a>
+    }
+    else
+    {
+        <form asp-action="CreateByProductTypes" method="post">
+            @Html.AntiForgeryToken()
+
+            <div class="card mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">Configuración</h5>
+                </div>
+                <div class="card-body">
+                    <div class="form-group mb-3">
+                        <label for="defaultPrice" class="form-label">Precio Inicial por Defecto</label>
+                        <div class="input-group" style="max-width: 300px;">
+                            <span class="input-group-text">$</span>
+                            <input type="number"
+                                   class="form-control"
+                                   id="defaultPrice"
+                                   name="defaultPrice"
+                                   value="0"
+                                   step="0.01"
+                                   min="0" />
+                        </div>
+                        <small class="form-text text-muted">
+                            Este será el precio inicial para todos los productos. Puedes editarlos después individualmente.
+                        </small>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header bg-secondary text-white">
+                    <h5 class="mb-0">Tipos de Producto - Vista Previa</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-striped table-hover">
+                            <thead class="table-dark">
+                                <tr>
+                                    <th>Tipo de Producto</th>
+                                    <th>Productos Activos</th>
+                                    <th>Tipo de Precio</th>
+                                    <th>Lista a Crear</th>
+                                    <th>Estado</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var productType in Model)
+                                {
+                                    var priceListName = $"Lista de {productType.Name}";
+                                    var alreadyExists = existingPriceLists.Contains(priceListName);
+
+                                    <tr class="@(alreadyExists ? "table-warning" : "")">
+                                        <td>
+                                            <strong>@productType.Name</strong>
+                                            @if (!string.IsNullOrEmpty(productType.Description))
+                                            {
+                                                <br />
+                                                <small class="text-muted">@productType.Description</small>
+                                            }
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-primary">@productType.Products.Count</span>
+                                        </td>
+                                        <td>
+                                            @switch (productType.PricingType)
+                                            {
+                                                case GrupoMad.Models.PricingType.PerSquareMeter:
+                                                    <span class="badge bg-info">Por m²</span>
+                                                    break;
+                                                case GrupoMad.Models.PricingType.PerUnit:
+                                                    <span class="badge bg-success">Por Unidad</span>
+                                                    break;
+                                                case GrupoMad.Models.PricingType.PerRange:
+                                                    <span class="badge bg-warning">Por Rango</span>
+                                                    break;
+                                                case GrupoMad.Models.PricingType.PerLinearMeter:
+                                                    <span class="badge bg-primary">Por Metro Lineal</span>
+                                                    break;
+                                            }
+                                        </td>
+                                        <td>
+                                            <code>@priceListName</code>
+                                        </td>
+                                        <td>
+                                            @if (alreadyExists)
+                                            {
+                                                <span class="badge bg-warning">
+                                                    <i class="bi bi-exclamation-triangle"></i> Ya existe
+                                                </span>
+                                            }
+                                            else if (productType.Products.Count == 0)
+                                            {
+                                                <span class="badge bg-secondary">
+                                                    <i class="bi bi-info-circle"></i> Sin productos
+                                                </span>
+                                            }
+                                            else
+                                            {
+                                                <span class="badge bg-success">
+                                                    <i class="bi bi-check-circle"></i> Se creará
+                                                </span>
+                                            }
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mt-4">
+                <button type="submit" class="btn btn-primary btn-lg">
+                    <i class="bi bi-plus-circle"></i> Crear Listas de Precios
+                </button>
+                <a asp-action="Index" class="btn btn-secondary btn-lg">
+                    <i class="bi bi-arrow-left"></i> Cancelar
+                </a>
+            </div>
+
+            <div class="alert alert-warning mt-3">
+                <strong>Nota:</strong> Las listas que ya existen serán omitidas automáticamente.
+                Solo se crearán las que aún no existen.
+            </div>
+        </form>
+    }
+</div>
+
+@section Scripts {
+    <script>
+        // Confirmar antes de crear
+        document.querySelector('form').addEventListener('submit', function(e) {
+            var listsToCreate = document.querySelectorAll('.badge.bg-success').length;
+            if (listsToCreate === 0) {
+                e.preventDefault();
+                alert('No hay listas nuevas para crear. Todas las listas ya existen o los tipos no tienen productos.');
+                return false;
+            }
+
+            if (!confirm(`¿Está seguro de que desea crear ${listsToCreate} lista(s) de precios?`)) {
+                e.preventDefault();
+                return false;
+            }
+        });
+    </script>
+}
