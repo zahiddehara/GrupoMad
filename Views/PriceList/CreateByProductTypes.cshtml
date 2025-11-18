@@ -2,7 +2,7 @@
 
 @{
     ViewData["Title"] = "Crear Listas de Precios por Tipo de Producto";
-    var existingPriceLists = ViewBag.ExistingPriceLists as List<string> ?? new List<string>();
+    var existingProductTypeIds = ViewBag.ExistingProductTypeIds as List<int> ?? new List<int>();
 }
 
 <div class="container mt-4">
@@ -77,7 +77,7 @@
                                 @foreach (var productType in Model)
                                 {
                                     var priceListName = $"Lista de {productType.Name}";
-                                    var alreadyExists = existingPriceLists.Contains(priceListName);
+                                    var alreadyExists = existingProductTypeIds.Contains(productType.Id);
 
                                     <tr class="@(alreadyExists ? "table-warning" : "")">
                                         <td>

@@ -14,6 +14,14 @@ namespace GrupoMad.Models
 
         public Store? Store { get; set; }
 
+        /// <summary>
+        /// Si tiene valor, la lista se vincula a un ProductType y se sincroniza automáticamente.
+        /// null = Lista manual (sin sincronización)
+        /// </summary>
+        public int? ProductTypeId { get; set; }
+
+        public ProductType? ProductType { get; set; }
+
         public bool IsActive { get; set; } = true;
 
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;

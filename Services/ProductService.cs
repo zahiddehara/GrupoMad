@@ -7,10 +7,12 @@ namespace GrupoMad.Services
     public class ProductService
     {
         private readonly ApplicationDbContext _context;
+        private readonly PriceListService _priceListService;
 
-        public ProductService(ApplicationDbContext context)
+        public ProductService(ApplicationDbContext context, PriceListService priceListService)
         {
             _context = context;
+            _priceListService = priceListService;
         }
 
         // ==================== CRUD de Productos ====================
@@ -54,6 +56,13 @@ namespace GrupoMad.Services
             product.CreatedAt = DateTime.UtcNow;
             _context.Products.Add(product);
             await _context.SaveChangesAsync();
+
+            // Sincronizar con listas de precios vinculadas al ProductType
+            if (product.ProductTypeId > 0)
+            {
+                await _priceListService.SyncNewProductToLinkedPriceListsAsync(product.Id);
+            }
+
             return product;
         }
 
@@ -61,6 +70,8 @@ namespace GrupoMad.Services
         {
             var product = await _context.Products.FindAsync(id);
             if (product == null) return null;
+
+            var oldProductTypeId = product.ProductTypeId;
 
             product.SKU = updatedProduct.SKU;
             product.Name = updatedProduct.Name;
@@ -71,6 +82,13 @@ namespace GrupoMad.Services
             product.UpdatedAt = DateTime.UtcNow;
 
             await _context.SaveChangesAsync();
+
+            // Si cambió el ProductType y ahora tiene uno, sincronizar con las nuevas listas
+            if (product.ProductTypeId > 0 && oldProductTypeId != product.ProductTypeId)
+            {
+                await _priceListService.SyncNewProductToLinkedPriceListsAsync(product.Id);
+            }
+
             return product;
         }
 

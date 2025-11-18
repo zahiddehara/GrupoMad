@@ -19,6 +19,7 @@ namespace GrupoMad.Services
         {
             var query = _context.PriceLists
                 .Include(pl => pl.Store)
+                .Include(pl => pl.ProductType)
                 .Include(pl => pl.PriceListItems)
                     .ThenInclude(pli => pli.Product)
                 .Include(pl => pl.PriceListItems)
@@ -37,9 +38,13 @@ namespace GrupoMad.Services
         {
             return await _context.PriceLists
                 .Include(pl => pl.Store)
+                .Include(pl => pl.ProductType)
                 .Include(pl => pl.PriceListItems)
                     .ThenInclude(pli => pli.Product)
                         .ThenInclude(p => p.ProductColors)
+                .Include(pl => pl.PriceListItems)
+                    .ThenInclude(pli => pli.Product)
+                        .ThenInclude(p => p.ProductType)
                 .Include(pl => pl.PriceListItems)
                     .ThenInclude(pli => pli.Discounts)
                 .FirstOrDefaultAsync(pl => pl.Id == id);
@@ -394,6 +399,164 @@ namespace GrupoMad.Services
             }
 
             return !await query.AnyAsync();
+        }
+
+        // ==================== Sincronización de ProductTypes ====================
+
+        /// <summary>
+        /// Sincroniza los productos de un ProductType a una PriceList.
+        /// Agrega productos nuevos del ProductType que no existan en la lista.
+        /// Elimina productos huérfanos (que ya no pertenecen al ProductType).
+        /// </summary>
+        public async Task<int> SyncProductsToPriceListAsync(int priceListId)
+        {
+            var priceList = await _context.PriceLists.FindAsync(priceListId);
+            if (priceList?.ProductTypeId == null) return 0;
+
+            // Productos que DEBERÍAN estar en la lista (activos del ProductType)
+            var validProductIds = await _context.Products
+                .Where(p => p.ProductTypeId == priceList.ProductTypeId && p.IsActive)
+                .Select(p => p.Id)
+                .ToListAsync();
+
+            // 1. ELIMINAR productos huérfanos (que ya no pertenecen al ProductType o están inactivos)
+            var orphanedItems = await _context.PriceListItems
+                .Include(pli => pli.Product)
+                .Where(pli => pli.PriceListId == priceListId
+                           && pli.Variant == null // Solo productos base (no variantes)
+                           && !validProductIds.Contains(pli.ProductId))
+                .ToListAsync();
+
+            if (orphanedItems.Any())
+            {
+                _context.PriceListItems.RemoveRange(orphanedItems);
+            }
+
+            // 2. AGREGAR productos nuevos que faltan
+            int added = 0;
+            foreach (var productId in validProductIds)
+            {
+                var exists = await _context.PriceListItems
+                    .AnyAsync(pli => pli.PriceListId == priceListId
+                                  && pli.ProductId == productId
+                                  && pli.Variant == null);
+
+                if (!exists)
+                {
+                    _context.PriceListItems.Add(new PriceListItem
+                    {
+                        PriceListId = priceListId,
+                        ProductId = productId,
+                        Price = 0,
+                        Variant = null,
+                        CreatedAt = DateTime.UtcNow
+                    });
+                    added++;
+                }
+            }
+
+            if (added > 0 || orphanedItems.Any())
+            {
+                await _context.SaveChangesAsync();
+            }
+
+            return added + orphanedItems.Count; // Total de cambios realizados
+        }
+
+        /// <summary>
+        /// Sincroniza un producto nuevo a todas las listas vinculadas a su ProductType.
+        /// Se llama automáticamente cuando se crea o actualiza un producto.
+        /// </summary>
+        public async Task<int> SyncNewProductToLinkedPriceListsAsync(int productId)
+        {
+            var product = await _context.Products.FindAsync(productId);
+            if (product == null || product.ProductTypeId == 0 || !product.IsActive) return 0;
+
+            // Buscar todas las listas vinculadas a este ProductType
+            var linkedLists = await _context.PriceLists
+                .Where(pl => pl.ProductTypeId == product.ProductTypeId && pl.IsActive)
+                .ToListAsync();
+
+            int added = 0;
+            foreach (var priceList in linkedLists)
+            {
+                // Verificar que no exista ya
+                var exists = await _context.PriceListItems
+                    .AnyAsync(pli => pli.PriceListId == priceList.Id && pli.ProductId == productId && pli.Variant == null);
+
+                if (!exists)
+                {
+                    _context.PriceListItems.Add(new PriceListItem
+                    {
+                        PriceListId = priceList.Id,
+                        ProductId = productId,
+                        Price = 0,
+                        Variant = null,
+                        CreatedAt = DateTime.UtcNow
+                    });
+                    added++;
+                }
+            }
+
+            if (added > 0)
+            {
+                await _context.SaveChangesAsync();
+            }
+
+            return added;
+        }
+
+        /// <summary>
+        /// Obtiene el precio de un producto para una tienda específica.
+        /// Si la tienda no tiene precio definido (o es 0), hereda del precio global.
+        /// </summary>
+        public async Task<decimal?> GetProductPriceForStoreAsync(int productId, int storeId, int productTypeId, string? variant = null)
+        {
+            // 1. Buscar precio específico de la tienda
+            var storePriceList = await _context.PriceLists
+                .FirstOrDefaultAsync(pl => pl.StoreId == storeId
+                                        && pl.ProductTypeId == productTypeId
+                                        && pl.IsActive);
+
+            if (storePriceList != null)
+            {
+                var storePrice = await _context.PriceListItems
+                    .Include(pli => pli.Discounts)
+                    .Where(pli => pli.PriceListId == storePriceList.Id
+                               && pli.ProductId == productId
+                               && pli.Variant == variant)
+                    .FirstOrDefaultAsync();
+
+                // Si tiene precio específico Y no es 0, usarlo
+                if (storePrice != null && storePrice.Price > 0)
+                {
+                    return storePrice.GetFinalPrice(); // Con descuentos si aplica
+                }
+            }
+
+            // 2. Si no tiene precio específico, buscar precio global
+            var globalPriceList = await _context.PriceLists
+                .FirstOrDefaultAsync(pl => pl.StoreId == null
+                                        && pl.ProductTypeId == productTypeId
+                                        && pl.IsActive);
+
+            if (globalPriceList != null)
+            {
+                var globalPrice = await _context.PriceListItems
+                    .Include(pli => pli.Discounts)
+                    .Where(pli => pli.PriceListId == globalPriceList.Id
+                               && pli.ProductId == productId
+                               && pli.Variant == variant)
+                    .FirstOrDefaultAsync();
+
+                if (globalPrice != null && globalPrice.Price > 0)
+                {
+                    return globalPrice.GetFinalPrice();
+                }
+            }
+
+            // 3. No hay precio definido
+            return null;
         }
     }
 }

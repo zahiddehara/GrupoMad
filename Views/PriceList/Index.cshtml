@@ -67,6 +67,7 @@
     <thead>
         <tr>
             <th>Nombre</th>
+            <th>Tipo de Producto</th>
             <th>Tienda</th>
             <th>Items</th>
             <th>Estado</th>
@@ -79,6 +80,20 @@
         {
             <tr>
                 <td><strong>@item.Name</strong></td>
+                <td>
+                    @if (item.ProductType != null)
+                    {
+                        <span class="badge bg-info">
+                            <i class="bi bi-link-45deg"></i> @item.ProductType.Name
+                        </span>
+                    }
+                    else
+                    {
+                        <span class="text-muted">
+                            <i class="bi bi-dash-circle"></i> Manual
+                        </span>
+                    }
+                </td>
                 <td>
                     @if (item.Store != null)
                     {

@@ -338,6 +338,32 @@ namespace GrupoMad.Controllers
             return RedirectToAction(nameof(ManageItems), new { id = priceListId });
         }
 
+        // POST: PriceList/SyncProducts
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> SyncProducts(int priceListId)
+        {
+            try
+            {
+                var changesCount = await _priceListService.SyncProductsToPriceListAsync(priceListId);
+
+                if (changesCount > 0)
+                {
+                    TempData["Success"] = $"Sincronización completada: se realizaron {changesCount} cambio(s) (productos agregados y/o removidos).";
+                }
+                else
+                {
+                    TempData["Info"] = "La lista ya está sincronizada. No se encontraron cambios.";
+                }
+            }
+            catch (Exception ex)
+            {
+                TempData["Error"] = $"Error al sincronizar productos: {ex.Message}";
+            }
+
+            return RedirectToAction(nameof(ManageItems), new { id = priceListId });
+        }
+
         // ==================== Vistas Especializadas ====================
 
         // GET: PriceList/ByStore/5
@@ -499,13 +525,13 @@ namespace GrupoMad.Controllers
                 .OrderBy(pt => pt.Name)
                 .ToListAsync();
 
-            // Verificar cuáles ProductTypes ya tienen PriceList
-            var existingPriceLists = await _context.PriceLists
-                .Where(pl => pl.StoreId == null) // Solo listas globales
-                .Select(pl => pl.Name)
+            // Verificar cuáles ProductTypes ya tienen PriceList vinculada
+            var existingProductTypeIds = await _context.PriceLists
+                .Where(pl => pl.StoreId == null && pl.ProductTypeId != null) // Solo listas globales vinculadas
+                .Select(pl => pl.ProductTypeId.Value)
                 .ToListAsync();
 
-            ViewBag.ExistingPriceLists = existingPriceLists;
+            ViewBag.ExistingProductTypeIds = existingProductTypeIds;
             return View(productTypes);
         }
 
@@ -527,38 +553,29 @@ namespace GrupoMad.Controllers
 
                 foreach (var productType in productTypes)
                 {
-                    // Nombre de la lista basado en ProductType
-                    string priceListName = $"Lista de {productType.Name}";
+                    // Verificar si ya existe una lista vinculada a este ProductType
+                    var existingList = await _context.PriceLists
+                        .FirstOrDefaultAsync(pl => pl.ProductTypeId == productType.Id && pl.StoreId == null);
 
-                    // Verificar si ya existe una lista con este nombre
-                    if (await _priceListService.IsPriceListNameUniqueAsync(priceListName))
+                    if (existingList == null)
                     {
-                        // Crear la PriceList
+                        // Nombre de la lista basado en ProductType
+                        string priceListName = $"Lista de {productType.Name}";
+
+                        // Crear la PriceList vinculada al ProductType
                         var priceList = new PriceList
                         {
                             Name = priceListName,
                             StoreId = null, // Global
+                            ProductTypeId = productType.Id, // 🔥 VINCULACIÓN AL PRODUCTTYPE
                             IsActive = true,
                             CreatedAt = DateTime.UtcNow
                         };
 
                         var createdPriceList = await _priceListService.CreatePriceListAsync(priceList);
 
-                        // Agregar todos los productos de este ProductType
-                        int itemsAdded = 0;
-                        foreach (var product in productType.Products)
-                        {
-                            var priceListItem = new PriceListItem
-                            {
-                                PriceListId = createdPriceList.Id,
-                                ProductId = product.Id,
-                                Price = defaultPrice,
-                                CreatedAt = DateTime.UtcNow
-                            };
-
-                            await _priceListService.AddItemToPriceListAsync(priceListItem);
-                            itemsAdded++;
-                        }
+                        // Sincronizar productos del ProductType
+                        int itemsAdded = await _priceListService.SyncProductsToPriceListAsync(createdPriceList.Id);
 
                         createdCount++;
                         createdLists.Add($"{priceListName} ({itemsAdded} productos)");
