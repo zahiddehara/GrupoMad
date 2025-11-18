@@ -1,0 +1,89 @@
+@model GrupoMad.Controllers.ProductTypeCreateViewModel
+
+@{
+    ViewData["Title"] = "Crear Tipo de Producto";
+}
+
+<div class="container mt-4">
+    <h1>@ViewData["Title"]</h1>
+
+    <hr />
+
+    <div class="row">
+        <div class="col-md-6">
+            <form asp-action="Create">
+                <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+                <div class="form-group mb-3">
+                    <label asp-for="Name" class="control-label">Nombre *</label>
+                    <input asp-for="Name" class="form-control" placeholder="Ej: Pisos, Azulejos, Cerámicas" />
+                    <span asp-validation-for="Name" class="text-danger"></span>
+                </div>
+
+                <div class="form-group mb-3">
+                    <label asp-for="Description" class="control-label">Descripción</label>
+                    <textarea asp-for="Description" class="form-control" rows="3" placeholder="Descripción opcional del tipo de producto"></textarea>
+                    <span asp-validation-for="Description" class="text-danger"></span>
+                </div>
+
+                <div class="form-group mb-3">
+                    <label asp-for="PricingType" class="control-label">Tipo de Precio *</label>
+                    <select asp-for="PricingType" class="form-control">
+                        <option value="">-- Seleccione un tipo de precio --</option>
+                        <option value="@GrupoMad.Models.PricingType.PerSquareMeter">Por Metro Cuadrado (m²)</option>
+                        <option value="@GrupoMad.Models.PricingType.PerUnit">Por Unidad</option>
+                        <option value="@GrupoMad.Models.PricingType.PerRange">Por Rango</option>
+                        <option value="@GrupoMad.Models.PricingType.PerLinearMeter">Por Metro Lineal (m)</option>
+                    </select>
+                    <span asp-validation-for="PricingType" class="text-danger"></span>
+                    <small class="form-text text-muted">
+                        Seleccione cómo se calcula el precio para este tipo de producto
+                    </small>
+                </div>
+
+                <div class="form-check mb-3">
+                    <input asp-for="IsActive" class="form-check-input" type="checkbox" />
+                    <label asp-for="IsActive" class="form-check-label">
+                        Activo
+                    </label>
+                </div>
+
+                <div class="form-group">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-save"></i> Crear
+                    </button>
+                    <a asp-action="Index" class="btn btn-secondary">
+                        <i class="bi bi-arrow-left"></i> Volver al Listado
+                    </a>
+                </div>
+            </form>
+        </div>
+
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5>Información sobre Tipos de Precio</h5>
+                </div>
+                <div class="card-body">
+                    <dl>
+                        <dt>Por Metro Cuadrado (m²)</dt>
+                        <dd>El precio se calcula multiplicando por el área en metros cuadrados. Ideal para pisos, azulejos, alfombras.</dd>
+
+                        <dt>Por Unidad</dt>
+                        <dd>El precio se aplica por cada unidad del producto. Ideal para muebles, accesorios, artículos individuales.</dd>
+
+                        <dt>Por Rango</dt>
+                        <dd>El precio varía según rangos de cantidad o medida. Ideal para productos con descuentos por volumen.</dd>
+
+                        <dt>Por Metro Lineal (m)</dt>
+                        <dd>El precio se calcula por metro lineal. Ideal para molduras, zócalos, cortinas, perfiles.</dd>
+                    </dl>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}

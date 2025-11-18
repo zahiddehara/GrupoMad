@@ -12,7 +12,6 @@
         <form asp-action="Edit">
             <div asp-validation-summary="ModelOnly" class="text-danger"></div>
             <input type="hidden" asp-for="Id" />
-            <input type="hidden" asp-for="ProductTypeId" />
 
             <div class="form-group mb-3">
                 <label asp-for="SKU" class="control-label">SKU</label>
@@ -33,11 +32,11 @@
             </div>
 
             <div class="form-group mb-3">
-                <label class="control-label">Tipo de Producto</label>
-                <select asp-for="ProductTypeId" class="form-control" asp-items="ViewBag.ProductTypes" disabled>
+                <label asp-for="ProductTypeId" class="control-label">Tipo de Producto</label>
+                <select asp-for="ProductTypeId" class="form-control" asp-items="ViewBag.ProductTypes">
                     <option value="">-- Seleccione un tipo --</option>
                 </select>
-                <small class="form-text text-muted">El tipo de producto no se puede cambiar después de crearlo</small>
+                <span asp-validation-for="ProductTypeId" class="text-danger"></span>
             </div>
 
             <div class="form-group mb-3">
