@@ -44,7 +44,7 @@ namespace GrupoMad.Controllers
         // GET: Store/Create
         public IActionResult Create()
         {
-            ViewData["CompanyId"] = new SelectList(_context.Companies, "Id", "Id");
+            ViewData["CompanyId"] = new SelectList(_context.Companies, "Id", "Name");
             return View();
         }
 
@@ -55,13 +55,18 @@ namespace GrupoMad.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create([Bind("Id,Name,CompanyId")] Store store)
         {
+            // Remover errores de validación para propiedades de navegación
+            ModelState.Remove("Products");
+            ModelState.Remove("PriceLists");
+            ModelState.Remove("Company");
+
             if (ModelState.IsValid)
             {
                 _context.Add(store);
                 await _context.SaveChangesAsync();
                 return RedirectToAction(nameof(Index));
             }
-            ViewData["CompanyId"] = new SelectList(_context.Companies, "Id", "Id", store.CompanyId);
+            ViewData["CompanyId"] = new SelectList(_context.Companies, "Id", "Name", store.CompanyId);
             return View(store);
         }
 
@@ -78,7 +83,7 @@ namespace GrupoMad.Controllers
             {
                 return NotFound();
             }
-            ViewData["CompanyId"] = new SelectList(_context.Companies, "Id", "Id", store.CompanyId);
+            ViewData["CompanyId"] = new SelectList(_context.Companies, "Id", "Name", store.CompanyId);
             return View(store);
         }
 
@@ -93,6 +98,11 @@ namespace GrupoMad.Controllers
             {
                 return NotFound();
             }
+
+            // Remover errores de validación para propiedades de navegación
+            ModelState.Remove("Products");
+            ModelState.Remove("PriceLists");
+            ModelState.Remove("Company");
 
             if (ModelState.IsValid)
             {
@@ -114,7 +124,7 @@ namespace GrupoMad.Controllers
                 }
                 return RedirectToAction(nameof(Index));
             }
-            ViewData["CompanyId"] = new SelectList(_context.Companies, "Id", "Id", store.CompanyId);
+            ViewData["CompanyId"] = new SelectList(_context.Companies, "Id", "Name", store.CompanyId);
             return View(store);
         }
 
