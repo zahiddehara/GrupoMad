@@ -70,6 +70,11 @@
                     <span class="badge bg-secondary">@Model.Products.Count</span>
                 </dd>
 
+                <dt class="col-sm-4">Listas de Precios Asociadas:</dt>
+                <dd class="col-sm-8">
+                    <span class="badge bg-warning text-dark">@ViewBag.PriceListCount</span>
+                </dd>
+
                 <dt class="col-sm-4">Fecha de Creación:</dt>
                 <dd class="col-sm-8">@Model.CreatedAt.ToString("dd/MM/yyyy HH:mm")</dd>
             </dl>
@@ -97,6 +102,20 @@
                     {
                         <small class="text-muted">... y @(Model.Products.Count - 5) producto(s) más</small>
                     }
+                </div>
+            }
+            else if (ViewBag.PriceListCount > 0)
+            {
+                <div class="alert alert-warning mt-3" role="alert">
+                    <h5 class="alert-heading">
+                        <i class="bi bi-exclamation-triangle"></i> Advertencia: Eliminación en Cascada
+                    </h5>
+                    <p>Este tipo de producto tiene <strong>@ViewBag.PriceListCount lista(s) de precios</strong> asociada(s).</p>
+                    <hr>
+                    <p class="mb-0">
+                        <strong>Al eliminar este tipo de producto, también se eliminarán todas las listas de precios asociadas,</strong>
+                        incluyendo todos sus items y descuentos. Esta acción no se puede deshacer.
+                    </p>
                 </div>
             }
         </div>

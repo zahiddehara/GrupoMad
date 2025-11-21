@@ -165,6 +165,13 @@ namespace GrupoMad.Controllers
                 return NotFound();
             }
 
+            // Obtener el conteo de PriceLists asociadas
+            var priceListCount = await _context.PriceLists
+                .Where(pl => pl.ProductTypeId == id)
+                .CountAsync();
+
+            ViewBag.PriceListCount = priceListCount;
+
             return View(productType);
         }
 
@@ -189,10 +196,41 @@ namespace GrupoMad.Controllers
                 return RedirectToAction(nameof(Delete), new { id });
             }
 
+            // Obtener las PriceLists asociadas para eliminarlas en cascada
+            var associatedPriceLists = await _context.PriceLists
+                .Include(pl => pl.PriceListItems)
+                    .ThenInclude(pli => pli.Discounts)
+                .Where(pl => pl.ProductTypeId == id)
+                .ToListAsync();
+
+            // Eliminar en cascada: PriceListItemDiscounts -> PriceListItems -> PriceLists
+            foreach (var priceList in associatedPriceLists)
+            {
+                if (priceList.PriceListItems != null)
+                {
+                    foreach (var item in priceList.PriceListItems)
+                    {
+                        if (item.Discounts != null)
+                        {
+                            _context.PriceListItemDiscounts.RemoveRange(item.Discounts);
+                        }
+                    }
+                    _context.PriceListItems.RemoveRange(priceList.PriceListItems);
+                }
+                _context.PriceLists.Remove(priceList);
+            }
+
+            // Eliminar el ProductType
             _context.ProductTypes.Remove(productType);
             await _context.SaveChangesAsync();
 
-            TempData["Success"] = "Tipo de producto eliminado exitosamente.";
+            var message = "Tipo de producto eliminado exitosamente.";
+            if (associatedPriceLists.Any())
+            {
+                message += $" También se eliminaron {associatedPriceLists.Count} lista(s) de precios asociada(s).";
+            }
+
+            TempData["Success"] = message;
             return RedirectToAction(nameof(Index));
         }
 
