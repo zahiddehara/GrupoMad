@@ -21,10 +21,29 @@ namespace GrupoMad.Controllers
         // ==================== CRUD de PriceList ====================
 
         // GET: PriceList
-        public async Task<IActionResult> Index(bool includeInactive = false)
+        public async Task<IActionResult> Index(bool includeInactive = false, string productTypeSearch = null, bool onlyGlobal = false)
         {
             var priceLists = await _priceListService.GetAllPriceListsAsync(includeInactive);
+
+            // Filtrar por ProductType si se especifica un término de búsqueda
+            if (!string.IsNullOrWhiteSpace(productTypeSearch))
+            {
+                priceLists = priceLists.Where(pl =>
+                    pl.ProductType != null &&
+                    pl.ProductType.Name.Contains(productTypeSearch, StringComparison.OrdinalIgnoreCase)
+                ).ToList();
+            }
+
+            // Filtrar solo listas globales (StoreId == null)
+            if (onlyGlobal)
+            {
+                priceLists = priceLists.Where(pl => pl.StoreId == null).ToList();
+            }
+
             ViewBag.IncludeInactive = includeInactive;
+            ViewBag.ProductTypeSearch = productTypeSearch;
+            ViewBag.OnlyGlobal = onlyGlobal;
+
             return View(priceLists);
         }
 
