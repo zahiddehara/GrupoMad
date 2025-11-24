@@ -588,5 +588,117 @@ namespace GrupoMad.Controllers
                 return RedirectToAction(nameof(CreateByProductTypes));
             }
         }
+
+        // ==================== Crear PriceLists por ProductType y Store ====================
+
+        // GET: PriceList/CreateByProductTypesForStores
+        public async Task<IActionResult> CreateByProductTypesForStores()
+        {
+            var productTypes = await _context.ProductTypes
+                .Include(pt => pt.Products.Where(p => p.IsActive))
+                .Where(pt => pt.IsActive)
+                .OrderBy(pt => pt.Name)
+                .ToListAsync();
+
+            var stores = await _context.Stores
+                .OrderBy(s => s.Name)
+                .ToListAsync();
+
+            // Verificar cuáles combinaciones de Store + ProductType ya tienen PriceList
+            var existingCombinations = await _context.PriceLists
+                .Where(pl => pl.StoreId != null && pl.ProductTypeId != null)
+                .Select(pl => new { pl.StoreId, pl.ProductTypeId })
+                .ToListAsync();
+
+            ViewBag.Stores = stores;
+            ViewBag.ExistingCombinations = existingCombinations
+                .Select(ec => (ec.StoreId.Value, ec.ProductTypeId.Value))
+                .ToList();
+
+            return View(productTypes);
+        }
+
+        // POST: PriceList/CreateByProductTypesForStores
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> CreateByProductTypesForStores(decimal defaultPrice = 0)
+        {
+            try
+            {
+                var productTypes = await _context.ProductTypes
+                    .Include(pt => pt.Products.Where(p => p.IsActive))
+                    .Where(pt => pt.IsActive)
+                    .ToListAsync();
+
+                var stores = await _context.Stores
+                    .ToListAsync();
+
+                int createdCount = 0;
+                int skippedCount = 0;
+                var createdLists = new List<string>();
+
+                foreach (var store in stores)
+                {
+                    foreach (var productType in productTypes)
+                    {
+                        // Verificar si ya existe una lista para esta combinación Store + ProductType
+                        var existingList = await _context.PriceLists
+                            .FirstOrDefaultAsync(pl =>
+                                pl.ProductTypeId == productType.Id &&
+                                pl.StoreId == store.Id);
+
+                        if (existingList == null && productType.Products.Count > 0)
+                        {
+                            // Nombre de la lista basado en ProductType y Store
+                            string priceListName = $"Lista de {productType.Name} - {store.Name}";
+
+                            // Crear la PriceList vinculada al ProductType y Store
+                            var priceList = new PriceList
+                            {
+                                Name = priceListName,
+                                StoreId = store.Id,
+                                ProductTypeId = productType.Id,
+                                IsActive = true,
+                                CreatedAt = DateTime.UtcNow
+                            };
+
+                            var createdPriceList = await _priceListService.CreatePriceListAsync(priceList);
+
+                            // Sincronizar productos del ProductType
+                            int itemsAdded = await _priceListService.SyncProductsToPriceListAsync(createdPriceList.Id);
+
+                            createdCount++;
+                            createdLists.Add($"{priceListName} ({itemsAdded} productos)");
+                        }
+                        else
+                        {
+                            skippedCount++;
+                        }
+                    }
+                }
+
+                if (createdCount > 0)
+                {
+                    TempData["Success"] = $"Se crearon {createdCount} lista(s) de precios exitosamente.";
+                }
+
+                if (skippedCount > 0)
+                {
+                    TempData["Info"] = $"Se omitieron {skippedCount} combinación(es) porque ya existían o no tenían productos.";
+                }
+
+                if (createdCount == 0 && skippedCount == 0)
+                {
+                    TempData["Warning"] = "No se encontraron tipos de producto o tiendas activas para crear listas.";
+                }
+
+                return RedirectToAction(nameof(Index));
+            }
+            catch (Exception ex)
+            {
+                TempData["Error"] = $"Error al crear listas de precios: {ex.Message}";
+                return RedirectToAction(nameof(CreateByProductTypesForStores));
+            }
+        }
     }
 }
