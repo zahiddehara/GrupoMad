@@ -21,7 +21,7 @@ namespace GrupoMad.Controllers
         // ==================== CRUD de PriceList ====================
 
         // GET: PriceList
-        public async Task<IActionResult> Index(bool includeInactive = false, string productTypeSearch = null, bool onlyGlobal = false)
+        public async Task<IActionResult> Index(bool includeInactive = false, string productTypeSearch = null, bool onlyGlobal = false, int? storeId = null)
         {
             var priceLists = await _priceListService.GetAllPriceListsAsync(includeInactive);
 
@@ -34,10 +34,32 @@ namespace GrupoMad.Controllers
                 ).ToList();
             }
 
+            // Filtrar por Store si se especifica
+            if (storeId.HasValue)
+            {
+                priceLists = priceLists.Where(pl => pl.StoreId == storeId.Value).ToList();
+            }
+
             // Filtrar solo listas globales (StoreId == null)
             if (onlyGlobal)
             {
                 priceLists = priceLists.Where(pl => pl.StoreId == null).ToList();
+            }
+
+            // Obtener todas las tiendas para el dropdown
+            var stores = await _context.Stores.OrderBy(s => s.Name).ToListAsync();
+            ViewBag.Stores = stores;
+
+            // Si hay un storeId seleccionado, obtener el nombre de la tienda
+            if (storeId.HasValue)
+            {
+                var selectedStore = stores.FirstOrDefault(s => s.Id == storeId.Value);
+                ViewBag.SelectedStoreName = selectedStore?.Name;
+                ViewBag.SelectedStoreId = storeId.Value;
+            }
+            else
+            {
+                ViewBag.SelectedStoreId = (int?)null;
             }
 
             ViewBag.IncludeInactive = includeInactive;

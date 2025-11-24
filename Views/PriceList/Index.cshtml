@@ -66,7 +66,7 @@
 <div class="card mb-3">
     <div class="card-body">
         <form asp-action="Index" method="get" class="row g-3">
-            <div class="col-md-8">
+            <div class="col-md-6">
                 <label for="productTypeSearch" class="form-label">
                     <i class="bi bi-search"></i> Buscar por Tipo de Producto
                 </label>
@@ -77,15 +77,32 @@
                        placeholder="Escribe el nombre del tipo de producto..."
                        value="@ViewBag.ProductTypeSearch">
             </div>
-            <div class="col-md-4 d-flex align-items-end">
+            <div class="col-md-6">
+                <label for="storeId" class="form-label">
+                    <i class="bi bi-shop"></i> Filtrar por Tienda
+                </label>
+                <select name="storeId" id="storeId" class="form-select">
+                    <option value="">Todas las tiendas</option>
+                    @if (ViewBag.Stores != null)
+                    {
+                        int? selectedStoreId = ViewBag.SelectedStoreId as int?;
+                        @foreach (var store in ViewBag.Stores)
+                        {
+                            var isSelected = selectedStoreId.HasValue && selectedStoreId.Value == store.Id;
+                            <option value="@store.Id" selected="@isSelected">
+                                @store.Name
+                            </option>
+                        }
+                    }
+                </select>
+            </div>
+            <div class="col-12 d-flex align-items-center">
                 <button type="submit" class="btn btn-primary me-2">
                     <i class="bi bi-search"></i> Buscar
                 </button>
-                <a asp-action="Index" asp-route-includeInactive="@ViewBag.IncludeInactive" class="btn btn-secondary">
+                <a asp-action="Index" asp-route-includeInactive="@ViewBag.IncludeInactive" class="btn btn-secondary me-3">
                     <i class="bi bi-x-circle"></i> Limpiar
                 </a>
-            </div>
-            <div class="col-12">
                 <div class="form-check">
                     <input class="form-check-input"
                            type="checkbox"
@@ -103,7 +120,12 @@
     </div>
 </div>
 
-@if (!string.IsNullOrWhiteSpace(ViewBag.ProductTypeSearch) || ViewBag.OnlyGlobal)
+@{
+    int? selectedStoreIdForBadges = ViewBag.SelectedStoreId as int?;
+    bool hasStoreFilter = selectedStoreIdForBadges.HasValue;
+}
+
+@if (!string.IsNullOrWhiteSpace(ViewBag.ProductTypeSearch) || ViewBag.OnlyGlobal || hasStoreFilter)
 {
     <div class="mb-3">
         <span class="text-muted me-2">Filtrando por:</span>
@@ -114,6 +136,21 @@
                 <i class="bi bi-tag"></i> @ViewBag.ProductTypeSearch
                 <a asp-action="Index"
                    asp-route-includeInactive="@ViewBag.IncludeInactive"
+                   asp-route-onlyGlobal="@ViewBag.OnlyGlobal"
+                   asp-route-storeId="@selectedStoreIdForBadges"
+                   class="text-white text-decoration-none ms-2">
+                    <i class="bi bi-x-circle"></i>
+                </a>
+            </span>
+        }
+
+        @if (hasStoreFilter && ViewBag.SelectedStoreName != null)
+        {
+            <span class="badge bg-success fs-6 me-2">
+                <i class="bi bi-shop"></i> @ViewBag.SelectedStoreName
+                <a asp-action="Index"
+                   asp-route-includeInactive="@ViewBag.IncludeInactive"
+                   asp-route-productTypeSearch="@ViewBag.ProductTypeSearch"
                    asp-route-onlyGlobal="@ViewBag.OnlyGlobal"
                    class="text-white text-decoration-none ms-2">
                     <i class="bi bi-x-circle"></i>
@@ -128,6 +165,7 @@
                 <a asp-action="Index"
                    asp-route-includeInactive="@ViewBag.IncludeInactive"
                    asp-route-productTypeSearch="@ViewBag.ProductTypeSearch"
+                   asp-route-storeId="@selectedStoreIdForBadges"
                    class="text-white text-decoration-none ms-2">
                     <i class="bi bi-x-circle"></i>
                 </a>
