@@ -159,23 +159,6 @@ namespace GrupoMad.Services
                 .FirstOrDefaultAsync(pli => pli.Id == id);
         }
 
-        public async Task<PriceListItem> AddItemToPriceListAsync(PriceListItem item)
-        {
-            // Verificar que no exista ya el producto en la lista
-            var exists = await _context.PriceListItems
-                .AnyAsync(pli => pli.PriceListId == item.PriceListId && pli.ProductId == item.ProductId);
-
-            if (exists)
-            {
-                throw new InvalidOperationException("El producto ya existe en esta lista de precios.");
-            }
-
-            item.CreatedAt = DateTime.UtcNow;
-            _context.PriceListItems.Add(item);
-            await _context.SaveChangesAsync();
-            return item;
-        }
-
         public async Task<PriceListItem?> UpdatePriceListItemAsync(int id, PriceListItem updatedItem)
         {
             var item = await _context.PriceListItems.FindAsync(id);

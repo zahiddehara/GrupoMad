@@ -2,7 +2,6 @@
 
 @{
     ViewData["Title"] = "Gestionar Productos";
-    var availableProducts = ViewBag.AvailableProducts as SelectList;
 }
 
 <h1>Gestionar Productos - @Model.Name</h1>
@@ -67,192 +66,126 @@ else
 
 <hr />
 
-<div class="row">
-    <!-- Productos en la lista -->
-    <div class="col-md-8">
-        <h3>Productos en la Lista</h3>
+<div>
+    <h3>Productos en la Lista</h3>
 
-        @if (Model.PriceListItems != null && Model.PriceListItems.Any())
-        {
-            <div class="table-responsive">
-                <table class="table table-striped">
-                    <thead>
+    @if (Model.PriceListItems != null && Model.PriceListItems.Any())
+    {
+        <div class="table-responsive">
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>SKU</th>
+                        <th>Producto</th>
+                        <th>Tipo</th>
+                        <th>Precio Base</th>
+                        <th>Variante</th>
+                        <th>Precio Final</th>
+                        <th>Descuentos Activos</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in Model.PriceListItems.OrderBy(p => p.Product.Name))
+                    {
                         <tr>
-                            <th>SKU</th>
-                            <th>Producto</th>
-                            <th>Tipo</th>
-                            <th>Precio Base</th>
-                            <th>Variante</th>
-                            <th>Precio Final</th>
-                            <th>Descuentos Activos</th>
-                            <th>Acciones</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @foreach (var item in Model.PriceListItems.OrderBy(p => p.Product.Name))
-                        {
-                            <tr>
-                                <td><code>@item.Product.SKU</code></td>
-                                <td><strong>@item.Product.Name</strong></td>
-                                <td>
-                                    @if (item.Product.ProductType != null)
-                                    {
-                                        @switch (item.Product.ProductType.PricingType)
-                                        {
-                                            case GrupoMad.Models.PricingType.PerSquareMeter:
-                                                <span class="badge bg-info">m²</span>
-                                                break;
-                                            case GrupoMad.Models.PricingType.PerUnit:
-                                                <span class="badge bg-success">Unidad</span>
-                                                break;
-                                            case GrupoMad.Models.PricingType.PerLinearMeter:
-                                                <span class="badge bg-warning">Metro</span>
-                                                break;
-                                            case GrupoMad.Models.PricingType.PerRange:
-                                                <span class="badge bg-secondary">Rango</span>
-                                                break;
-                                        }
-                                    }
-                                </td>
-                                <td>
-                                    <form asp-action="UpdateItem" method="post" class="d-inline">
-                                        @Html.AntiForgeryToken()
-                                        <input type="hidden" name="itemId" value="@item.Id" />
-                                        <input type="hidden" name="priceListId" value="@Model.Id" />
-                                        <input type="hidden" name="variant" value="@item.Variant" />
-                                        <div class="input-group input-group-sm" style="width: 150px;">
-                                            <span class="input-group-text">$</span>
-                                            <input type="number" name="price" value="@item.Price"
-                                                   class="form-control form-control-sm" step="0.01" min="0" required />
-                                            <button type="submit" class="btn btn-primary btn-sm">💾</button>
-                                        </div>
-                                    </form>
-                                </td>
-                                <td>
-                                    <form asp-action="UpdateItem" method="post" class="d-inline">
-                                        @Html.AntiForgeryToken()
-                                        <input type="hidden" name="itemId" value="@item.Id" />
-                                        <input type="hidden" name="priceListId" value="@Model.Id" />
-                                        <input type="hidden" name="price" value="@item.Price" />
-                                        <div class="input-group input-group-sm" style="width: 120px;">
-                                            <input type="text" name="variant" value="@item.Variant"
-                                                   class="form-control form-control-sm" placeholder="Opcional" />
-                                            <button type="submit" class="btn btn-primary btn-sm">💾</button>
-                                        </div>
-                                    </form>
-                                </td>
-                                <td>
-                                    @{
-                                        var finalPrice = item.GetFinalPrice();
-                                    }
-                                    <strong class="text-primary">$@finalPrice.ToString("N2")</strong>
-                                </td>
-                                <td>
-                                    @{
-                                        var activeDiscount = item.GetActiveDiscount();
-                                        var discountApplied = item.GetDiscountApplied();
-                                    }
-                                    @if (activeDiscount != null && discountApplied > 0)
-                                    {
-                                        <span class="badge bg-success" title="Descuento vigente hasta @activeDiscount.ValidUntil.ToString("dd/MM/yyyy")">
-                                            -$@discountApplied.ToString("N2")
-                                            <small>(P@(activeDiscount.Priority))</small>
-                                        </span>
-                                    }
-                                    else
-                                    {
-                                        <span class="text-muted">-</span>
-                                    }
-                                </td>
-                                <td>
-                                    <a asp-action="ManageDiscounts" asp-route-itemId="@item.Id" class="btn btn-sm btn-light" title="Gestionar Descuentos">
-                                        Descuentos
-                                    </a>
-                                    <form asp-action="RemoveItem" method="post" style="display: inline;">
-                                        @Html.AntiForgeryToken()
-                                        <input type="hidden" name="itemId" value="@item.Id" />
-                                        <input type="hidden" name="priceListId" value="@Model.Id" />
-                                        <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('¿Eliminar este producto?');">
-                                            🗑️
-                                        </button>
-                                    </form>
-                                </td>
-                            </tr>
-                        }
-                    </tbody>
-                </table>
-            </div>
-        }
-        else
-        {
-            <div class="alert alert-info">
-                No hay productos en esta lista.
-            </div>
-        }
-    </div>
-
-    <!-- Agregar producto -->
-    <div class="col-md-4">
-        <h3>Agregar Producto</h3>
-
-        @if (availableProducts != null && availableProducts.Any())
-        {
-            <div class="card">
-                <div class="card-body">
-                    <form asp-action="AddItem" method="post">
-                        @Html.AntiForgeryToken()
-                        <input type="hidden" name="priceListId" value="@Model.Id" />
-
-                        <div class="mb-3">
-                            <label for="productId" class="form-label">Producto</label>
-                            <select name="productId" id="productId" class="form-select" required>
-                                <option value="">-- Seleccione un producto --</option>
-                                @foreach (var item in availableProducts)
+                            <td><code>@item.Product.SKU</code></td>
+                            <td><strong>@item.Product.Name</strong></td>
+                            <td>
+                                @if (item.Product.ProductType != null)
                                 {
-                                    <option value="@item.Value">@item.Text</option>
+                                    @switch (item.Product.ProductType.PricingType)
+                                    {
+                                        case GrupoMad.Models.PricingType.PerSquareMeter:
+                                            <span class="badge bg-info">m²</span>
+                                            break;
+                                        case GrupoMad.Models.PricingType.PerUnit:
+                                            <span class="badge bg-success">Unidad</span>
+                                            break;
+                                        case GrupoMad.Models.PricingType.PerLinearMeter:
+                                            <span class="badge bg-warning">Metro</span>
+                                            break;
+                                        case GrupoMad.Models.PricingType.PerRange:
+                                            <span class="badge bg-secondary">Rango</span>
+                                            break;
+                                    }
                                 }
-                            </select>
-                        </div>
-
-                        <div class="mb-3">
-                            <label for="price" class="form-label">Precio</label>
-                            <div class="input-group">
-                                <span class="input-group-text">$</span>
-                                <input type="number" name="price" id="price"
-                                       class="form-control" step="0.01" min="0" required />
-                            </div>
-                            <small class="form-text text-muted">
-                                Precio base del producto en esta lista
-                            </small>
-                        </div>
-
-                        <div class="mb-3">
-                            <label for="variant" class="form-label">Variante (Opcional)</label>
-                            <input type="text" name="variant" id="variant"
-                                   class="form-control" placeholder="Ej: 3 vías, 4 vías, etc." />
-                            <small class="form-text text-muted">
-                                Solo para productos con variantes
-                            </small>
-                        </div>
-
-                        <small class="form-text text-muted mb-3 d-block">
-                            Los descuentos se gestionan por separado desde el botón "Descuentos".
-                        </small>
-
-                        <button type="submit" class="btn btn-success w-100">
-                            Agregar Producto
-                        </button>
-                    </form>
-                </div>
-            </div>
-        }
-        else
-        {
-            <div class="alert alert-success">
-                Todos los productos disponibles ya están en esta lista.
-            </div>
-        }
-    </div>
+                            </td>
+                            <td>
+                                <form asp-action="UpdateItem" method="post" class="d-inline">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="itemId" value="@item.Id" />
+                                    <input type="hidden" name="priceListId" value="@Model.Id" />
+                                    <input type="hidden" name="variant" value="@item.Variant" />
+                                    <div class="input-group input-group-sm" style="width: 150px;">
+                                        <span class="input-group-text">$</span>
+                                        <input type="number" name="price" value="@item.Price"
+                                               class="form-control form-control-sm" step="0.01" min="0" required />
+                                        <button type="submit" class="btn btn-primary btn-sm">💾</button>
+                                    </div>
+                                </form>
+                            </td>
+                            <td>
+                                <form asp-action="UpdateItem" method="post" class="d-inline">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="itemId" value="@item.Id" />
+                                    <input type="hidden" name="priceListId" value="@Model.Id" />
+                                    <input type="hidden" name="price" value="@item.Price" />
+                                    <div class="input-group input-group-sm" style="width: 120px;">
+                                        <input type="text" name="variant" value="@item.Variant"
+                                               class="form-control form-control-sm" placeholder="Opcional" />
+                                        <button type="submit" class="btn btn-primary btn-sm">💾</button>
+                                    </div>
+                                </form>
+                            </td>
+                            <td>
+                                @{
+                                    var finalPrice = item.GetFinalPrice();
+                                }
+                                <strong class="text-primary">$@finalPrice.ToString("N2")</strong>
+                            </td>
+                            <td>
+                                @{
+                                    var activeDiscount = item.GetActiveDiscount();
+                                    var discountApplied = item.GetDiscountApplied();
+                                }
+                                @if (activeDiscount != null && discountApplied > 0)
+                                {
+                                    <span class="badge bg-success" title="Descuento vigente hasta @activeDiscount.ValidUntil.ToString("dd/MM/yyyy")">
+                                        -$@discountApplied.ToString("N2")
+                                        <small>(P@(activeDiscount.Priority))</small>
+                                    </span>
+                                }
+                                else
+                                {
+                                    <span class="text-muted">-</span>
+                                }
+                            </td>
+                            <td>
+                                <a asp-action="ManageDiscounts" asp-route-itemId="@item.Id" class="btn btn-sm btn-light" title="Gestionar Descuentos">
+                                    Descuentos
+                                </a>
+                                <form asp-action="RemoveItem" method="post" style="display: inline;">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="itemId" value="@item.Id" />
+                                    <input type="hidden" name="priceListId" value="@Model.Id" />
+                                    <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('¿Eliminar este producto?');">
+                                        🗑️
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+    else
+    {
+        <div class="alert alert-info">
+            No hay productos en esta lista.
+        </div>
+    }
 </div>
 
 <hr />

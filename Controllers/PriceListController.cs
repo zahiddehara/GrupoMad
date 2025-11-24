@@ -224,42 +224,9 @@ namespace GrupoMad.Controllers
                 return NotFound();
             }
 
-            // Obtener productos disponibles que no están en la lista
-            var productsInList = priceList.PriceListItems?.Select(pli => pli.ProductId).ToList() ?? new List<int>();
-            var availableProducts = _context.Products
-                .Where(p => p.IsActive && !productsInList.Contains(p.Id))
-                .ToList();
-
-            ViewBag.AvailableProducts = new SelectList(availableProducts, "Id", "Name");
             ViewBag.PricingTypes = Enum.GetValues(typeof(PricingType));
 
             return View(priceList);
-        }
-
-        // POST: PriceList/AddItem
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> AddItem(int priceListId, int productId, decimal price, string? variant)
-        {
-            try
-            {
-                var item = new PriceListItem
-                {
-                    PriceListId = priceListId,
-                    ProductId = productId,
-                    Price = price,
-                    Variant = variant
-                };
-
-                await _priceListService.AddItemToPriceListAsync(item);
-                TempData["Success"] = "Producto agregado exitosamente a la lista de precios.";
-            }
-            catch (InvalidOperationException ex)
-            {
-                TempData["Error"] = ex.Message;
-            }
-
-            return RedirectToAction(nameof(ManageItems), new { id = priceListId });
         }
 
         // POST: PriceList/UpdateItem
