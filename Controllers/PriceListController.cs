@@ -304,6 +304,95 @@ namespace GrupoMad.Controllers
             return RedirectToAction(nameof(BulkOperations), new { id = priceListId });
         }
 
+        // POST: PriceList/ApplyPercentageFromGlobal
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ApplyPercentageFromGlobal(int priceListId, decimal percentage)
+        {
+            try
+            {
+                // Obtener la lista de precios de tienda
+                var storePriceList = await _context.PriceLists
+                    .Include(pl => pl.PriceListItems)
+                        .ThenInclude(pli => pli.Product)
+                    .FirstOrDefaultAsync(pl => pl.Id == priceListId);
+
+                if (storePriceList == null)
+                {
+                    TempData["Error"] = "Lista de precios no encontrada.";
+                    return RedirectToAction(nameof(ManageItems), new { id = priceListId });
+                }
+
+                if (!storePriceList.StoreId.HasValue)
+                {
+                    TempData["Error"] = "Esta función solo está disponible para listas de tienda.";
+                    return RedirectToAction(nameof(ManageItems), new { id = priceListId });
+                }
+
+                if (!storePriceList.ProductTypeId.HasValue)
+                {
+                    TempData["Error"] = "Esta lista no está vinculada a un tipo de producto.";
+                    return RedirectToAction(nameof(ManageItems), new { id = priceListId });
+                }
+
+                // Buscar la lista global correspondiente
+                var globalPriceList = await _context.PriceLists
+                    .Include(pl => pl.PriceListItems)
+                    .FirstOrDefaultAsync(pl =>
+                        pl.ProductTypeId == storePriceList.ProductTypeId &&
+                        pl.StoreId == null);
+
+                if (globalPriceList == null)
+                {
+                    TempData["Error"] = "No se encontró la lista global correspondiente a este tipo de producto.";
+                    return RedirectToAction(nameof(ManageItems), new { id = priceListId });
+                }
+
+                int itemsUpdated = 0;
+                int itemsNotFound = 0;
+
+                // Actualizar cada item de la lista de tienda con el porcentaje aplicado al precio global
+                foreach (var storeItem in storePriceList.PriceListItems)
+                {
+                    // Buscar el precio del mismo producto en la lista global
+                    var globalItem = globalPriceList.PriceListItems
+                        .FirstOrDefault(gi => gi.ProductId == storeItem.ProductId);
+
+                    if (globalItem != null)
+                    {
+                        // Calcular nuevo precio: PrecioGlobal * (1 + Porcentaje/100)
+                        decimal newPrice = globalItem.Price * (1 + (percentage / 100));
+                        storeItem.Price = Math.Round(newPrice, 2);
+                        storeItem.UpdatedAt = DateTime.UtcNow;
+                        itemsUpdated++;
+                    }
+                    else
+                    {
+                        itemsNotFound++;
+                    }
+                }
+
+                await _context.SaveChangesAsync();
+
+                if (itemsUpdated > 0)
+                {
+                    TempData["Success"] = $"Se actualizaron {itemsUpdated} producto(s) aplicando {percentage:+0.##;-0.##}% sobre los precios de la lista global.";
+                }
+
+                if (itemsNotFound > 0)
+                {
+                    TempData["Info"] = $"{itemsNotFound} producto(s) no se encontraron en la lista global y no fueron actualizados.";
+                }
+
+                return RedirectToAction(nameof(ManageItems), new { id = priceListId });
+            }
+            catch (Exception ex)
+            {
+                TempData["Error"] = $"Error al aplicar porcentaje: {ex.Message}";
+                return RedirectToAction(nameof(ManageItems), new { id = priceListId });
+            }
+        }
+
         // POST: PriceList/CopyItems
         [HttpPost]
         [ValidateAntiForgeryToken]

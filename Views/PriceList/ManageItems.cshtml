@@ -64,6 +64,52 @@ else
     </div>
 }
 
+@* Mostrar opción de porcentaje para listas de tienda (no globales) *@
+@if (Model.StoreId.HasValue && Model.ProductTypeId.HasValue)
+{
+    <div class="card mb-3">
+        <div class="card-header bg-warning text-dark">
+            <h5 class="mb-0">
+                <i class="bi bi-percent"></i> Ajustar Precios desde Lista Global
+            </h5>
+        </div>
+        <div class="card-body">
+            <p class="text-muted">
+                Los precios de esta lista se basan en la lista global "<strong>Lista de @Model.ProductType?.Name</strong>".
+                Aplica un porcentaje para ajustar todos los precios automáticamente.
+            </p>
+            <form asp-action="ApplyPercentageFromGlobal" method="post" class="row g-3">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="priceListId" value="@Model.Id" />
+
+                <div class="col-auto">
+                    <label for="percentage" class="form-label">Porcentaje de Ajuste</label>
+                    <div class="input-group">
+                        <input type="number"
+                               class="form-control"
+                               id="percentage"
+                               name="percentage"
+                               step="0.01"
+                               placeholder="Ej: 15 o -10"
+                               required
+                               style="width: 120px;" />
+                        <span class="input-group-text">%</span>
+                    </div>
+                    <small class="form-text text-muted">
+                        Positivo para aumentar, negativo para reducir
+                    </small>
+                </div>
+
+                <div class="col-auto d-flex align-items-end">
+                    <button type="submit" class="btn btn-warning" onclick="return confirm('¿Está seguro de aplicar este porcentaje a TODOS los productos de la lista?');">
+                        <i class="bi bi-calculator"></i> Aplicar Porcentaje
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+}
+
 <hr />
 
 <div>
@@ -112,18 +158,33 @@ else
                                 }
                             </td>
                             <td>
-                                <form asp-action="UpdateItem" method="post" class="d-inline">
-                                    @Html.AntiForgeryToken()
-                                    <input type="hidden" name="itemId" value="@item.Id" />
-                                    <input type="hidden" name="priceListId" value="@Model.Id" />
-                                    <input type="hidden" name="variant" value="@item.Variant" />
+                                @if (Model.StoreId.HasValue)
+                                {
+                                    @* Para listas de tienda: mostrar precio pero no permitir edición directa *@
                                     <div class="input-group input-group-sm" style="width: 150px;">
                                         <span class="input-group-text">$</span>
-                                        <input type="number" name="price" value="@item.Price"
-                                               class="form-control form-control-sm" step="0.01" min="0" required />
-                                        <button type="submit" class="btn btn-primary btn-sm">💾</button>
+                                        <input type="number" value="@item.Price"
+                                               class="form-control form-control-sm" step="0.01" min="0" readonly disabled
+                                               title="Use el ajuste de porcentaje arriba para modificar los precios" />
                                     </div>
-                                </form>
+                                    <small class="text-muted">Desde lista global</small>
+                                }
+                                else
+                                {
+                                    @* Para listas globales: permitir edición directa *@
+                                    <form asp-action="UpdateItem" method="post" class="d-inline">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="itemId" value="@item.Id" />
+                                        <input type="hidden" name="priceListId" value="@Model.Id" />
+                                        <input type="hidden" name="variant" value="@item.Variant" />
+                                        <div class="input-group input-group-sm" style="width: 150px;">
+                                            <span class="input-group-text">$</span>
+                                            <input type="number" name="price" value="@item.Price"
+                                                   class="form-control form-control-sm" step="0.01" min="0" required />
+                                            <button type="submit" class="btn btn-primary btn-sm">💾</button>
+                                        </div>
+                                    </form>
+                                }
                             </td>
                             <td>
                                 <form asp-action="UpdateItem" method="post" class="d-inline">
