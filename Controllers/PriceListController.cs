@@ -369,13 +369,6 @@ namespace GrupoMad.Controllers
             return View(priceLists);
         }
 
-        // GET: PriceList/Global
-        public async Task<IActionResult> Global()
-        {
-            var globalPriceLists = await _priceListService.GetGlobalPriceListsAsync();
-            return View(globalPriceLists);
-        }
-
         // GET: PriceList/ProductPrices/5
         public async Task<IActionResult> ProductPrices(int? productId)
         {

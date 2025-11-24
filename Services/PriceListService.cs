@@ -120,19 +120,6 @@ namespace GrupoMad.Services
                 .ToListAsync();
         }
 
-        // Obtener solo listas de precios globales
-        public async Task<List<PriceList>> GetGlobalPriceListsAsync()
-        {
-            return await _context.PriceLists
-                .Where(pl => pl.IsActive && pl.StoreId == null)
-                .Include(pl => pl.PriceListItems)
-                    .ThenInclude(pli => pli.Product)
-                .Include(pl => pl.PriceListItems)
-                    .ThenInclude(pli => pli.Discounts)
-                .OrderBy(pl => pl.Name)
-                .ToListAsync();
-        }
-
         // Obtener solo listas específicas de una tienda
         public async Task<List<PriceList>> GetStoreSpecificPriceListsAsync(int storeId)
         {
