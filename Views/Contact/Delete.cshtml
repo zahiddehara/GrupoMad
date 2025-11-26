@@ -1,0 +1,90 @@
+@model GrupoMad.Models.Contact
+
+@{
+    ViewData["Title"] = "Eliminar Contacto";
+}
+
+<div class="container">
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a asp-action="Index">Contactos</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">Eliminar</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow border-danger">
+                <div class="card-header bg-danger text-white">
+                    <h4 class="mb-0"><i class="bi bi-exclamation-triangle"></i> Confirmar Eliminación</h4>
+                </div>
+                <div class="card-body p-4">
+                    <div class="alert alert-warning" role="alert">
+                        <i class="bi bi-exclamation-triangle-fill"></i>
+                        <strong>¿Estás seguro de que deseas eliminar este contacto?</strong>
+                        <p class="mb-0 mt-2">Esta acción no se puede deshacer. @if (Model.ShippingAddresses?.Count > 0)
+                        {
+                            <span class="text-danger fw-bold">También se eliminarán @Model.ShippingAddresses.Count dirección(es) de envío asociada(s).</span>
+                        }</p>
+                    </div>
+
+                    <hr>
+
+                    <div class="row mb-3">
+                        <div class="col-md-4 fw-bold">Empresa:</div>
+                        <div class="col-md-8">
+                            <span class="badge bg-info">@Model.Company.Name</span>
+                        </div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-md-4 fw-bold">Nombre Completo:</div>
+                        <div class="col-md-8">@Model.FirstName @Model.LastName</div>
+                    </div>
+
+                    @if (!string.IsNullOrEmpty(Model.RFC))
+                    {
+                        <div class="row mb-3">
+                            <div class="col-md-4 fw-bold">RFC:</div>
+                            <div class="col-md-8">@Model.RFC</div>
+                        </div>
+                    }
+
+                    <div class="row mb-3">
+                        <div class="col-md-4 fw-bold">Dirección:</div>
+                        <div class="col-md-8">
+                            @Model.Street @Model.ExteriorNumber@(Model.InteriorNumber != null ? $" Int. {Model.InteriorNumber}" : "")<br />
+                            @Model.Neighborhood<br />
+                            @Model.City, @Model.StateID.ToString() - C.P. @Model.PostalCode
+                        </div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-md-4 fw-bold">Direcciones de Envío:</div>
+                        <div class="col-md-8">
+                            <span class="badge bg-secondary">@Model.ShippingAddresses.Count</span>
+                        </div>
+                    </div>
+
+                    <hr class="my-4">
+
+                    <form asp-action="Delete">
+                        <input type="hidden" asp-for="Id" />
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-between">
+                            <a asp-action="Index" class="btn btn-outline-secondary btn-lg">
+                                <i class="bi bi-arrow-left"></i> Cancelar
+                            </a>
+                            <button type="submit" class="btn btn-danger btn-lg px-5">
+                                <i class="bi bi-trash"></i> Sí, Eliminar Contacto
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

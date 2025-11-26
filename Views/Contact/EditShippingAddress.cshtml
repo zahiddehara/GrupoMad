@@ -1,0 +1,138 @@
+@model GrupoMad.Models.ShippingAddress
+
+@{
+    ViewData["Title"] = "Editar Dirección de Envío";
+    var contact = ViewBag.Contact as GrupoMad.Models.Contact;
+}
+
+<div class="container">
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a asp-action="Index">Contactos</a></li>
+                    <li class="breadcrumb-item"><a asp-action="Details" asp-route-id="@contact.Id">@contact.FirstName @contact.LastName</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">Editar Dirección de Envío</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+
+    <div class="row justify-content-center">
+        <div class="col-md-10 col-lg-8">
+            <div class="card shadow">
+                <div class="card-header bg-secondary text-white">
+                    <h4 class="mb-0"><i class="bi bi-pencil"></i> Editar Dirección de Envío</h4>
+                    <small>Para: @contact.FirstName @contact.LastName</small>
+                </div>
+                <div class="card-body p-4">
+                    <form asp-action="EditShippingAddress">
+                        @if (!ViewData.ModelState.IsValid)
+                        {
+                            <div asp-validation-summary="All" class="alert alert-danger" role="alert"></div>
+                        }
+
+                        <input type="hidden" asp-for="Id" />
+                        <input type="hidden" asp-for="ContactID" />
+                        <input type="hidden" asp-for="CreatedAt" />
+
+                        <h5 class="mb-3"><i class="bi bi-person-badge"></i> Información del Destinatario</h5>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="FirstName" class="form-label fw-bold">Nombre(s)</label>
+                                <input asp-for="FirstName" class="form-control" placeholder="Nombre" />
+                                <span asp-validation-for="FirstName" class="text-danger small"></span>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="LastName" class="form-label fw-bold">Apellido(s)</label>
+                                <input asp-for="LastName" class="form-control" placeholder="Apellido" />
+                                <span asp-validation-for="LastName" class="text-danger small"></span>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="RFC" class="form-label fw-bold">RFC (Opcional)</label>
+                            <input asp-for="RFC" class="form-control" placeholder="RFC" maxlength="13" />
+                            <span asp-validation-for="RFC" class="text-danger small"></span>
+                        </div>
+
+                        <hr class="my-4">
+                        <h5 class="mb-3"><i class="bi bi-geo-alt"></i> Dirección de Envío</h5>
+
+                        <div class="mb-3">
+                            <label asp-for="Street" class="form-label fw-bold">Calle</label>
+                            <input asp-for="Street" class="form-control" placeholder="Nombre de la calle" />
+                            <span asp-validation-for="Street" class="text-danger small"></span>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="ExteriorNumber" class="form-label fw-bold">Número Exterior</label>
+                                <input asp-for="ExteriorNumber" class="form-control" placeholder="Núm. Ext." />
+                                <span asp-validation-for="ExteriorNumber" class="text-danger small"></span>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="InteriorNumber" class="form-label fw-bold">Número Interior (Opcional)</label>
+                                <input asp-for="InteriorNumber" class="form-control" placeholder="Núm. Int." />
+                                <span asp-validation-for="InteriorNumber" class="text-danger small"></span>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="Neighborhood" class="form-label fw-bold">Colonia</label>
+                            <input asp-for="Neighborhood" class="form-control" placeholder="Colonia o Barrio" />
+                            <span asp-validation-for="Neighborhood" class="text-danger small"></span>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="City" class="form-label fw-bold">Ciudad</label>
+                                <input asp-for="City" class="form-control" placeholder="Ciudad o Municipio" />
+                                <span asp-validation-for="City" class="text-danger small"></span>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="PostalCode" class="form-label fw-bold">Código Postal</label>
+                                <input asp-for="PostalCode" class="form-control" placeholder="C.P." maxlength="10" />
+                                <span asp-validation-for="PostalCode" class="text-danger small"></span>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="StateID" class="form-label fw-bold">Estado</label>
+                            <select asp-for="StateID" class="form-select" asp-items="Html.GetEnumSelectList<GrupoMad.Models.MexicanState>()">
+                                <option value="">-- Selecciona un estado --</option>
+                            </select>
+                            <span asp-validation-for="StateID" class="text-danger small"></span>
+                        </div>
+
+                        <hr class="my-4">
+                        <h5 class="mb-3"><i class="bi bi-card-text"></i> Información Adicional</h5>
+
+                        <div class="mb-3">
+                            <label asp-for="DeliveryReference" class="form-label fw-bold">Referencia de Entrega (Opcional)</label>
+                            <textarea asp-for="DeliveryReference" class="form-control" rows="3" placeholder="Ej: Casa de dos pisos, portón azul, entre calle X y Y"></textarea>
+                            <span asp-validation-for="DeliveryReference" class="text-danger small"></span>
+                            <small class="text-muted">Agrega referencias que ayuden al repartidor a ubicar la dirección.</small>
+                        </div>
+
+                        <hr class="my-4">
+
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-between">
+                            <a asp-action="Details" asp-route-id="@contact.Id" class="btn btn-outline-secondary btn-lg">
+                                <i class="bi bi-arrow-left"></i> Cancelar
+                            </a>
+                            <button type="submit" class="btn btn-secondary btn-lg px-5">
+                                <i class="bi bi-check-circle"></i> Guardar Cambios
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}

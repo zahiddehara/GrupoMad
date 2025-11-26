@@ -1,0 +1,87 @@
+@model GrupoMad.Models.ShippingAddress
+
+@{
+    ViewData["Title"] = "Eliminar Dirección de Envío";
+}
+
+<div class="container">
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a asp-action="Index">Contactos</a></li>
+                    <li class="breadcrumb-item"><a asp-action="Details" asp-route-id="@Model.Contact.Id">@Model.Contact.FirstName @Model.Contact.LastName</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">Eliminar Dirección</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow border-danger">
+                <div class="card-header bg-danger text-white">
+                    <h4 class="mb-0"><i class="bi bi-exclamation-triangle"></i> Confirmar Eliminación</h4>
+                </div>
+                <div class="card-body p-4">
+                    <div class="alert alert-warning" role="alert">
+                        <i class="bi bi-exclamation-triangle-fill"></i>
+                        <strong>¿Estás seguro de que deseas eliminar esta dirección de envío?</strong>
+                        <p class="mb-0 mt-2">Esta acción no se puede deshacer.</p>
+                    </div>
+
+                    <hr>
+
+                    <div class="row mb-3">
+                        <div class="col-md-4 fw-bold">Contacto:</div>
+                        <div class="col-md-8">@Model.Contact.FirstName @Model.Contact.LastName</div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-md-4 fw-bold">Destinatario:</div>
+                        <div class="col-md-8">@Model.FirstName @Model.LastName</div>
+                    </div>
+
+                    @if (!string.IsNullOrEmpty(Model.RFC))
+                    {
+                        <div class="row mb-3">
+                            <div class="col-md-4 fw-bold">RFC:</div>
+                            <div class="col-md-8">@Model.RFC</div>
+                        </div>
+                    }
+
+                    <div class="row mb-3">
+                        <div class="col-md-4 fw-bold">Dirección:</div>
+                        <div class="col-md-8">
+                            @Model.Street @Model.ExteriorNumber@(Model.InteriorNumber != null ? $" Int. {Model.InteriorNumber}" : "")<br />
+                            @Model.Neighborhood<br />
+                            @Model.City, @Model.StateID.ToString() - C.P. @Model.PostalCode
+                        </div>
+                    </div>
+
+                    @if (!string.IsNullOrEmpty(Model.DeliveryReference))
+                    {
+                        <div class="row mb-3">
+                            <div class="col-md-4 fw-bold">Referencia:</div>
+                            <div class="col-md-8">@Model.DeliveryReference</div>
+                        </div>
+                    }
+
+                    <hr class="my-4">
+
+                    <form asp-action="DeleteShippingAddress">
+                        <input type="hidden" asp-for="Id" />
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-between">
+                            <a asp-action="Details" asp-route-id="@Model.Contact.Id" class="btn btn-outline-secondary btn-lg">
+                                <i class="bi bi-arrow-left"></i> Cancelar
+                            </a>
+                            <button type="submit" class="btn btn-danger btn-lg px-5">
+                                <i class="bi bi-trash"></i> Sí, Eliminar Dirección
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

@@ -3,6 +3,7 @@ using System;
 using GrupoMad.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -10,9 +11,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace GrupoMad.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251126230141_AddContactAndShippingAddressModels")]
+    partial class AddContactAndShippingAddressModels
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "9.0.10");
@@ -59,9 +62,6 @@ namespace GrupoMad.Migrations
                         .IsRequired()
                         .HasMaxLength(100)
                         .HasColumnType("TEXT");
-
-                    b.Property<int>("CompanyId")
-                        .HasColumnType("INTEGER");
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("TEXT");
@@ -111,8 +111,6 @@ namespace GrupoMad.Migrations
                         .HasColumnType("TEXT");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("CompanyId");
 
                     b.ToTable("Contacts");
                 });
@@ -443,17 +441,6 @@ namespace GrupoMad.Migrations
                         });
                 });
 
-            modelBuilder.Entity("GrupoMad.Models.Contact", b =>
-                {
-                    b.HasOne("GrupoMad.Models.Company", "Company")
-                        .WithMany("Contacts")
-                        .HasForeignKey("CompanyId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.Navigation("Company");
-                });
-
             modelBuilder.Entity("GrupoMad.Models.PriceList", b =>
                 {
                     b.HasOne("GrupoMad.Models.ProductType", "ProductType")
@@ -549,8 +536,6 @@ namespace GrupoMad.Migrations
 
             modelBuilder.Entity("GrupoMad.Models.Company", b =>
                 {
-                    b.Navigation("Contacts");
-
                     b.Navigation("Stores");
                 });
 

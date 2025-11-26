@@ -26,6 +26,20 @@ namespace GrupoMad.Data
                 .HasForeignKey(p => p.ProductTypeId)
                 .OnDelete(DeleteBehavior.Restrict);
 
+            // Configurar relación ShippingAddress - Contact
+            modelBuilder.Entity<ShippingAddress>()
+                .HasOne(sa => sa.Contact)
+                .WithMany(c => c.ShippingAddresses)
+                .HasForeignKey(sa => sa.ContactID)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            // Configurar relación Contact - Company
+            modelBuilder.Entity<Contact>()
+                .HasOne(c => c.Company)
+                .WithMany(co => co.Contacts)
+                .HasForeignKey(c => c.CompanyId)
+                .OnDelete(DeleteBehavior.Restrict);
+
             modelBuilder.Entity<Company>().HasData(
                 new Company { Id = 1, Name = "Deconolux" },
                 new Company { Id = 2, Name = "Persianas Mad" },
@@ -51,5 +65,7 @@ namespace GrupoMad.Data
         public DbSet<PriceList> PriceLists { get; set; }
         public DbSet<PriceListItem> PriceListItems { get; set; }
         public DbSet<PriceListItemDiscount> PriceListItemDiscounts { get; set; }
+        public DbSet<Contact> Contacts { get; set; }
+        public DbSet<ShippingAddress> ShippingAddresses { get; set; }
     }
 }
