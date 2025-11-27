@@ -23,17 +23,14 @@ namespace GrupoMad.Controllers
         // ==================== CRUD de PriceList ====================
 
         // GET: PriceList
-        public async Task<IActionResult> Index(bool includeInactive = false, string productTypeSearch = null, bool onlyGlobal = false, int? storeId = null)
+        public async Task<IActionResult> Index(bool includeInactive = false, int? productTypeId = null, bool onlyGlobal = false, int? storeId = null)
         {
             var priceLists = await _priceListService.GetAllPriceListsAsync(includeInactive);
 
-            // Filtrar por ProductType si se especifica un término de búsqueda
-            if (!string.IsNullOrWhiteSpace(productTypeSearch))
+            // Filtrar por ProductType si se especifica
+            if (productTypeId.HasValue)
             {
-                priceLists = priceLists.Where(pl =>
-                    pl.ProductType != null &&
-                    pl.ProductType.Name.Contains(productTypeSearch, StringComparison.OrdinalIgnoreCase)
-                ).ToList();
+                priceLists = priceLists.Where(pl => pl.ProductTypeId == productTypeId.Value).ToList();
             }
 
             // Filtrar por Store si se especifica
@@ -52,6 +49,13 @@ namespace GrupoMad.Controllers
             var stores = await _context.Stores.OrderBy(s => s.Name).ToListAsync();
             ViewBag.Stores = stores;
 
+            // Obtener todos los tipos de producto para el dropdown
+            var productTypes = await _context.ProductTypes
+                .Where(pt => pt.IsActive)
+                .OrderBy(pt => pt.Name)
+                .ToListAsync();
+            ViewBag.ProductTypes = new SelectList(productTypes, "Id", "Name", productTypeId);
+
             // Si hay un storeId seleccionado, obtener el nombre de la tienda
             if (storeId.HasValue)
             {
@@ -64,8 +68,19 @@ namespace GrupoMad.Controllers
                 ViewBag.SelectedStoreId = (int?)null;
             }
 
+            // Si hay un productTypeId seleccionado, obtener el nombre
+            if (productTypeId.HasValue)
+            {
+                var selectedProductType = productTypes.FirstOrDefault(pt => pt.Id == productTypeId.Value);
+                ViewBag.SelectedProductTypeName = selectedProductType?.Name;
+                ViewBag.SelectedProductTypeId = productTypeId.Value;
+            }
+            else
+            {
+                ViewBag.SelectedProductTypeId = (int?)null;
+            }
+
             ViewBag.IncludeInactive = includeInactive;
-            ViewBag.ProductTypeSearch = productTypeSearch;
             ViewBag.OnlyGlobal = onlyGlobal;
 
             return View(priceLists);
