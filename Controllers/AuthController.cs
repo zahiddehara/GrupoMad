@@ -40,6 +40,7 @@ namespace GrupoMad.Controllers
             {
                 ModelState.AddModelError(string.Empty, "El email y la contraseña son requeridos.");
                 ViewData["ReturnUrl"] = returnUrl;
+                ViewData["Email"] = email;
                 return View();
             }
 
@@ -53,6 +54,7 @@ namespace GrupoMad.Controllers
             {
                 ModelState.AddModelError(string.Empty, "Email o contraseña incorrectos.");
                 ViewData["ReturnUrl"] = returnUrl;
+                ViewData["Email"] = email;
                 return View();
             }
 
@@ -61,6 +63,7 @@ namespace GrupoMad.Controllers
             {
                 ModelState.AddModelError(string.Empty, "Esta cuenta ha sido desactivada. Contacta al administrador.");
                 ViewData["ReturnUrl"] = returnUrl;
+                ViewData["Email"] = email;
                 return View();
             }
 
@@ -70,6 +73,7 @@ namespace GrupoMad.Controllers
             {
                 ModelState.AddModelError(string.Empty, "Email o contraseña incorrectos.");
                 ViewData["ReturnUrl"] = returnUrl;
+                ViewData["Email"] = email;
                 return View();
             }
 
