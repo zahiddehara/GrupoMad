@@ -1,0 +1,122 @@
+@model GrupoMad.Models.User
+
+@{
+    ViewData["Title"] = "Eliminar Usuario";
+}
+
+<div class="container">
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a asp-action="Index">Usuarios</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">Eliminar</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow border-danger">
+                <div class="card-header bg-danger text-white">
+                    <h4 class="mb-0"><i class="bi bi-exclamation-triangle"></i> Confirmar Eliminación</h4>
+                </div>
+                <div class="card-body p-4">
+                    <div class="alert alert-warning" role="alert">
+                        <i class="bi bi-exclamation-triangle-fill"></i>
+                        <strong>¿Estás seguro de que deseas eliminar este usuario?</strong>
+                        <p class="mb-0 mt-2">Esta acción no se puede deshacer.</p>
+                    </div>
+
+                    <hr>
+
+                    <div class="row mb-3">
+                        <div class="col-md-4 fw-bold">Nombre Completo:</div>
+                        <div class="col-md-8">@Model.FirstName @Model.LastName</div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-md-4 fw-bold">Email:</div>
+                        <div class="col-md-8">@Model.Email</div>
+                    </div>
+
+                    @if (!string.IsNullOrEmpty(Model.PhoneNumber))
+                    {
+                        <div class="row mb-3">
+                            <div class="col-md-4 fw-bold">Teléfono:</div>
+                            <div class="col-md-8">@Model.PhoneNumber</div>
+                        </div>
+                    }
+
+                    <div class="row mb-3">
+                        <div class="col-md-4 fw-bold">Rol:</div>
+                        <div class="col-md-8">
+                            @if (Model.Role == GrupoMad.Models.UserRole.Administrator)
+                            {
+                                <span class="badge bg-danger">Administrador</span>
+                            }
+                            else if (Model.Role == GrupoMad.Models.UserRole.SalesManager)
+                            {
+                                <span class="badge bg-warning text-dark">Gerente de Ventas</span>
+                            }
+                            else if (Model.Role == GrupoMad.Models.UserRole.StoreManager)
+                            {
+                                <span class="badge bg-info">Gerente de Tienda</span>
+                            }
+                            else if (Model.Role == GrupoMad.Models.UserRole.Salesperson)
+                            {
+                                <span class="badge bg-secondary">Vendedor</span>
+                            }
+                        </div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-md-4 fw-bold">Tienda:</div>
+                        <div class="col-md-8">
+                            @if (Model.Store != null)
+                            {
+                                <div>
+                                    @Model.Store.Name<br />
+                                    <small class="text-muted">@Model.Store.Company?.Name</small>
+                                </div>
+                            }
+                            else
+                            {
+                                <span class="badge bg-dark">Todas las tiendas</span>
+                            }
+                        </div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-md-4 fw-bold">Estado:</div>
+                        <div class="col-md-8">
+                            @if (Model.IsActive)
+                            {
+                                <span class="badge bg-success">Activo</span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-secondary">Inactivo</span>
+                            }
+                        </div>
+                    </div>
+
+                    <hr class="my-4">
+
+                    <form asp-action="Delete">
+                        <input type="hidden" asp-for="Id" />
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-between">
+                            <a asp-action="Index" class="btn btn-outline-secondary btn-lg">
+                                <i class="bi bi-arrow-left"></i> Cancelar
+                            </a>
+                            <button type="submit" class="btn btn-danger btn-lg px-5">
+                                <i class="bi bi-trash"></i> Sí, Eliminar Usuario
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

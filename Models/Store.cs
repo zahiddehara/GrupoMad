@@ -14,5 +14,7 @@ namespace GrupoMad.Models
         public List<Product> Products { get; set; }
 
         public List<PriceList> PriceLists { get; set; }
+
+        public List<User> Users { get; set; } = new List<User>();
     }
 }

@@ -1,0 +1,179 @@
+@model GrupoMad.Models.User
+
+@{
+    ViewData["Title"] = "Detalles del Usuario";
+}
+
+<div class="container">
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="bi bi-check-circle"></i> @TempData["SuccessMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a asp-action="Index">Usuarios</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">Detalles</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-12 mb-4">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                    <h4 class="mb-0"><i class="bi bi-person-badge"></i> Información del Usuario</h4>
+                    <div>
+                        <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-light btn-sm me-2">
+                            <i class="bi bi-pencil"></i> Editar
+                        </a>
+                        <a asp-action="ChangePassword" asp-route-id="@Model.Id" class="btn btn-warning btn-sm">
+                            <i class="bi bi-key"></i> Cambiar Contraseña
+                        </a>
+                    </div>
+                </div>
+                <div class="card-body p-4">
+                    <div class="row mb-3">
+                        <div class="col-md-3 fw-bold">Nombre Completo:</div>
+                        <div class="col-md-9">@Model.FirstName @Model.LastName</div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-md-3 fw-bold">Email:</div>
+                        <div class="col-md-9">
+                            <a href="mailto:@Model.Email">@Model.Email</a>
+                        </div>
+                    </div>
+
+                    @if (!string.IsNullOrEmpty(Model.PhoneNumber))
+                    {
+                        <div class="row mb-3">
+                            <div class="col-md-3 fw-bold">Teléfono:</div>
+                            <div class="col-md-9">
+                                <a href="tel:@Model.PhoneNumber">@Model.PhoneNumber</a>
+                            </div>
+                        </div>
+                    }
+
+                    <hr>
+
+                    <div class="row mb-3">
+                        <div class="col-md-3 fw-bold">Rol:</div>
+                        <div class="col-md-9">
+                            @if (Model.Role == GrupoMad.Models.UserRole.Administrator)
+                            {
+                                <span class="badge bg-danger">
+                                    <i class="bi bi-shield-fill-exclamation"></i> Administrador
+                                </span>
+                                <br><small class="text-muted">Acceso total a todas las tiendas y empresas</small>
+                            }
+                            else if (Model.Role == GrupoMad.Models.UserRole.SalesManager)
+                            {
+                                <span class="badge bg-warning text-dark">
+                                    <i class="bi bi-graph-up"></i> Gerente de Ventas
+                                </span>
+                            }
+                            else if (Model.Role == GrupoMad.Models.UserRole.StoreManager)
+                            {
+                                <span class="badge bg-info">
+                                    <i class="bi bi-shop"></i> Gerente de Tienda
+                                </span>
+                            }
+                            else if (Model.Role == GrupoMad.Models.UserRole.Salesperson)
+                            {
+                                <span class="badge bg-secondary">
+                                    <i class="bi bi-person-badge"></i> Vendedor
+                                </span>
+                            }
+                        </div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-md-3 fw-bold">Tienda Asignada:</div>
+                        <div class="col-md-9">
+                            @if (Model.Store != null)
+                            {
+                                <div>
+                                    <strong>@Model.Store.Name</strong><br />
+                                    <small class="text-muted">
+                                        <i class="bi bi-building"></i> @Model.Store.Company?.Name
+                                    </small>
+                                </div>
+                            }
+                            else
+                            {
+                                <span class="badge bg-dark">
+                                    <i class="bi bi-globe"></i> Todas las tiendas
+                                </span>
+                            }
+                        </div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-md-3 fw-bold">Estado:</div>
+                        <div class="col-md-9">
+                            @if (Model.IsActive)
+                            {
+                                <span class="badge bg-success">
+                                    <i class="bi bi-check-circle"></i> Activo
+                                </span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-secondary">
+                                    <i class="bi bi-x-circle"></i> Inactivo
+                                </span>
+                            }
+                        </div>
+                    </div>
+
+                    <hr>
+
+                    <div class="row mb-2">
+                        <div class="col-md-3 fw-bold">Creado:</div>
+                        <div class="col-md-9">
+                            <small class="text-muted">@Model.CreatedAt.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</small>
+                        </div>
+                    </div>
+
+                    @if (Model.UpdatedAt != null)
+                    {
+                        <div class="row mb-2">
+                            <div class="col-md-3 fw-bold">Última Actualización:</div>
+                            <div class="col-md-9">
+                                <small class="text-muted">@Model.UpdatedAt.Value.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</small>
+                            </div>
+                        </div>
+                    }
+
+                    @if (Model.LastLoginAt != null)
+                    {
+                        <div class="row mb-2">
+                            <div class="col-md-3 fw-bold">Último Acceso:</div>
+                            <div class="col-md-9">
+                                <small class="text-muted">@Model.LastLoginAt.Value.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</small>
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mt-4">
+        <div class="col-md-12">
+            <a asp-action="Index" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left"></i> Volver a la Lista
+            </a>
+            <a asp-action="Delete" asp-route-id="@Model.Id" class="btn btn-outline-danger">
+                <i class="bi bi-trash"></i> Eliminar Usuario
+            </a>
+        </div>
+    </div>
+</div>

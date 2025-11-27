@@ -1,0 +1,147 @@
+@model GrupoMad.Models.User
+
+@{
+    ViewData["Title"] = "Crear Usuario";
+}
+
+<div class="container">
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a asp-action="Index">Usuarios</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">Crear Nuevo</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+
+    <div class="row justify-content-center">
+        <div class="col-md-10 col-lg-8">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0"><i class="bi bi-plus-circle"></i> Crear Nuevo Usuario</h4>
+                </div>
+                <div class="card-body p-4">
+                    <form asp-action="Create">
+                        @if (!ViewData.ModelState.IsValid)
+                        {
+                            <div asp-validation-summary="All" class="alert alert-danger" role="alert"></div>
+                        }
+
+                        <h5 class="mb-3"><i class="bi bi-person-badge"></i> Información Personal</h5>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="FirstName" class="form-label fw-bold">Nombre(s)</label>
+                                <input asp-for="FirstName" class="form-control" placeholder="Nombre" />
+                                <span asp-validation-for="FirstName" class="text-danger small"></span>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="LastName" class="form-label fw-bold">Apellido(s)</label>
+                                <input asp-for="LastName" class="form-control" placeholder="Apellido" />
+                                <span asp-validation-for="LastName" class="text-danger small"></span>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="Email" class="form-label fw-bold">Email</label>
+                                <input asp-for="Email" class="form-control" type="email" placeholder="usuario@ejemplo.com" />
+                                <span asp-validation-for="Email" class="text-danger small"></span>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="PhoneNumber" class="form-label fw-bold">Teléfono (Opcional)</label>
+                                <input asp-for="PhoneNumber" class="form-control" type="tel" placeholder="5551234567" />
+                                <span asp-validation-for="PhoneNumber" class="text-danger small"></span>
+                            </div>
+                        </div>
+
+                        <hr class="my-4">
+                        <h5 class="mb-3"><i class="bi bi-shield-lock"></i> Seguridad</h5>
+
+                        <div class="mb-3">
+                            <label for="Password" class="form-label fw-bold">Contraseña</label>
+                            <input type="password" name="Password" id="Password" class="form-control" placeholder="Mínimo 8 caracteres" />
+                            <small class="text-muted">Debe contener al menos 8 caracteres, una mayúscula, una minúscula y un número.</small>
+                            <span class="text-danger small d-block">@ViewData.ModelState["Password"]?.Errors.FirstOrDefault()?.ErrorMessage</span>
+                        </div>
+
+                        <hr class="my-4">
+                        <h5 class="mb-3"><i class="bi bi-briefcase"></i> Rol y Asignación</h5>
+
+                        <div class="mb-3">
+                            <label asp-for="Role" class="form-label fw-bold">Rol</label>
+                            <select asp-for="Role" class="form-select" id="roleSelect" asp-items="Html.GetEnumSelectList<GrupoMad.Models.UserRole>()">
+                                <option value="">-- Selecciona un rol --</option>
+                            </select>
+                            <span asp-validation-for="Role" class="text-danger small"></span>
+                            <div class="mt-2">
+                                <small class="text-muted">
+                                    <strong>Administrator:</strong> Acceso total a todas las tiendas y empresas<br />
+                                    <strong>SalesManager:</strong> Gerente de ventas<br />
+                                    <strong>StoreManager:</strong> Gerente de tienda<br />
+                                    <strong>Salesperson:</strong> Vendedor (menor privilegio)
+                                </small>
+                            </div>
+                        </div>
+
+                        <div class="mb-3" id="storeSelectDiv">
+                            <label asp-for="StoreId" class="form-label fw-bold">Tienda</label>
+                            <select asp-for="StoreId" class="form-select" asp-items="ViewBag.StoreId">
+                                <option value="">-- Selecciona una tienda --</option>
+                            </select>
+                            <span asp-validation-for="StoreId" class="text-danger small"></span>
+                            <small class="text-muted" id="storeHelpText">Los administradores no requieren tienda asignada.</small>
+                        </div>
+
+                        <div class="mb-3">
+                            <div class="form-check form-switch">
+                                <input asp-for="IsActive" class="form-check-input" type="checkbox" checked />
+                                <label asp-for="IsActive" class="form-check-label fw-bold">Usuario Activo</label>
+                            </div>
+                            <small class="text-muted">Los usuarios inactivos no podrán acceder al sistema.</small>
+                        </div>
+
+                        <hr class="my-4">
+
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-between">
+                            <a asp-action="Index" class="btn btn-outline-secondary btn-lg">
+                                <i class="bi bi-arrow-left"></i> Cancelar
+                            </a>
+                            <button type="submit" class="btn btn-primary btn-lg px-5">
+                                <i class="bi bi-check-circle"></i> Crear Usuario
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+    <script>
+        // Manejar la visibilidad del selector de tienda según el rol
+        document.getElementById('roleSelect').addEventListener('change', function() {
+            const storeDiv = document.getElementById('storeSelectDiv');
+            const storeSelect = document.querySelector('select[name="StoreId"]');
+            const helpText = document.getElementById('storeHelpText');
+
+            if (this.value === '@((int)GrupoMad.Models.UserRole.Administrator)') {
+                storeSelect.value = '';
+                storeSelect.disabled = true;
+                helpText.innerHTML = '<span class="text-info"><i class="bi bi-info-circle"></i> Los administradores tienen acceso a todas las tiendas.</span>';
+            } else {
+                storeSelect.disabled = false;
+                helpText.innerHTML = '<span class="text-warning"><i class="bi bi-exclamation-triangle"></i> Requerido para este rol.</span>';
+            }
+        });
+
+        // Ejecutar al cargar la página si ya hay un rol seleccionado
+        document.addEventListener('DOMContentLoaded', function() {
+            document.getElementById('roleSelect').dispatchEvent(new Event('change'));
+        });
+    </script>
+}
