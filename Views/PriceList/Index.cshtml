@@ -39,9 +39,6 @@
 }
 
 <div class="mb-3">
-    <a asp-action="Create" class="btn btn-primary">
-        <i class="bi bi-plus-circle"></i> Crear Nueva Lista de Precios
-    </a>
     <a asp-action="CreateByProductTypes" class="btn btn-success">
         <i class="bi bi-grid-3x3-gap"></i> Crear por Tipos de Producto (Global)
     </a>
@@ -245,7 +242,6 @@
                     <a asp-action="Details" asp-route-id="@item.Id" class="btn btn-sm btn-info">Detalles</a>
                     <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-sm btn-warning">Editar</a>
                     <a asp-action="ManageItems" asp-route-id="@item.Id" class="btn btn-sm btn-secondary">Productos</a>
-                    <a asp-action="BulkOperations" asp-route-id="@item.Id" class="btn btn-sm btn-dark">Operaciones</a>
                 </td>
             </tr>
         }

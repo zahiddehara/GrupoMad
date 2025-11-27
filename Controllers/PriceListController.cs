@@ -312,37 +312,6 @@ namespace GrupoMad.Controllers
 
         // ==================== Operaciones en Lote ====================
 
-        // GET: PriceList/BulkOperations/5
-        public async Task<IActionResult> BulkOperations(int? id)
-        {
-            if (id == null)
-            {
-                return NotFound();
-            }
-
-            var priceList = await _priceListService.GetPriceListByIdAsync(id.Value);
-            if (priceList == null)
-            {
-                return NotFound();
-            }
-
-            // Obtener otras listas de precios para copiar
-            var otherPriceLists = await _priceListService.GetAllPriceListsAsync();
-            ViewBag.OtherPriceLists = new SelectList(otherPriceLists.Where(pl => pl.Id != id.Value), "Id", "Name");
-
-            return View(priceList);
-        }
-
-        // POST: PriceList/ApplyPercentage
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> ApplyPercentage(int priceListId, decimal percentage)
-        {
-            var itemsUpdated = await _priceListService.ApplyPercentageToAllItemsAsync(priceListId, percentage);
-            TempData["Success"] = $"Se aplicó {percentage}% a {itemsUpdated} productos.";
-            return RedirectToAction(nameof(BulkOperations), new { id = priceListId });
-        }
-
         // POST: PriceList/ApplyPercentageFromGlobal
         [HttpPost]
         [ValidateAntiForgeryToken]
@@ -430,16 +399,6 @@ namespace GrupoMad.Controllers
                 TempData["Error"] = $"Error al aplicar porcentaje: {ex.Message}";
                 return RedirectToAction(nameof(ManageItems), new { id = priceListId });
             }
-        }
-
-        // POST: PriceList/CopyItems
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> CopyItems(int fromPriceListId, int toPriceListId)
-        {
-            var itemsCopied = await _priceListService.CopyPriceListItemsAsync(fromPriceListId, toPriceListId);
-            TempData["Success"] = $"Se copiaron {itemsCopied} productos a la lista de destino.";
-            return RedirectToAction(nameof(BulkOperations), new { id = toPriceListId });
         }
 
         // POST: PriceList/AddMultipleProducts
