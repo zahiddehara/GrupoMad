@@ -49,6 +49,28 @@
                     <ul class="navbar-nav ms-auto">
                         @if (User.Identity?.IsAuthenticated == true)
                         {
+                            var storeName = User.Claims.FirstOrDefault(c => c.Type == "StoreName")?.Value;
+                            var companyName = User.Claims.FirstOrDefault(c => c.Type == "CompanyName")?.Value;
+
+                            if (!string.IsNullOrEmpty(companyName) || !string.IsNullOrEmpty(storeName))
+                            {
+                                <li class="nav-item d-flex align-items-center me-3">
+                                    <span class="text-muted small">
+                                        @if (!string.IsNullOrEmpty(companyName))
+                                        {
+                                            <i class="bi bi-building"></i> <strong>@companyName</strong>
+                                        }
+                                        @if (!string.IsNullOrEmpty(storeName))
+                                        {
+                                            if (!string.IsNullOrEmpty(companyName))
+                                            {
+                                                <span class="mx-1">|</span>
+                                            }
+                                            <i class="bi bi-shop"></i> @storeName
+                                        }
+                                    </span>
+                                </li>
+                            }
                             <li class="nav-item dropdown">
                                 <a class="nav-link dropdown-toggle text-dark" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                                     <i class="bi bi-person-circle"></i> @User.Identity.Name
