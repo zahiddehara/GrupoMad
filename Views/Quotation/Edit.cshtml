@@ -38,7 +38,7 @@
                             <div class="col-md-6">
                                 <div class="mb-3">
                                     <label asp-for="ContactId" class="form-label">Cliente <span class="text-danger">*</span></label>
-                                    <select asp-for="ContactId" class="form-select" asp-items="ViewBag.ContactId" required>
+                                    <select asp-for="ContactId" id="contactSelect" class="form-select" asp-items="ViewBag.ContactId" required>
                                         <option value="">Seleccione un cliente...</option>
                                     </select>
                                     <span asp-validation-for="ContactId" class="text-danger"></span>
@@ -212,8 +212,8 @@
                             <table class="table table-hover align-middle mb-0" id="itemsTable">
                                 <thead class="table-light">
                                     <tr>
-                                        <th class="px-3 py-2" style="width: 25%">Producto</th>
-                                        <th class="px-3 py-2" style="width: 10%">Variante</th>
+                                        <th class="px-3 py-2" style="width: 20%">Producto</th>
+                                        <th class="px-3 py-2" style="width: 12%">Color</th>
                                         <th class="px-3 py-2" style="width: 8%">Ancho (m)</th>
                                         <th class="px-3 py-2" style="width: 8%">Alto (m)</th>
                                         <th class="px-3 py-2" style="width: 8%">Cantidad</th>
@@ -319,6 +319,11 @@
 @section Scripts {
     @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
 
+    <!-- Select2 CSS y JS -->
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+    <link href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" rel="stylesheet" />
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+
     <script>
         // Datos de productos
         const products = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(products.Select(p => new {
@@ -330,7 +335,7 @@
         // Items existentes
         const existingItems = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.Items.OrderBy(i => i.DisplayOrder).Select(i => new {
             productId = i.ProductId,
-            variant = i.Variant,
+            productColorId = i.ProductColorId,
             quantity = i.Quantity,
             width = i.Width,
             height = i.Height,
@@ -355,7 +360,9 @@
                     </select>
                 </td>
                 <td class="px-3 py-2">
-                    <input name="items[${itemCounter}].Variant" type="text" class="form-control form-control-sm variant-input" data-index="${itemCounter}" value="${itemData?.variant || ''}" />
+                    <select name="items[${itemCounter}].ProductColorId" class="form-select form-select-sm color-select" data-index="${itemCounter}" disabled>
+                        <option value="">Primero seleccione un producto...</option>
+                    </select>
                 </td>
                 <td class="px-3 py-2">
                     <input name="items[${itemCounter}].Width" type="number" step="0.01" min="0" class="form-control form-control-sm dimension-input" data-index="${itemCounter}" value="${itemData?.width || ''}" />
@@ -384,20 +391,47 @@
 
             tbody.appendChild(row);
 
-            // Event listeners
-            const productSelect = row.querySelector('.product-select');
-            productSelect.addEventListener('change', function() {
-                loadProductPrice(this.value, itemCounter);
+            // Capturar el índice actual antes de incrementar
+            const currentIndex = itemCounter;
+
+            // Inicializar Select2 para el dropdown de productos
+            const productSelect = $(row).find('.product-select');
+            productSelect.select2({
+                theme: 'bootstrap-5',
+                placeholder: 'Buscar producto...',
+                allowClear: true,
+                width: '100%'
+            });
+
+            // Event listener para cuando cambia el producto
+            productSelect.on('change', function() {
+                const productId = this.value;
+                if (productId) {
+                    loadProductColors(productId, currentIndex);
+                    loadProductPrice(productId, currentIndex);
+                } else {
+                    // Limpiar el dropdown de colores
+                    const colorSelect = $(row).find('.color-select');
+
+                    // Destruir Select2 si existe
+                    if (colorSelect.hasClass('select2-hidden-accessible')) {
+                        colorSelect.select2('destroy');
+                    }
+
+                    colorSelect.html('<option value="">Primero seleccione un producto...</option>');
+                    colorSelect.prop('disabled', true);
+                }
             });
 
             // Event listeners para recalcular
             row.querySelectorAll('.quantity-input, .dimension-input, .discounted-price-input').forEach(input => {
-                input.addEventListener('input', () => calculateItemTotal(itemCounter));
+                input.addEventListener('input', () => calculateItemTotal(currentIndex));
             });
 
-            // Calcular total inicial si hay datos
-            if (itemData) {
-                calculateItemTotal(itemCounter);
+            // Si hay datos existentes, cargar los colores y seleccionar el color correcto
+            if (itemData && itemData.productId) {
+                loadProductColors(itemData.productId, currentIndex, itemData.productColorId);
+                calculateItemTotal(currentIndex);
             }
 
             itemCounter++;
@@ -406,11 +440,72 @@
 
         // Eliminar item
         function removeItem(index) {
-            const row = document.getElementById(`item-${index}`);
-            if (row) {
+            const row = $(`#item-${index}`);
+            if (row.length) {
+                // Destruir Select2 antes de eliminar la fila
+                row.find('.color-select').each(function() {
+                    if ($(this).hasClass('select2-hidden-accessible')) {
+                        $(this).select2('destroy');
+                    }
+                });
+                row.find('.product-select').each(function() {
+                    if ($(this).hasClass('select2-hidden-accessible')) {
+                        $(this).select2('destroy');
+                    }
+                });
+
                 row.remove();
                 calculateTotals();
                 toggleNoItemsMessage();
+            }
+        }
+
+        // Cargar colores del producto
+        async function loadProductColors(productId, index, selectedColorId = null) {
+            if (!productId) return;
+
+            try {
+                const response = await fetch(`/Quotation/GetProductColors?productId=${productId}`);
+                const data = await response.json();
+
+                const colorSelect = $(`[name="items[${index}].ProductColorId"]`);
+
+                // Destruir Select2 si ya existe
+                if (colorSelect.hasClass('select2-hidden-accessible')) {
+                    colorSelect.select2('destroy');
+                }
+
+                if (data.success && data.colors && data.colors.length > 0) {
+                    // Poblar el dropdown con los colores
+                    colorSelect.html('<option value="">Seleccione un color...</option>');
+                    data.colors.forEach(color => {
+                        const option = $('<option></option>')
+                            .val(color.id)
+                            .text(`${color.name} (SKU: ${color.sku})`);
+
+                        // Seleccionar el color si coincide
+                        if (selectedColorId && color.id === selectedColorId) {
+                            option.prop('selected', true);
+                        }
+
+                        colorSelect.append(option);
+                    });
+                    colorSelect.prop('disabled', false);
+
+                    // Inicializar Select2
+                    colorSelect.select2({
+                        theme: 'bootstrap-5',
+                        placeholder: 'Seleccione un color...',
+                        allowClear: true,
+                        width: '100%'
+                    });
+                } else {
+                    // Si no hay colores, mostrar mensaje y deshabilitar
+                    colorSelect.html('<option value="">Sin colores disponibles</option>');
+                    colorSelect.prop('disabled', true);
+                }
+            } catch (error) {
+                console.error('Error al cargar colores:', error);
             }
         }
 
@@ -418,11 +513,8 @@
         async function loadProductPrice(productId, index) {
             if (!productId) return;
 
-            const variantInput = document.querySelector(`[name="items[${index}].Variant"]`);
-            const variant = variantInput ? variantInput.value : null;
-
             try {
-                const url = `/Quotation/GetProductPrice?productId=${productId}&storeId=${storeId}${variant ? `&variant=${encodeURIComponent(variant)}` : ''}`;
+                const url = `/Quotation/GetProductPrice?productId=${productId}&storeId=${storeId}`;
                 const response = await fetch(url);
                 const data = await response.json();
 
@@ -500,6 +592,15 @@
                 noItemsMsg.style.display = 'none';
             }
         }
+
+        // Inicializar Select2 para el dropdown de Cliente
+        const contactSelect = $('#contactSelect');
+        contactSelect.select2({
+            theme: 'bootstrap-5',
+            placeholder: 'Buscar cliente...',
+            allowClear: true,
+            width: '100%'
+        });
 
         // Event listeners para descuento global y envío
         document.getElementById('globalDiscountInput').addEventListener('input', calculateTotals);

@@ -167,7 +167,7 @@
                                 <tr>
                                     <th class="px-4 py-3">#</th>
                                     <th class="px-4 py-3">Producto</th>
-                                    <th class="px-4 py-3">Variante</th>
+                                    <th class="px-4 py-3">Color</th>
                                     <th class="px-4 py-3 text-center">Dimensiones</th>
                                     <th class="px-4 py-3 text-center">Cantidad</th>
                                     <th class="px-4 py-3 text-end">Precio Unit.</th>
@@ -192,9 +192,13 @@
                                                 }
                                             </td>
                                             <td class="px-4 py-3">
-                                                @if (!string.IsNullOrEmpty(item.Variant))
+                                                @if (item.ProductColor != null)
                                                 {
-                                                    <span class="badge bg-secondary">@item.Variant</span>
+                                                    <div>
+                                                        <span class="badge bg-secondary">@item.ProductColor.Name</span>
+                                                        <br />
+                                                        <small class="text-muted">SKU: @item.ProductColor.SKU</small>
+                                                    </div>
                                                 }
                                                 else
                                                 {
