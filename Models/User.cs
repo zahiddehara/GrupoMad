@@ -45,6 +45,8 @@ namespace GrupoMad.Models
 
         public bool IsActive { get; set; } = true;
 
+        public List<Quotation> Quotations { get; set; } = new List<Quotation>();
+
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
         public DateTime? UpdatedAt { get; set; }

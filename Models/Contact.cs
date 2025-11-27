@@ -86,6 +86,8 @@ namespace GrupoMad.Models
 
         public List<ShippingAddress> ShippingAddresses { get; set; } = new List<ShippingAddress>();
 
+        public List<Quotation> Quotations { get; set; } = new List<Quotation>();
+
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
         public DateTime? UpdatedAt { get; set; }

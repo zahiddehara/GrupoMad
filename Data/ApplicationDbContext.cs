@@ -52,6 +52,41 @@ namespace GrupoMad.Data
                 .HasIndex(u => u.Email)
                 .IsUnique();
 
+            // Configurar relación Quotation - Contact
+            modelBuilder.Entity<Quotation>()
+                .HasOne(q => q.Contact)
+                .WithMany(c => c.Quotations)
+                .HasForeignKey(q => q.ContactId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            // Configurar relación Quotation - Store
+            modelBuilder.Entity<Quotation>()
+                .HasOne(q => q.Store)
+                .WithMany(s => s.Quotations)
+                .HasForeignKey(q => q.StoreId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            // Configurar relación Quotation - User (CreatedByUser)
+            modelBuilder.Entity<Quotation>()
+                .HasOne(q => q.CreatedByUser)
+                .WithMany(u => u.Quotations)
+                .HasForeignKey(q => q.CreatedByUserId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            // Configurar relación QuotationItem - Quotation
+            modelBuilder.Entity<QuotationItem>()
+                .HasOne(qi => qi.Quotation)
+                .WithMany(q => q.Items)
+                .HasForeignKey(qi => qi.QuotationId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            // Configurar relación QuotationItem - Product
+            modelBuilder.Entity<QuotationItem>()
+                .HasOne(qi => qi.Product)
+                .WithMany()
+                .HasForeignKey(qi => qi.ProductId)
+                .OnDelete(DeleteBehavior.Restrict);
+
             modelBuilder.Entity<Company>().HasData(
                 new Company { Id = 1, Name = "Deconolux" },
                 new Company { Id = 2, Name = "Persianas Mad" },
@@ -80,5 +115,7 @@ namespace GrupoMad.Data
         public DbSet<Contact> Contacts { get; set; }
         public DbSet<ShippingAddress> ShippingAddresses { get; set; }
         public DbSet<User> Users { get; set; }
+        public DbSet<Quotation> Quotations { get; set; }
+        public DbSet<QuotationItem> QuotationItems { get; set; }
     }
 }
