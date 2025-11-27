@@ -1,0 +1,679 @@
+@model GrupoMad.Models.Quotation
+
+@{
+    ViewData["Title"] = "Crear Cotización";
+    var products = ViewData["Products"] as List<GrupoMad.Models.Product> ?? new List<GrupoMad.Models.Product>();
+}
+
+<div class="container-fluid">
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a asp-action="Index">Cotizaciones</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">Crear Nueva</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+
+    <form asp-action="Create" method="post" id="quotationForm">
+        <div asp-validation-summary="ModelOnly" class="alert alert-danger"></div>
+
+        <!-- Información General -->
+        <div class="row mb-4">
+            <div class="col-md-12">
+                <div class="card shadow">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0"><i class="bi bi-info-circle"></i> Información General</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label asp-for="ContactId" class="form-label">Cliente <span class="text-danger">*</span></label>
+                                    <select asp-for="ContactId" id="contactSelect" class="form-select" asp-items="ViewBag.ContactId" required>
+                                        <option value="">Seleccione un cliente...</option>
+                                    </select>
+                                    <span asp-validation-for="ContactId" class="text-danger"></span>
+                                </div>
+
+                                @if (ViewData["IsAdmin"] != null && (bool)ViewData["IsAdmin"])
+                                {
+                                    <div class="mb-3">
+                                        <label asp-for="StoreId" class="form-label">Tienda <span class="text-danger">*</span></label>
+                                        <select asp-for="StoreId" id="storeSelect" class="form-select" asp-items="ViewBag.StoreId" required>
+                                            <option value="">Seleccione una tienda...</option>
+                                        </select>
+                                        <span asp-validation-for="StoreId" class="text-danger"></span>
+                                    </div>
+                                }
+                                else
+                                {
+                                    <div class="mb-3">
+                                        <label class="form-label">Tienda</label>
+                                        <input type="text" class="form-control" value="@ViewData["StoreName"]" readonly />
+                                        <input type="hidden" asp-for="StoreId" />
+                                    </div>
+                                }
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label asp-for="QuotationDate" class="form-label">Fecha de Cotización</label>
+                                    <input asp-for="QuotationDate" type="datetime-local" class="form-control" readonly />
+                                </div>
+
+                                <div class="mb-3">
+                                    <label asp-for="ValidUntil" class="form-label">Válida Hasta <span class="text-danger">*</span></label>
+                                    <input asp-for="ValidUntil" type="date" class="form-control" required />
+                                    <span asp-validation-for="ValidUntil" class="text-danger"></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Dirección de Entrega -->
+        <div class="row mb-4">
+            <div class="col-md-12">
+                <div class="card shadow">
+                    <div class="card-header bg-light">
+                        <h5 class="mb-0"><i class="bi bi-truck"></i> Dirección de Entrega</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row mb-3">
+                            <div class="col-md-12">
+                                <label class="form-label">Seleccionar Dirección de Entrega</label>
+                                <select id="addressSelector" class="form-select" disabled>
+                                    <option value="">Primero seleccione un cliente...</option>
+                                </select>
+                                <small class="text-muted">Seleccione una dirección guardada o ingrese una nueva manualmente</small>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label asp-for="DeliveryFirstName" class="form-label">Nombre <span class="text-danger">*</span></label>
+                                    <input asp-for="DeliveryFirstName" class="form-control" required />
+                                    <span asp-validation-for="DeliveryFirstName" class="text-danger"></span>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label asp-for="DeliveryLastName" class="form-label">Apellido <span class="text-danger">*</span></label>
+                                    <input asp-for="DeliveryLastName" class="form-control" required />
+                                    <span asp-validation-for="DeliveryLastName" class="text-danger"></span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-8">
+                                <div class="mb-3">
+                                    <label asp-for="DeliveryStreet" class="form-label">Calle <span class="text-danger">*</span></label>
+                                    <input asp-for="DeliveryStreet" class="form-control" required />
+                                    <span asp-validation-for="DeliveryStreet" class="text-danger"></span>
+                                </div>
+                            </div>
+                            <div class="col-md-2">
+                                <div class="mb-3">
+                                    <label asp-for="DeliveryExteriorNumber" class="form-label">Núm. Ext. <span class="text-danger">*</span></label>
+                                    <input asp-for="DeliveryExteriorNumber" class="form-control" required />
+                                    <span asp-validation-for="DeliveryExteriorNumber" class="text-danger"></span>
+                                </div>
+                            </div>
+                            <div class="col-md-2">
+                                <div class="mb-3">
+                                    <label asp-for="DeliveryInteriorNumber" class="form-label">Núm. Int.</label>
+                                    <input asp-for="DeliveryInteriorNumber" class="form-control" />
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <label asp-for="DeliveryNeighborhood" class="form-label">Colonia <span class="text-danger">*</span></label>
+                                    <input asp-for="DeliveryNeighborhood" class="form-control" required />
+                                    <span asp-validation-for="DeliveryNeighborhood" class="text-danger"></span>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <label asp-for="DeliveryCity" class="form-label">Ciudad <span class="text-danger">*</span></label>
+                                    <input asp-for="DeliveryCity" class="form-control" required />
+                                    <span asp-validation-for="DeliveryCity" class="text-danger"></span>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <label asp-for="DeliveryStateID" class="form-label">Estado <span class="text-danger">*</span></label>
+                                    <select asp-for="DeliveryStateID" class="form-select" required>
+                                        <option value="">Seleccione...</option>
+                                        <option value="@((int)GrupoMad.Models.MexicanState.Aguascalientes)">Aguascalientes</option>
+                                        <option value="@((int)GrupoMad.Models.MexicanState.BajaCalifornia)">Baja California</option>
+                                        <option value="@((int)GrupoMad.Models.MexicanState.BajaCaliforniaSur)">Baja California Sur</option>
+                                        <option value="@((int)GrupoMad.Models.MexicanState.Campeche)">Campeche</option>
+                                        <option value="@((int)GrupoMad.Models.MexicanState.Chiapas)">Chiapas</option>
+                                        <option value="@((int)GrupoMad.Models.MexicanState.Chihuahua)">Chihuahua</option>
+                                        <option value="@((int)GrupoMad.Models.MexicanState.CiudadDeMexico)">Ciudad de México</option>
+                                        <option value="@((int)GrupoMad.Models.MexicanState.Coahuila)">Coahuila</option>
+                                        <option value="@((int)GrupoMad.Models.MexicanState.Colima)">Colima</option>
+                                        <option value="@((int)GrupoMad.Models.MexicanState.Durango)">Durango</option>
+                                        <option value="@((int)GrupoMad.Models.MexicanState.EstadoDeMexico)">Estado de México</option>
+                                        <option value="@((int)GrupoMad.Models.MexicanState.Guanajuato)">Guanajuato</option>
+                                        <option value="@((int)GrupoMad.Models.MexicanState.Guerrero)">Guerrero</option>
+                                        <option value="@((int)GrupoMad.Models.MexicanState.Hidalgo)">Hidalgo</option>
+                                        <option value="@((int)GrupoMad.Models.MexicanState.Jalisco)">Jalisco</option>
+                                        <option value="@((int)GrupoMad.Models.MexicanState.Michoacan)">Michoacán</option>
+                                        <option value="@((int)GrupoMad.Models.MexicanState.Morelos)">Morelos</option>
+                                        <option value="@((int)GrupoMad.Models.MexicanState.Nayarit)">Nayarit</option>
+                                        <option value="@((int)GrupoMad.Models.MexicanState.NuevoLeon)">Nuevo León</option>
+                                        <option value="@((int)GrupoMad.Models.MexicanState.Oaxaca)">Oaxaca</option>
+                                        <option value="@((int)GrupoMad.Models.MexicanState.Puebla)">Puebla</option>
+                                        <option value="@((int)GrupoMad.Models.MexicanState.Queretaro)">Querétaro</option>
+                                        <option value="@((int)GrupoMad.Models.MexicanState.QuintanaRoo)">Quintana Roo</option>
+                                        <option value="@((int)GrupoMad.Models.MexicanState.SanLuisPotosi)">San Luis Potosí</option>
+                                        <option value="@((int)GrupoMad.Models.MexicanState.Sinaloa)">Sinaloa</option>
+                                        <option value="@((int)GrupoMad.Models.MexicanState.Sonora)">Sonora</option>
+                                        <option value="@((int)GrupoMad.Models.MexicanState.Tabasco)">Tabasco</option>
+                                        <option value="@((int)GrupoMad.Models.MexicanState.Tamaulipas)">Tamaulipas</option>
+                                        <option value="@((int)GrupoMad.Models.MexicanState.Tlaxcala)">Tlaxcala</option>
+                                        <option value="@((int)GrupoMad.Models.MexicanState.Veracruz)">Veracruz</option>
+                                        <option value="@((int)GrupoMad.Models.MexicanState.Yucatan)">Yucatán</option>
+                                        <option value="@((int)GrupoMad.Models.MexicanState.Zacatecas)">Zacatecas</option>
+                                    </select>
+                                    <span asp-validation-for="DeliveryStateID" class="text-danger"></span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <label asp-for="DeliveryPostalCode" class="form-label">Código Postal <span class="text-danger">*</span></label>
+                                    <input asp-for="DeliveryPostalCode" class="form-control" required maxlength="10" />
+                                    <span asp-validation-for="DeliveryPostalCode" class="text-danger"></span>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <label asp-for="DeliveryRFC" class="form-label">RFC</label>
+                                    <input asp-for="DeliveryRFC" class="form-control" maxlength="13" />
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <label asp-for="DeliveryReference" class="form-label">Referencia</label>
+                                    <input asp-for="DeliveryReference" class="form-control" />
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Items de la Cotización -->
+        <div class="row mb-4">
+            <div class="col-md-12">
+                <div class="card shadow">
+                    <div class="card-header bg-light d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0"><i class="bi bi-list-ul"></i> Items de la Cotización</h5>
+                        <button type="button" class="btn btn-sm btn-success" onclick="addItem()">
+                            <i class="bi bi-plus-circle"></i> Agregar Item
+                        </button>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle mb-0" id="itemsTable">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th class="px-3 py-2" style="width: 20%">Producto</th>
+                                        <th class="px-3 py-2" style="width: 12%">Color</th>
+                                        <th class="px-3 py-2" style="width: 8%">Ancho (m)</th>
+                                        <th class="px-3 py-2" style="width: 8%">Alto (m)</th>
+                                        <th class="px-3 py-2" style="width: 8%">Cantidad</th>
+                                        <th class="px-3 py-2" style="width: 12%">Precio Unit.</th>
+                                        <th class="px-3 py-2" style="width: 12%">Precio c/Desc.</th>
+                                        <th class="px-3 py-2" style="width: 12%">Total</th>
+                                        <th class="px-3 py-2" style="width: 5%"></th>
+                                    </tr>
+                                </thead>
+                                <tbody id="itemsTableBody">
+                                    <!-- Items dinámicos se agregarán aquí -->
+                                </tbody>
+                            </table>
+                        </div>
+                        <div id="noItemsMessage" class="text-center py-5">
+                            <i class="bi bi-inbox fs-1 text-muted d-block mb-3"></i>
+                            <p class="text-muted">No hay items agregados. Haga clic en "Agregar Item" para comenzar.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Descuentos y Costos Adicionales -->
+        <div class="row mb-4">
+            <div class="col-md-8">
+                <div class="card shadow">
+                    <div class="card-header bg-light">
+                        <h5 class="mb-0"><i class="bi bi-journal-text"></i> Notas y Observaciones</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <label asp-for="Notes" class="form-label">Notas</label>
+                            <textarea asp-for="Notes" class="form-control" rows="3"></textarea>
+                        </div>
+                        <div class="mb-3">
+                            <label asp-for="TermsAndConditions" class="form-label">Términos y Condiciones</label>
+                            <textarea asp-for="TermsAndConditions" class="form-control" rows="3"></textarea>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card shadow mb-3">
+                    <div class="card-header bg-light">
+                        <h5 class="mb-0"><i class="bi bi-percent"></i> Ajustes</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <label asp-for="GlobalDiscountPercentage" class="form-label">Descuento Global (%)</label>
+                            <input asp-for="GlobalDiscountPercentage" type="number" step="0.01" min="0" max="100" class="form-control" id="globalDiscountInput" />
+                        </div>
+                        <div class="mb-3">
+                            <label asp-for="ShippingCost" class="form-label">Costo de Envío/Instalación</label>
+                            <input asp-for="ShippingCost" type="number" step="0.01" min="0" class="form-control" id="shippingCostInput" />
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card shadow">
+                    <div class="card-header bg-light">
+                        <h5 class="mb-0"><i class="bi bi-calculator"></i> Resumen</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between mb-2">
+                            <span>Subtotal:</span>
+                            <strong id="subtotalDisplay">$0.00</strong>
+                        </div>
+                        <div class="d-flex justify-content-between mb-2">
+                            <span>Descuento Global:</span>
+                            <strong class="text-success" id="globalDiscountDisplay">$0.00</strong>
+                        </div>
+                        <div class="d-flex justify-content-between mb-2">
+                            <span>Envío/Instalación:</span>
+                            <strong id="shippingDisplay">$0.00</strong>
+                        </div>
+                        <hr />
+                        <div class="d-flex justify-content-between">
+                            <h5 class="mb-0">Total:</h5>
+                            <h5 class="mb-0 text-success" id="totalDisplay">$0.00</h5>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Botones de Acción -->
+        <div class="row mb-4">
+            <div class="col-md-12">
+                <div class="d-flex justify-content-between">
+                    <a asp-action="Index" class="btn btn-outline-secondary">
+                        <i class="bi bi-arrow-left"></i> Cancelar
+                    </a>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-save"></i> Crear Cotización
+                    </button>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+
+    <!-- Select2 CSS y JS -->
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+    <link href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" rel="stylesheet" />
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+
+    <script>
+        // Datos de productos
+        const products = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(products.Select(p => new {
+            id = p.Id,
+            name = p.Name,
+            pricingType = p.ProductType.PricingType.ToString()
+        })));
+
+        let itemCounter = 0;
+        const storeId = document.querySelector('[name="StoreId"]').value;
+        let contactAddresses = [];
+
+        // Inicializar Select2 para el dropdown de Cliente
+        const contactSelect = $('#contactSelect');
+        contactSelect.select2({
+            theme: 'bootstrap-5',
+            placeholder: 'Buscar cliente...',
+            allowClear: true,
+            width: '100%'
+        });
+
+        // Inicializar Select2 para el dropdown de Tienda (solo si es admin)
+        const storeSelect = $('#storeSelect');
+        if (storeSelect.length > 0) {
+            storeSelect.select2({
+                theme: 'bootstrap-5',
+                placeholder: 'Buscar tienda...',
+                allowClear: true,
+                width: '100%'
+            });
+        }
+
+        const addressSelector = document.getElementById('addressSelector');
+
+        // Cargar direcciones cuando se seleccione un cliente
+        contactSelect.on('change', async function() {
+            const contactId = this.value;
+
+            if (!contactId) {
+                addressSelector.disabled = true;
+                addressSelector.innerHTML = '<option value="">Primero seleccione un cliente...</option>';
+                contactAddresses = [];
+                return;
+            }
+
+            try {
+                const response = await fetch(`/Quotation/GetContactAddresses?contactId=${contactId}`);
+                const data = await response.json();
+
+                if (data.success && data.addresses && data.addresses.length > 0) {
+                    contactAddresses = data.addresses;
+
+                    // Poblar el dropdown de direcciones
+                    addressSelector.innerHTML = '<option value="">Seleccione una dirección o ingrese manualmente...</option>';
+                    data.addresses.forEach((address, index) => {
+                        const option = document.createElement('option');
+                        option.value = index;
+                        option.textContent = address.label;
+                        addressSelector.appendChild(option);
+                    });
+
+                    addressSelector.disabled = false;
+
+                    // Auto-seleccionar la dirección principal (primera en la lista)
+                    if (data.addresses.length > 0) {
+                        addressSelector.value = '0';
+                        fillAddressFields(data.addresses[0]);
+                    }
+                } else {
+                    addressSelector.disabled = true;
+                    addressSelector.innerHTML = '<option value="">No hay direcciones disponibles</option>';
+                }
+            } catch (error) {
+                console.error('Error al cargar direcciones:', error);
+                addressSelector.disabled = true;
+                addressSelector.innerHTML = '<option value="">Error al cargar direcciones</option>';
+            }
+        });
+
+        // Rellenar campos cuando se seleccione una dirección
+        addressSelector.addEventListener('change', function() {
+            const index = parseInt(this.value);
+
+            if (isNaN(index) || index < 0 || index >= contactAddresses.length) {
+                return;
+            }
+
+            fillAddressFields(contactAddresses[index]);
+        });
+
+        // Función para rellenar los campos de dirección
+        function fillAddressFields(address) {
+            document.querySelector('[name="DeliveryFirstName"]').value = address.firstName;
+            document.querySelector('[name="DeliveryLastName"]').value = address.lastName;
+            document.querySelector('[name="DeliveryStreet"]').value = address.street;
+            document.querySelector('[name="DeliveryExteriorNumber"]').value = address.exteriorNumber;
+            document.querySelector('[name="DeliveryInteriorNumber"]').value = address.interiorNumber;
+            document.querySelector('[name="DeliveryNeighborhood"]').value = address.neighborhood;
+            document.querySelector('[name="DeliveryCity"]').value = address.city;
+            document.querySelector('[name="DeliveryStateID"]').value = address.stateID;
+            document.querySelector('[name="DeliveryPostalCode"]').value = address.postalCode;
+            document.querySelector('[name="DeliveryRFC"]').value = address.rfc;
+            document.querySelector('[name="DeliveryReference"]').value = address.reference;
+        }
+
+        // Agregar nuevo item
+        function addItem() {
+            const tbody = document.getElementById('itemsTableBody');
+            const row = document.createElement('tr');
+            row.id = `item-${itemCounter}`;
+            row.innerHTML = `
+                <td class="px-3 py-2">
+                    <select name="items[${itemCounter}].ProductId" class="form-select form-select-sm product-select" data-index="${itemCounter}" required>
+                        <option value="">Seleccione...</option>
+                        ${products.map(p => `<option value="${p.id}">${p.name}</option>`).join('')}
+                    </select>
+                </td>
+                <td class="px-3 py-2">
+                    <select name="items[${itemCounter}].ProductColorId" class="form-select form-select-sm color-select" data-index="${itemCounter}" disabled>
+                        <option value="">Primero seleccione un producto...</option>
+                    </select>
+                </td>
+                <td class="px-3 py-2">
+                    <input name="items[${itemCounter}].Width" type="number" step="0.01" min="0" class="form-control form-control-sm dimension-input" data-index="${itemCounter}" />
+                </td>
+                <td class="px-3 py-2">
+                    <input name="items[${itemCounter}].Height" type="number" step="0.01" min="0" class="form-control form-control-sm dimension-input" data-index="${itemCounter}" />
+                </td>
+                <td class="px-3 py-2">
+                    <input name="items[${itemCounter}].Quantity" type="number" step="0.01" min="0.01" value="1" class="form-control form-control-sm quantity-input" data-index="${itemCounter}" required />
+                </td>
+                <td class="px-3 py-2">
+                    <input name="items[${itemCounter}].UnitPrice" type="number" step="0.01" min="0" class="form-control form-control-sm price-input" data-index="${itemCounter}" readonly />
+                </td>
+                <td class="px-3 py-2">
+                    <input name="items[${itemCounter}].DiscountedPrice" type="number" step="0.01" min="0" class="form-control form-control-sm discounted-price-input" data-index="${itemCounter}" required readonly />
+                </td>
+                <td class="px-3 py-2">
+                    <strong class="item-total" data-index="${itemCounter}">$0.00</strong>
+                </td>
+                <td class="px-3 py-2">
+                    <button type="button" class="btn btn-sm btn-outline-danger" onclick="removeItem(${itemCounter})">
+                        <i class="bi bi-trash"></i>
+                    </button>
+                </td>
+            `;
+
+            tbody.appendChild(row);
+
+            // Capturar el índice actual antes de incrementar
+            const currentIndex = itemCounter;
+
+            // Inicializar Select2 para el dropdown de productos
+            const productSelect = $(row).find('.product-select');
+            productSelect.select2({
+                theme: 'bootstrap-5',
+                placeholder: 'Buscar producto...',
+                allowClear: true,
+                width: '100%'
+            });
+
+            // Event listener para cuando cambia el producto
+            productSelect.on('change', function() {
+                const productId = this.value;
+                if (productId) {
+                    loadProductColors(productId, currentIndex);
+                    loadProductPrice(productId, currentIndex);
+                } else {
+                    // Limpiar el dropdown de colores
+                    const colorSelect = row.querySelector('.color-select');
+                    colorSelect.innerHTML = '<option value="">Primero seleccione un producto...</option>';
+                    colorSelect.disabled = true;
+                }
+            });
+
+            // Event listeners para recalcular
+            row.querySelectorAll('.quantity-input, .dimension-input, .discounted-price-input').forEach(input => {
+                input.addEventListener('input', () => calculateItemTotal(currentIndex));
+            });
+
+            itemCounter++;
+            toggleNoItemsMessage();
+        }
+
+        // Eliminar item
+        function removeItem(index) {
+            const row = document.getElementById(`item-${index}`);
+            if (row) {
+                row.remove();
+                calculateTotals();
+                toggleNoItemsMessage();
+            }
+        }
+
+        // Cargar colores del producto
+        async function loadProductColors(productId, index) {
+            if (!productId) return;
+
+            try {
+                const response = await fetch(`/Quotation/GetProductColors?productId=${productId}`);
+                const data = await response.json();
+
+                const colorSelect = document.querySelector(`[name="items[${index}].ProductColorId"]`);
+
+                if (data.success && data.colors && data.colors.length > 0) {
+                    // Poblar el dropdown con los colores
+                    colorSelect.innerHTML = '<option value="">Seleccione un color...</option>';
+                    data.colors.forEach(color => {
+                        const option = document.createElement('option');
+                        option.value = color.id;
+                        option.textContent = color.name;
+                        colorSelect.appendChild(option);
+                    });
+                    colorSelect.disabled = false;
+                } else {
+                    // Si no hay colores, mostrar mensaje y deshabilitar
+                    colorSelect.innerHTML = '<option value="">Sin colores disponibles</option>';
+                    colorSelect.disabled = true;
+                }
+            } catch (error) {
+                console.error('Error al cargar colores:', error);
+            }
+        }
+
+        // Cargar precio del producto
+        async function loadProductPrice(productId, index) {
+            if (!productId) return;
+
+            const storeIdInput = document.querySelector('[name="StoreId"]');
+            const storeId = storeIdInput.value;
+
+            if (!storeId) {
+                alert('Por favor seleccione una tienda primero');
+                return;
+            }
+
+            try {
+                const url = `/Quotation/GetProductPrice?productId=${productId}&storeId=${storeId}`;
+                const response = await fetch(url);
+                const data = await response.json();
+
+                if (data.success) {
+                    document.querySelector(`[name="items[${index}].UnitPrice"]`).value = data.unitPrice.toFixed(2);
+                    document.querySelector(`[name="items[${index}].DiscountedPrice"]`).value = data.discountedPrice.toFixed(2);
+                    calculateItemTotal(index);
+                } else {
+                    alert('No se encontró precio para este producto');
+                }
+            } catch (error) {
+                console.error('Error al cargar precio:', error);
+            }
+        }
+
+        // Calcular total de un item
+        function calculateItemTotal(index) {
+            const quantity = parseFloat(document.querySelector(`[name="items[${index}].Quantity"]`).value) || 0;
+            const width = parseFloat(document.querySelector(`[name="items[${index}].Width"]`).value) || 0;
+            const height = parseFloat(document.querySelector(`[name="items[${index}].Height"]`).value) || 0;
+            const discountedPrice = parseFloat(document.querySelector(`[name="items[${index}].DiscountedPrice"]`).value) || 0;
+
+            // Obtener el tipo de precio del producto seleccionado
+            const productId = parseInt(document.querySelector(`[name="items[${index}].ProductId"]`).value);
+            const product = products.find(p => p.id === productId);
+
+            let effectiveQuantity = quantity;
+            if (product) {
+                if (product.pricingType === 'PerSquareMeter' && width > 0 && height > 0) {
+                    effectiveQuantity = width * height * quantity;
+                } else if (product.pricingType === 'PerLinearMeter' && width > 0) {
+                    effectiveQuantity = width * quantity;
+                }
+            }
+
+            const total = effectiveQuantity * discountedPrice;
+            const totalDisplay = document.querySelector(`.item-total[data-index="${index}"]`);
+            if (totalDisplay) {
+                totalDisplay.textContent = `$${total.toFixed(2)}`;
+            }
+
+            calculateTotals();
+        }
+
+        // Calcular totales generales
+        function calculateTotals() {
+            let subtotal = 0;
+
+            // Sumar todos los items
+            document.querySelectorAll('.item-total').forEach(elem => {
+                const value = parseFloat(elem.textContent.replace('$', '').replace(',', '')) || 0;
+                subtotal += value;
+            });
+
+            const globalDiscountPercentage = parseFloat(document.getElementById('globalDiscountInput').value) || 0;
+            const shippingCost = parseFloat(document.getElementById('shippingCostInput').value) || 0;
+
+            const globalDiscountAmount = subtotal * (globalDiscountPercentage / 100);
+            const total = subtotal - globalDiscountAmount + shippingCost;
+
+            // Actualizar displays
+            document.getElementById('subtotalDisplay').textContent = `$${subtotal.toFixed(2)}`;
+            document.getElementById('globalDiscountDisplay').textContent = `-$${globalDiscountAmount.toFixed(2)}`;
+            document.getElementById('shippingDisplay').textContent = `$${shippingCost.toFixed(2)}`;
+            document.getElementById('totalDisplay').textContent = `$${total.toFixed(2)}`;
+        }
+
+        // Toggle mensaje de "no items"
+        function toggleNoItemsMessage() {
+            const tbody = document.getElementById('itemsTableBody');
+            const noItemsMsg = document.getElementById('noItemsMessage');
+            if (tbody.children.length === 0) {
+                noItemsMsg.style.display = 'block';
+            } else {
+                noItemsMsg.style.display = 'none';
+            }
+        }
+
+        // Event listeners para descuento global y envío
+        document.getElementById('globalDiscountInput').addEventListener('input', calculateTotals);
+        document.getElementById('shippingCostInput').addEventListener('input', calculateTotals);
+
+        // Validación antes de enviar
+        document.getElementById('quotationForm').addEventListener('submit', function(e) {
+            const tbody = document.getElementById('itemsTableBody');
+            if (tbody.children.length === 0) {
+                e.preventDefault();
+                alert('Debe agregar al menos un item a la cotización');
+                return false;
+            }
+        });
+
+        // Inicializar
+        toggleNoItemsMessage();
+
+        // Agregar primer item automáticamente
+        addItem();
+    </script>
+}

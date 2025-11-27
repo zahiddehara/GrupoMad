@@ -203,6 +203,12 @@ namespace GrupoMad.Models
         public Product Product { get; set; }
 
         /// <summary>
+        /// Color del producto (si aplica)
+        /// </summary>
+        public int? ProductColorId { get; set; }
+        public ProductColor? ProductColor { get; set; }
+
+        /// <summary>
         /// Variante del producto (si aplica)
         /// Por ejemplo: "3 vías", "4 vías", etc.
         /// </summary>

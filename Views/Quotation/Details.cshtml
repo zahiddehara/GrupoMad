@@ -1,0 +1,407 @@
+@model GrupoMad.Models.Quotation
+
+@{
+    ViewData["Title"] = "Detalles de Cotización";
+}
+
+<div class="container-fluid">
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a asp-action="Index">Cotizaciones</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">@Model.QuotationNumber</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="bi bi-check-circle"></i> @TempData["SuccessMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="bi bi-exclamation-triangle"></i> @TempData["ErrorMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
+    <!-- Header con información principal -->
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h4 class="mb-0"><i class="bi bi-file-earmark-text"></i> Cotización @Model.QuotationNumber</h4>
+                        <div>
+                            @if (Model.Status == GrupoMad.Models.QuotationStatus.Draft)
+                            {
+                                <span class="badge bg-secondary fs-6">
+                                    <i class="bi bi-pencil"></i> Borrador
+                                </span>
+                            }
+                            else if (Model.Status == GrupoMad.Models.QuotationStatus.Sent)
+                            {
+                                @if (Model.IsExpired())
+                                {
+                                    <span class="badge bg-danger fs-6">
+                                        <i class="bi bi-clock-history"></i> Expirada
+                                    </span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-info fs-6">
+                                        <i class="bi bi-send"></i> Enviada
+                                    </span>
+                                }
+                            }
+                            else if (Model.Status == GrupoMad.Models.QuotationStatus.Accepted)
+                            {
+                                <span class="badge bg-success fs-6">
+                                    <i class="bi bi-check-circle"></i> Aceptada
+                                </span>
+                            }
+                            else if (Model.Status == GrupoMad.Models.QuotationStatus.Rejected)
+                            {
+                                <span class="badge bg-warning text-dark fs-6">
+                                    <i class="bi bi-x-circle"></i> Rechazada
+                                </span>
+                            }
+                            else if (Model.Status == GrupoMad.Models.QuotationStatus.Expired)
+                            {
+                                <span class="badge bg-danger fs-6">
+                                    <i class="bi bi-clock-history"></i> Expirada
+                                </span>
+                            }
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body p-4">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="row mb-3">
+                                <div class="col-md-5 fw-bold">Fecha de Cotización:</div>
+                                <div class="col-md-7">@Model.QuotationDate.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</div>
+                            </div>
+                            <div class="row mb-3">
+                                <div class="col-md-5 fw-bold">Válida Hasta:</div>
+                                <div class="col-md-7">
+                                    @Model.ValidUntil.ToLocalTime().ToString("dd/MM/yyyy")
+                                    @if (Model.IsExpired())
+                                    {
+                                        <span class="badge bg-danger ms-2">Expirada</span>
+                                    }
+                                </div>
+                            </div>
+                            <div class="row mb-3">
+                                <div class="col-md-5 fw-bold">Tienda:</div>
+                                <div class="col-md-7">
+                                    @Model.Store?.Name<br />
+                                    <small class="text-muted">@Model.Store?.Company?.Name</small>
+                                </div>
+                            </div>
+                            <div class="row mb-3">
+                                <div class="col-md-5 fw-bold">Creada Por:</div>
+                                <div class="col-md-7">@Model.CreatedByUser?.FirstName @Model.CreatedByUser?.LastName</div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <h5 class="mb-3"><i class="bi bi-person-badge"></i> Cliente</h5>
+                            <p class="mb-1"><strong>@Model.Contact?.FirstName @Model.Contact?.LastName</strong></p>
+                            @if (!string.IsNullOrEmpty(Model.Contact?.RFC))
+                            {
+                                <p class="mb-1"><small class="text-muted">RFC: @Model.Contact?.RFC</small></p>
+                            }
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Dirección de Entrega -->
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="card shadow-sm">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0"><i class="bi bi-truck"></i> Dirección de Entrega</h5>
+                </div>
+                <div class="card-body">
+                    <p class="mb-1"><strong>@Model.DeliveryFirstName @Model.DeliveryLastName</strong></p>
+                    @if (!string.IsNullOrEmpty(Model.DeliveryRFC))
+                    {
+                        <p class="mb-2"><small class="text-muted">RFC: @Model.DeliveryRFC</small></p>
+                    }
+                    <p class="mb-1">
+                        @Model.DeliveryStreet @Model.DeliveryExteriorNumber@(Model.DeliveryInteriorNumber != null ? $" Int. {Model.DeliveryInteriorNumber}" : "")
+                    </p>
+                    <p class="mb-1">@Model.DeliveryNeighborhood</p>
+                    <p class="mb-1">@Model.DeliveryCity, @Model.DeliveryStateID.ToString()</p>
+                    <p class="mb-1">C.P. @Model.DeliveryPostalCode</p>
+                    @if (!string.IsNullOrEmpty(Model.DeliveryReference))
+                    {
+                        <p class="mb-0 mt-2"><small><strong>Referencia:</strong> @Model.DeliveryReference</small></p>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Items de la Cotización -->
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="card shadow-sm">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0"><i class="bi bi-list-ul"></i> Items de la Cotización</h5>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th class="px-4 py-3">#</th>
+                                    <th class="px-4 py-3">Producto</th>
+                                    <th class="px-4 py-3">Variante</th>
+                                    <th class="px-4 py-3 text-center">Dimensiones</th>
+                                    <th class="px-4 py-3 text-center">Cantidad</th>
+                                    <th class="px-4 py-3 text-end">Precio Unit.</th>
+                                    <th class="px-4 py-3 text-end">Precio c/Desc.</th>
+                                    <th class="px-4 py-3 text-end">Total</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @if (Model.Items?.Any() == true)
+                                {
+                                    int itemNumber = 1;
+                                    @foreach (var item in Model.Items.OrderBy(i => i.DisplayOrder))
+                                    {
+                                        <tr>
+                                            <td class="px-4 py-3">@itemNumber</td>
+                                            <td class="px-4 py-3">
+                                                <strong>@item.Product?.Name</strong><br />
+                                                <small class="text-muted">@item.Product?.ProductType?.Name</small>
+                                                @if (!string.IsNullOrEmpty(item.Description))
+                                                {
+                                                    <br /><small class="text-muted">@item.Description</small>
+                                                }
+                                            </td>
+                                            <td class="px-4 py-3">
+                                                @if (!string.IsNullOrEmpty(item.Variant))
+                                                {
+                                                    <span class="badge bg-secondary">@item.Variant</span>
+                                                }
+                                                else
+                                                {
+                                                    <span class="text-muted">-</span>
+                                                }
+                                            </td>
+                                            <td class="px-4 py-3 text-center">
+                                                @if (item.Width.HasValue || item.Height.HasValue)
+                                                {
+                                                    @if (item.Width.HasValue && item.Height.HasValue)
+                                                    {
+                                                        <small>@item.Width.Value.ToString("0.00") x @item.Height.Value.ToString("0.00") m</small>
+                                                    }
+                                                    else if (item.Width.HasValue)
+                                                    {
+                                                        <small>@item.Width.Value.ToString("0.00") m</small>
+                                                    }
+                                                }
+                                                else
+                                                {
+                                                    <span class="text-muted">-</span>
+                                                }
+                                            </td>
+                                            <td class="px-4 py-3 text-center">
+                                                @item.Quantity.ToString("0.00")
+                                                @if (item.GetEffectiveQuantity() != item.Quantity)
+                                                {
+                                                    <br /><small class="text-muted">Efectiva: @item.GetEffectiveQuantity().ToString("0.00")</small>
+                                                }
+                                            </td>
+                                            <td class="px-4 py-3 text-end">
+                                                @item.UnitPrice.ToString("C")
+                                            </td>
+                                            <td class="px-4 py-3 text-end">
+                                                @item.DiscountedPrice.ToString("C")
+                                                @if (item.HasDiscount())
+                                                {
+                                                    <br /><small class="text-success">Ahorro: @item.GetDiscountAmount().ToString("C")</small>
+                                                }
+                                            </td>
+                                            <td class="px-4 py-3 text-end">
+                                                <strong>@item.GetLineTotal().ToString("C")</strong>
+                                            </td>
+                                        </tr>
+                                        itemNumber++;
+                                    }
+                                }
+                                else
+                                {
+                                    <tr>
+                                        <td colspan="8" class="text-center py-4">
+                                            <p class="text-muted mb-0">No hay items en esta cotización</p>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Totales y Notas -->
+    <div class="row mb-4">
+        <div class="col-md-8">
+            @if (!string.IsNullOrEmpty(Model.Notes) || !string.IsNullOrEmpty(Model.TermsAndConditions))
+            {
+                <div class="card shadow-sm mb-4">
+                    <div class="card-header bg-light">
+                        <h5 class="mb-0"><i class="bi bi-journal-text"></i> Notas y Condiciones</h5>
+                    </div>
+                    <div class="card-body">
+                        @if (!string.IsNullOrEmpty(Model.Notes))
+                        {
+                            <h6>Notas:</h6>
+                            <p>@Model.Notes</p>
+                        }
+                        @if (!string.IsNullOrEmpty(Model.TermsAndConditions))
+                        {
+                            <h6>Términos y Condiciones:</h6>
+                            <p>@Model.TermsAndConditions</p>
+                        }
+                    </div>
+                </div>
+            }
+        </div>
+        <div class="col-md-4">
+            <div class="card shadow-sm">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0"><i class="bi bi-calculator"></i> Resumen</h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>Subtotal:</span>
+                        <strong>@Model.GetSubtotal().ToString("C")</strong>
+                    </div>
+                    @if (Model.GlobalDiscountPercentage > 0)
+                    {
+                        <div class="d-flex justify-content-between mb-2">
+                            <span>Descuento Global (@Model.GlobalDiscountPercentage%):</span>
+                            <strong class="text-success">-@Model.GetGlobalDiscountAmount().ToString("C")</strong>
+                        </div>
+                    }
+                    @if (Model.ShippingCost > 0)
+                    {
+                        <div class="d-flex justify-content-between mb-2">
+                            <span>Envío/Instalación:</span>
+                            <strong>@Model.ShippingCost.ToString("C")</strong>
+                        </div>
+                    }
+                    <hr />
+                    <div class="d-flex justify-content-between">
+                        <h5 class="mb-0">Total:</h5>
+                        <h5 class="mb-0 text-success">@Model.GetTotal().ToString("C")</h5>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Botones de Acción -->
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <a asp-action="Index" class="btn btn-outline-secondary">
+                                <i class="bi bi-arrow-left"></i> Volver a la Lista
+                            </a>
+                        </div>
+                        <div>
+                            @if (Model.Status == GrupoMad.Models.QuotationStatus.Draft)
+                            {
+                                <!-- Borrador: Enviar, Editar, Duplicar -->
+                                <form asp-action="Send" method="post" class="d-inline">
+                                    <input type="hidden" name="id" value="@Model.Id" />
+                                    <button type="submit" class="btn btn-info" onclick="return confirm('¿Está seguro de enviar esta cotización al cliente?')">
+                                        <i class="bi bi-send"></i> Enviar Cotización
+                                    </button>
+                                </form>
+                                <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-primary">
+                                    <i class="bi bi-pencil"></i> Editar
+                                </a>
+                                <a asp-action="Duplicate" asp-route-id="@Model.Id" class="btn btn-outline-secondary">
+                                    <i class="bi bi-copy"></i> Duplicar
+                                </a>
+                            }
+                            else if (Model.Status == GrupoMad.Models.QuotationStatus.Sent && !Model.IsExpired())
+                            {
+                                <!-- Enviada (no expirada): Aceptar, Rechazar, Duplicar -->
+                                <form asp-action="Accept" method="post" class="d-inline">
+                                    <input type="hidden" name="id" value="@Model.Id" />
+                                    <button type="submit" class="btn btn-success" onclick="return confirm('¿Confirma que el cliente aceptó esta cotización?')">
+                                        <i class="bi bi-check-circle"></i> Aceptar
+                                    </button>
+                                </form>
+                                <form asp-action="Reject" method="post" class="d-inline">
+                                    <input type="hidden" name="id" value="@Model.Id" />
+                                    <button type="submit" class="btn btn-warning" onclick="return confirm('¿Confirma que el cliente rechazó esta cotización?')">
+                                        <i class="bi bi-x-circle"></i> Rechazar
+                                    </button>
+                                </form>
+                                <a asp-action="Duplicate" asp-route-id="@Model.Id" class="btn btn-outline-secondary">
+                                    <i class="bi bi-copy"></i> Duplicar
+                                </a>
+                            }
+                            else
+                            {
+                                <!-- Aceptada, Rechazada o Expirada: Solo Duplicar -->
+                                <a asp-action="Duplicate" asp-route-id="@Model.Id" class="btn btn-outline-secondary">
+                                    <i class="bi bi-copy"></i> Duplicar
+                                </a>
+                            }
+                            <a asp-action="Delete" asp-route-id="@Model.Id" class="btn btn-outline-danger">
+                                <i class="bi bi-trash"></i> Eliminar
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Información de Timestamps -->
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <small class="text-muted">
+                        <strong>Creada:</strong> @Model.CreatedAt.ToLocalTime().ToString("dd/MM/yyyy HH:mm")
+                        @if (Model.UpdatedAt.HasValue)
+                        {
+                            <span class="ms-3"><strong>Actualizada:</strong> @Model.UpdatedAt.Value.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</span>
+                        }
+                        @if (Model.SentAt.HasValue)
+                        {
+                            <span class="ms-3"><strong>Enviada:</strong> @Model.SentAt.Value.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</span>
+                        }
+                        @if (Model.RespondedAt.HasValue)
+                        {
+                            <span class="ms-3"><strong>Respondida:</strong> @Model.RespondedAt.Value.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</span>
+                        }
+                    </small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

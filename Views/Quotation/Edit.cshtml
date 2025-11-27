@@ -1,0 +1,526 @@
+@model GrupoMad.Models.Quotation
+
+@{
+    ViewData["Title"] = "Editar Cotización";
+    var products = ViewData["Products"] as List<GrupoMad.Models.Product> ?? new List<GrupoMad.Models.Product>();
+}
+
+<div class="container-fluid">
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a asp-action="Index">Cotizaciones</a></li>
+                    <li class="breadcrumb-item"><a asp-action="Details" asp-route-id="@Model.Id">@Model.QuotationNumber</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">Editar</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+
+    <form asp-action="Edit" method="post" id="quotationForm">
+        <input type="hidden" asp-for="Id" />
+        <input type="hidden" asp-for="QuotationNumber" />
+        <input type="hidden" asp-for="CreatedAt" />
+        <input type="hidden" asp-for="StoreId" />
+
+        <div asp-validation-summary="ModelOnly" class="alert alert-danger"></div>
+
+        <!-- Información General -->
+        <div class="row mb-4">
+            <div class="col-md-12">
+                <div class="card shadow">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0"><i class="bi bi-info-circle"></i> Información General - @Model.QuotationNumber</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label asp-for="ContactId" class="form-label">Cliente <span class="text-danger">*</span></label>
+                                    <select asp-for="ContactId" class="form-select" asp-items="ViewBag.ContactId" required>
+                                        <option value="">Seleccione un cliente...</option>
+                                    </select>
+                                    <span asp-validation-for="ContactId" class="text-danger"></span>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label class="form-label">Tienda</label>
+                                    <input type="text" class="form-control" value="@Model.Store?.Name" readonly />
+                                    <small class="text-muted">La tienda no puede modificarse en una cotización existente</small>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Fecha de Cotización</label>
+                                    <input type="text" class="form-control" value="@Model.QuotationDate.ToLocalTime().ToString("dd/MM/yyyy HH:mm")" readonly />
+                                </div>
+
+                                <div class="mb-3">
+                                    <label asp-for="ValidUntil" class="form-label">Válida Hasta <span class="text-danger">*</span></label>
+                                    <input asp-for="ValidUntil" type="date" class="form-control" required />
+                                    <span asp-validation-for="ValidUntil" class="text-danger"></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Dirección de Entrega -->
+        <div class="row mb-4">
+            <div class="col-md-12">
+                <div class="card shadow">
+                    <div class="card-header bg-light">
+                        <h5 class="mb-0"><i class="bi bi-truck"></i> Dirección de Entrega</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label asp-for="DeliveryFirstName" class="form-label">Nombre <span class="text-danger">*</span></label>
+                                    <input asp-for="DeliveryFirstName" class="form-control" required />
+                                    <span asp-validation-for="DeliveryFirstName" class="text-danger"></span>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label asp-for="DeliveryLastName" class="form-label">Apellido <span class="text-danger">*</span></label>
+                                    <input asp-for="DeliveryLastName" class="form-control" required />
+                                    <span asp-validation-for="DeliveryLastName" class="text-danger"></span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-8">
+                                <div class="mb-3">
+                                    <label asp-for="DeliveryStreet" class="form-label">Calle <span class="text-danger">*</span></label>
+                                    <input asp-for="DeliveryStreet" class="form-control" required />
+                                    <span asp-validation-for="DeliveryStreet" class="text-danger"></span>
+                                </div>
+                            </div>
+                            <div class="col-md-2">
+                                <div class="mb-3">
+                                    <label asp-for="DeliveryExteriorNumber" class="form-label">Núm. Ext. <span class="text-danger">*</span></label>
+                                    <input asp-for="DeliveryExteriorNumber" class="form-control" required />
+                                    <span asp-validation-for="DeliveryExteriorNumber" class="text-danger"></span>
+                                </div>
+                            </div>
+                            <div class="col-md-2">
+                                <div class="mb-3">
+                                    <label asp-for="DeliveryInteriorNumber" class="form-label">Núm. Int.</label>
+                                    <input asp-for="DeliveryInteriorNumber" class="form-control" />
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <label asp-for="DeliveryNeighborhood" class="form-label">Colonia <span class="text-danger">*</span></label>
+                                    <input asp-for="DeliveryNeighborhood" class="form-control" required />
+                                    <span asp-validation-for="DeliveryNeighborhood" class="text-danger"></span>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <label asp-for="DeliveryCity" class="form-label">Ciudad <span class="text-danger">*</span></label>
+                                    <input asp-for="DeliveryCity" class="form-control" required />
+                                    <span asp-validation-for="DeliveryCity" class="text-danger"></span>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <label asp-for="DeliveryStateID" class="form-label">Estado <span class="text-danger">*</span></label>
+                                    <select asp-for="DeliveryStateID" class="form-select" required>
+                                        <option value="">Seleccione...</option>
+                                        <option value="@((int)GrupoMad.Models.MexicanState.Aguascalientes)">Aguascalientes</option>
+                                        <option value="@((int)GrupoMad.Models.MexicanState.BajaCalifornia)">Baja California</option>
+                                        <option value="@((int)GrupoMad.Models.MexicanState.BajaCaliforniaSur)">Baja California Sur</option>
+                                        <option value="@((int)GrupoMad.Models.MexicanState.Campeche)">Campeche</option>
+                                        <option value="@((int)GrupoMad.Models.MexicanState.Chiapas)">Chiapas</option>
+                                        <option value="@((int)GrupoMad.Models.MexicanState.Chihuahua)">Chihuahua</option>
+                                        <option value="@((int)GrupoMad.Models.MexicanState.CiudadDeMexico)">Ciudad de México</option>
+                                        <option value="@((int)GrupoMad.Models.MexicanState.Coahuila)">Coahuila</option>
+                                        <option value="@((int)GrupoMad.Models.MexicanState.Colima)">Colima</option>
+                                        <option value="@((int)GrupoMad.Models.MexicanState.Durango)">Durango</option>
+                                        <option value="@((int)GrupoMad.Models.MexicanState.EstadoDeMexico)">Estado de México</option>
+                                        <option value="@((int)GrupoMad.Models.MexicanState.Guanajuato)">Guanajuato</option>
+                                        <option value="@((int)GrupoMad.Models.MexicanState.Guerrero)">Guerrero</option>
+                                        <option value="@((int)GrupoMad.Models.MexicanState.Hidalgo)">Hidalgo</option>
+                                        <option value="@((int)GrupoMad.Models.MexicanState.Jalisco)">Jalisco</option>
+                                        <option value="@((int)GrupoMad.Models.MexicanState.Michoacan)">Michoacán</option>
+                                        <option value="@((int)GrupoMad.Models.MexicanState.Morelos)">Morelos</option>
+                                        <option value="@((int)GrupoMad.Models.MexicanState.Nayarit)">Nayarit</option>
+                                        <option value="@((int)GrupoMad.Models.MexicanState.NuevoLeon)">Nuevo León</option>
+                                        <option value="@((int)GrupoMad.Models.MexicanState.Oaxaca)">Oaxaca</option>
+                                        <option value="@((int)GrupoMad.Models.MexicanState.Puebla)">Puebla</option>
+                                        <option value="@((int)GrupoMad.Models.MexicanState.Queretaro)">Querétaro</option>
+                                        <option value="@((int)GrupoMad.Models.MexicanState.QuintanaRoo)">Quintana Roo</option>
+                                        <option value="@((int)GrupoMad.Models.MexicanState.SanLuisPotosi)">San Luis Potosí</option>
+                                        <option value="@((int)GrupoMad.Models.MexicanState.Sinaloa)">Sinaloa</option>
+                                        <option value="@((int)GrupoMad.Models.MexicanState.Sonora)">Sonora</option>
+                                        <option value="@((int)GrupoMad.Models.MexicanState.Tabasco)">Tabasco</option>
+                                        <option value="@((int)GrupoMad.Models.MexicanState.Tamaulipas)">Tamaulipas</option>
+                                        <option value="@((int)GrupoMad.Models.MexicanState.Tlaxcala)">Tlaxcala</option>
+                                        <option value="@((int)GrupoMad.Models.MexicanState.Veracruz)">Veracruz</option>
+                                        <option value="@((int)GrupoMad.Models.MexicanState.Yucatan)">Yucatán</option>
+                                        <option value="@((int)GrupoMad.Models.MexicanState.Zacatecas)">Zacatecas</option>
+                                    </select>
+                                    <span asp-validation-for="DeliveryStateID" class="text-danger"></span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <label asp-for="DeliveryPostalCode" class="form-label">Código Postal <span class="text-danger">*</span></label>
+                                    <input asp-for="DeliveryPostalCode" class="form-control" required maxlength="10" />
+                                    <span asp-validation-for="DeliveryPostalCode" class="text-danger"></span>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <label asp-for="DeliveryRFC" class="form-label">RFC</label>
+                                    <input asp-for="DeliveryRFC" class="form-control" maxlength="13" />
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <label asp-for="DeliveryReference" class="form-label">Referencia</label>
+                                    <input asp-for="DeliveryReference" class="form-control" />
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Items de la Cotización -->
+        <div class="row mb-4">
+            <div class="col-md-12">
+                <div class="card shadow">
+                    <div class="card-header bg-light d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0"><i class="bi bi-list-ul"></i> Items de la Cotización</h5>
+                        <button type="button" class="btn btn-sm btn-success" onclick="addItem()">
+                            <i class="bi bi-plus-circle"></i> Agregar Item
+                        </button>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle mb-0" id="itemsTable">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th class="px-3 py-2" style="width: 25%">Producto</th>
+                                        <th class="px-3 py-2" style="width: 10%">Variante</th>
+                                        <th class="px-3 py-2" style="width: 8%">Ancho (m)</th>
+                                        <th class="px-3 py-2" style="width: 8%">Alto (m)</th>
+                                        <th class="px-3 py-2" style="width: 8%">Cantidad</th>
+                                        <th class="px-3 py-2" style="width: 12%">Precio Unit.</th>
+                                        <th class="px-3 py-2" style="width: 12%">Precio c/Desc.</th>
+                                        <th class="px-3 py-2" style="width: 12%">Total</th>
+                                        <th class="px-3 py-2" style="width: 5%"></th>
+                                    </tr>
+                                </thead>
+                                <tbody id="itemsTableBody">
+                                    <!-- Items dinámicos se agregarán aquí -->
+                                </tbody>
+                            </table>
+                        </div>
+                        <div id="noItemsMessage" class="text-center py-5" style="display: none;">
+                            <i class="bi bi-inbox fs-1 text-muted d-block mb-3"></i>
+                            <p class="text-muted">No hay items agregados. Haga clic en "Agregar Item" para comenzar.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Descuentos y Costos Adicionales -->
+        <div class="row mb-4">
+            <div class="col-md-8">
+                <div class="card shadow">
+                    <div class="card-header bg-light">
+                        <h5 class="mb-0"><i class="bi bi-journal-text"></i> Notas y Observaciones</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <label asp-for="Notes" class="form-label">Notas</label>
+                            <textarea asp-for="Notes" class="form-control" rows="3"></textarea>
+                        </div>
+                        <div class="mb-3">
+                            <label asp-for="TermsAndConditions" class="form-label">Términos y Condiciones</label>
+                            <textarea asp-for="TermsAndConditions" class="form-control" rows="3"></textarea>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card shadow mb-3">
+                    <div class="card-header bg-light">
+                        <h5 class="mb-0"><i class="bi bi-percent"></i> Ajustes</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <label asp-for="GlobalDiscountPercentage" class="form-label">Descuento Global (%)</label>
+                            <input asp-for="GlobalDiscountPercentage" type="number" step="0.01" min="0" max="100" class="form-control" id="globalDiscountInput" />
+                        </div>
+                        <div class="mb-3">
+                            <label asp-for="ShippingCost" class="form-label">Costo de Envío/Instalación</label>
+                            <input asp-for="ShippingCost" type="number" step="0.01" min="0" class="form-control" id="shippingCostInput" />
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card shadow">
+                    <div class="card-header bg-light">
+                        <h5 class="mb-0"><i class="bi bi-calculator"></i> Resumen</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between mb-2">
+                            <span>Subtotal:</span>
+                            <strong id="subtotalDisplay">$0.00</strong>
+                        </div>
+                        <div class="d-flex justify-content-between mb-2">
+                            <span>Descuento Global:</span>
+                            <strong class="text-success" id="globalDiscountDisplay">$0.00</strong>
+                        </div>
+                        <div class="d-flex justify-content-between mb-2">
+                            <span>Envío/Instalación:</span>
+                            <strong id="shippingDisplay">$0.00</strong>
+                        </div>
+                        <hr />
+                        <div class="d-flex justify-content-between">
+                            <h5 class="mb-0">Total:</h5>
+                            <h5 class="mb-0 text-success" id="totalDisplay">$0.00</h5>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Botones de Acción -->
+        <div class="row mb-4">
+            <div class="col-md-12">
+                <div class="d-flex justify-content-between">
+                    <a asp-action="Details" asp-route-id="@Model.Id" class="btn btn-outline-secondary">
+                        <i class="bi bi-arrow-left"></i> Cancelar
+                    </a>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-save"></i> Guardar Cambios
+                    </button>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+
+    <script>
+        // Datos de productos
+        const products = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(products.Select(p => new {
+            id = p.Id,
+            name = p.Name,
+            pricingType = p.ProductType.PricingType.ToString()
+        })));
+
+        // Items existentes
+        const existingItems = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.Items.OrderBy(i => i.DisplayOrder).Select(i => new {
+            productId = i.ProductId,
+            variant = i.Variant,
+            quantity = i.Quantity,
+            width = i.Width,
+            height = i.Height,
+            unitPrice = i.UnitPrice,
+            discountedPrice = i.DiscountedPrice,
+            description = i.Description
+        })));
+
+        let itemCounter = 0;
+        const storeId = @Model.StoreId;
+
+        // Agregar nuevo item
+        function addItem(itemData = null) {
+            const tbody = document.getElementById('itemsTableBody');
+            const row = document.createElement('tr');
+            row.id = `item-${itemCounter}`;
+            row.innerHTML = `
+                <td class="px-3 py-2">
+                    <select name="items[${itemCounter}].ProductId" class="form-select form-select-sm product-select" data-index="${itemCounter}" required>
+                        <option value="">Seleccione...</option>
+                        ${products.map(p => `<option value="${p.id}" ${itemData && itemData.productId === p.id ? 'selected' : ''}>${p.name}</option>`).join('')}
+                    </select>
+                </td>
+                <td class="px-3 py-2">
+                    <input name="items[${itemCounter}].Variant" type="text" class="form-control form-control-sm variant-input" data-index="${itemCounter}" value="${itemData?.variant || ''}" />
+                </td>
+                <td class="px-3 py-2">
+                    <input name="items[${itemCounter}].Width" type="number" step="0.01" min="0" class="form-control form-control-sm dimension-input" data-index="${itemCounter}" value="${itemData?.width || ''}" />
+                </td>
+                <td class="px-3 py-2">
+                    <input name="items[${itemCounter}].Height" type="number" step="0.01" min="0" class="form-control form-control-sm dimension-input" data-index="${itemCounter}" value="${itemData?.height || ''}" />
+                </td>
+                <td class="px-3 py-2">
+                    <input name="items[${itemCounter}].Quantity" type="number" step="0.01" min="0.01" value="${itemData?.quantity || 1}" class="form-control form-control-sm quantity-input" data-index="${itemCounter}" required />
+                </td>
+                <td class="px-3 py-2">
+                    <input name="items[${itemCounter}].UnitPrice" type="number" step="0.01" min="0" class="form-control form-control-sm price-input" data-index="${itemCounter}" value="${itemData?.unitPrice || ''}" readonly />
+                </td>
+                <td class="px-3 py-2">
+                    <input name="items[${itemCounter}].DiscountedPrice" type="number" step="0.01" min="0" class="form-control form-control-sm discounted-price-input" data-index="${itemCounter}" value="${itemData?.discountedPrice || ''}" required />
+                </td>
+                <td class="px-3 py-2">
+                    <strong class="item-total" data-index="${itemCounter}">$0.00</strong>
+                </td>
+                <td class="px-3 py-2">
+                    <button type="button" class="btn btn-sm btn-outline-danger" onclick="removeItem(${itemCounter})">
+                        <i class="bi bi-trash"></i>
+                    </button>
+                </td>
+            `;
+
+            tbody.appendChild(row);
+
+            // Event listeners
+            const productSelect = row.querySelector('.product-select');
+            productSelect.addEventListener('change', function() {
+                loadProductPrice(this.value, itemCounter);
+            });
+
+            // Event listeners para recalcular
+            row.querySelectorAll('.quantity-input, .dimension-input, .discounted-price-input').forEach(input => {
+                input.addEventListener('input', () => calculateItemTotal(itemCounter));
+            });
+
+            // Calcular total inicial si hay datos
+            if (itemData) {
+                calculateItemTotal(itemCounter);
+            }
+
+            itemCounter++;
+            toggleNoItemsMessage();
+        }
+
+        // Eliminar item
+        function removeItem(index) {
+            const row = document.getElementById(`item-${index}`);
+            if (row) {
+                row.remove();
+                calculateTotals();
+                toggleNoItemsMessage();
+            }
+        }
+
+        // Cargar precio del producto
+        async function loadProductPrice(productId, index) {
+            if (!productId) return;
+
+            const variantInput = document.querySelector(`[name="items[${index}].Variant"]`);
+            const variant = variantInput ? variantInput.value : null;
+
+            try {
+                const url = `/Quotation/GetProductPrice?productId=${productId}&storeId=${storeId}${variant ? `&variant=${encodeURIComponent(variant)}` : ''}`;
+                const response = await fetch(url);
+                const data = await response.json();
+
+                if (data.success) {
+                    document.querySelector(`[name="items[${index}].UnitPrice"]`).value = data.unitPrice.toFixed(2);
+                    document.querySelector(`[name="items[${index}].DiscountedPrice"]`).value = data.discountedPrice.toFixed(2);
+                    calculateItemTotal(index);
+                } else {
+                    alert('No se encontró precio para este producto');
+                }
+            } catch (error) {
+                console.error('Error al cargar precio:', error);
+            }
+        }
+
+        // Calcular total de un item
+        function calculateItemTotal(index) {
+            const quantity = parseFloat(document.querySelector(`[name="items[${index}].Quantity"]`)?.value) || 0;
+            const width = parseFloat(document.querySelector(`[name="items[${index}].Width"]`)?.value) || 0;
+            const height = parseFloat(document.querySelector(`[name="items[${index}].Height"]`)?.value) || 0;
+            const discountedPrice = parseFloat(document.querySelector(`[name="items[${index}].DiscountedPrice"]`)?.value) || 0;
+
+            // Obtener el tipo de precio del producto seleccionado
+            const productId = parseInt(document.querySelector(`[name="items[${index}].ProductId"]`)?.value);
+            const product = products.find(p => p.id === productId);
+
+            let effectiveQuantity = quantity;
+            if (product) {
+                if (product.pricingType === 'PerSquareMeter' && width > 0 && height > 0) {
+                    effectiveQuantity = width * height * quantity;
+                } else if (product.pricingType === 'PerLinearMeter' && width > 0) {
+                    effectiveQuantity = width * quantity;
+                }
+            }
+
+            const total = effectiveQuantity * discountedPrice;
+            const totalDisplay = document.querySelector(`.item-total[data-index="${index}"]`);
+            if (totalDisplay) {
+                totalDisplay.textContent = `$${total.toFixed(2)}`;
+            }
+
+            calculateTotals();
+        }
+
+        // Calcular totales generales
+        function calculateTotals() {
+            let subtotal = 0;
+
+            // Sumar todos los items
+            document.querySelectorAll('.item-total').forEach(elem => {
+                const value = parseFloat(elem.textContent.replace('$', '').replace(',', '')) || 0;
+                subtotal += value;
+            });
+
+            const globalDiscountPercentage = parseFloat(document.getElementById('globalDiscountInput').value) || 0;
+            const shippingCost = parseFloat(document.getElementById('shippingCostInput').value) || 0;
+
+            const globalDiscountAmount = subtotal * (globalDiscountPercentage / 100);
+            const total = subtotal - globalDiscountAmount + shippingCost;
+
+            // Actualizar displays
+            document.getElementById('subtotalDisplay').textContent = `$${subtotal.toFixed(2)}`;
+            document.getElementById('globalDiscountDisplay').textContent = `-$${globalDiscountAmount.toFixed(2)}`;
+            document.getElementById('shippingDisplay').textContent = `$${shippingCost.toFixed(2)}`;
+            document.getElementById('totalDisplay').textContent = `$${total.toFixed(2)}`;
+        }
+
+        // Toggle mensaje de "no items"
+        function toggleNoItemsMessage() {
+            const tbody = document.getElementById('itemsTableBody');
+            const noItemsMsg = document.getElementById('noItemsMessage');
+            if (tbody.children.length === 0) {
+                noItemsMsg.style.display = 'block';
+            } else {
+                noItemsMsg.style.display = 'none';
+            }
+        }
+
+        // Event listeners para descuento global y envío
+        document.getElementById('globalDiscountInput').addEventListener('input', calculateTotals);
+        document.getElementById('shippingCostInput').addEventListener('input', calculateTotals);
+
+        // Validación antes de enviar
+        document.getElementById('quotationForm').addEventListener('submit', function(e) {
+            const tbody = document.getElementById('itemsTableBody');
+            if (tbody.children.length === 0) {
+                e.preventDefault();
+                alert('Debe agregar al menos un item a la cotización');
+                return false;
+            }
+        });
+
+        // Inicializar con items existentes
+        existingItems.forEach(item => {
+            addItem(item);
+        });
+
+        toggleNoItemsMessage();
+        calculateTotals();
+    </script>
+}

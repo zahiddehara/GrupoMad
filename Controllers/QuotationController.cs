@@ -57,6 +57,26 @@ namespace GrupoMad.Controllers
             ViewBag.StatusFilter = status;
             ViewBag.ContactIdFilter = contactId;
 
+            // Cargar lista de contactos para el filtro
+            var contactsQuery = _context.Contacts.AsQueryable();
+            if (userStoreId.HasValue)
+            {
+                var store = _context.Stores.Find(userStoreId.Value);
+                if (store?.CompanyId != null)
+                {
+                    contactsQuery = contactsQuery.Where(c => c.CompanyId == store.CompanyId);
+                }
+            }
+            var contacts = await contactsQuery
+                .OrderBy(c => c.FirstName)
+                .ThenBy(c => c.LastName)
+                .Select(c => new {
+                    Id = c.Id,
+                    FullName = c.FirstName + " " + c.LastName
+                })
+                .ToListAsync();
+            ViewBag.Contacts = new SelectList(contacts, "Id", "FullName", contactId);
+
             return View(quotations);
         }
 
@@ -76,6 +96,8 @@ namespace GrupoMad.Controllers
                 .Include(q => q.Items)
                     .ThenInclude(i => i.Product)
                         .ThenInclude(p => p.ProductType)
+                .Include(q => q.Items)
+                    .ThenInclude(i => i.ProductColor)
                 .FirstOrDefaultAsync(m => m.Id == id);
 
             if (quotation == null)
@@ -151,6 +173,17 @@ namespace GrupoMad.Controllers
             ModelState.Remove("Items");
             ModelState.Remove("QuotationNumber");
 
+            // Remover validaciones de propiedades de navegación en items
+            if (items != null)
+            {
+                for (int i = 0; i < items.Count; i++)
+                {
+                    ModelState.Remove($"items[{i}].Product");
+                    ModelState.Remove($"items[{i}].ProductColor");
+                    ModelState.Remove($"items[{i}].Quotation");
+                }
+            }
+
             if (ModelState.IsValid)
             {
                 try
@@ -173,6 +206,7 @@ namespace GrupoMad.Controllers
                             var quotationItem = new QuotationItem
                             {
                                 ProductId = itemDto.ProductId,
+                                ProductColorId = itemDto.ProductColorId,
                                 Variant = itemDto.Variant,
                                 Quantity = itemDto.Quantity,
                                 UnitPrice = itemDto.UnitPrice,
@@ -214,6 +248,8 @@ namespace GrupoMad.Controllers
             var quotation = await _context.Quotations
                 .Include(q => q.Items)
                     .ThenInclude(i => i.Product)
+                .Include(q => q.Items)
+                    .ThenInclude(i => i.ProductColor)
                 .FirstOrDefaultAsync(q => q.Id == id);
 
             if (quotation == null)
@@ -253,6 +289,17 @@ namespace GrupoMad.Controllers
             ModelState.Remove("CreatedByUser");
             ModelState.Remove("Items");
             ModelState.Remove("QuotationNumber");
+
+            // Remover validaciones de propiedades de navegación en items
+            if (items != null)
+            {
+                for (int i = 0; i < items.Count; i++)
+                {
+                    ModelState.Remove($"items[{i}].Product");
+                    ModelState.Remove($"items[{i}].ProductColor");
+                    ModelState.Remove($"items[{i}].Quotation");
+                }
+            }
 
             if (ModelState.IsValid)
             {
@@ -304,6 +351,7 @@ namespace GrupoMad.Controllers
                             var quotationItem = new QuotationItem
                             {
                                 ProductId = itemDto.ProductId,
+                                ProductColorId = itemDto.ProductColorId,
                                 Variant = itemDto.Variant,
                                 Quantity = itemDto.Quantity,
                                 UnitPrice = itemDto.UnitPrice,
@@ -485,6 +533,84 @@ namespace GrupoMad.Controllers
             });
         }
 
+        // API: Obtener colores de un producto
+        [HttpGet]
+        public async Task<IActionResult> GetProductColors(int productId)
+        {
+            var product = await _context.Products
+                .Include(p => p.ProductColors)
+                .FirstOrDefaultAsync(p => p.Id == productId);
+
+            if (product == null)
+            {
+                return Json(new { success = false, message = "Producto no encontrado" });
+            }
+
+            var colors = product.ProductColors.Select(c => new
+            {
+                id = c.Id,
+                name = c.Name,
+                sku = c.SKU
+            }).ToList();
+
+            return Json(new { success = true, colors = colors });
+        }
+
+        // API: Obtener direcciones de un contacto
+        [HttpGet]
+        public async Task<IActionResult> GetContactAddresses(int contactId)
+        {
+            var contact = await _context.Contacts
+                .Include(c => c.ShippingAddresses)
+                .FirstOrDefaultAsync(c => c.Id == contactId);
+
+            if (contact == null)
+            {
+                return Json(new { success = false, message = "Cliente no encontrado" });
+            }
+
+            // Preparar dirección principal del contacto
+            var mainAddress = new
+            {
+                id = 0, // ID 0 indica la dirección principal del contacto
+                label = "Dirección Principal",
+                firstName = contact.FirstName,
+                lastName = contact.LastName,
+                street = contact.Street,
+                exteriorNumber = contact.ExteriorNumber,
+                interiorNumber = contact.InteriorNumber ?? "",
+                neighborhood = contact.Neighborhood,
+                city = contact.City,
+                stateID = (int)contact.StateID,
+                postalCode = contact.PostalCode,
+                rfc = contact.RFC ?? "",
+                reference = ""
+            };
+
+            // Preparar direcciones de envío adicionales
+            var shippingAddresses = contact.ShippingAddresses.Select(a => new
+            {
+                id = a.Id,
+                label = $"{a.Street} {a.ExteriorNumber}, {a.Neighborhood}, {a.City}",
+                firstName = a.FirstName,
+                lastName = a.LastName,
+                street = a.Street,
+                exteriorNumber = a.ExteriorNumber,
+                interiorNumber = a.InteriorNumber ?? "",
+                neighborhood = a.Neighborhood,
+                city = a.City,
+                stateID = (int)a.StateID,
+                postalCode = a.PostalCode,
+                rfc = a.RFC ?? "",
+                reference = a.DeliveryReference ?? ""
+            }).ToList();
+
+            // Combinar dirección principal con las direcciones de envío
+            var allAddresses = new[] { mainAddress }.Concat(shippingAddresses).ToList();
+
+            return Json(new { success = true, addresses = allAddresses });
+        }
+
         // Helpers
 
         private bool QuotationExists(int id)
@@ -532,12 +658,16 @@ namespace GrupoMad.Controllers
                 }
             }
 
-            ViewData["ContactId"] = new SelectList(
-                contactsQuery.OrderBy(c => c.FirstName).ThenBy(c => c.LastName),
-                "Id",
-                "FirstName",
-                selectedContactId
-            );
+            var contactsList = contactsQuery
+                .OrderBy(c => c.FirstName)
+                .ThenBy(c => c.LastName)
+                .Select(c => new {
+                    Id = c.Id,
+                    FullName = c.FirstName + " " + c.LastName
+                })
+                .ToList();
+
+            ViewData["ContactId"] = new SelectList(contactsList, "Id", "FullName", selectedContactId);
 
             // Tiendas (solo la del usuario si no es admin)
             IQueryable<Store> storesQuery = _context.Stores.Include(s => s.Company);
@@ -548,6 +678,16 @@ namespace GrupoMad.Controllers
             }
 
             ViewData["StoreId"] = new SelectList(storesQuery, "Id", "Name", storeId);
+
+            // Indicar si el usuario es admin
+            ViewData["IsAdmin"] = IsAdmin();
+
+            // Guardar el nombre de la tienda para usuarios no admin
+            if (storeId.HasValue)
+            {
+                var storeName = _context.Stores.Find(storeId.Value)?.Name;
+                ViewData["StoreName"] = storeName;
+            }
 
             // Productos (todos)
             ViewData["Products"] = _context.Products
@@ -562,6 +702,7 @@ namespace GrupoMad.Controllers
     public class QuotationItemDto
     {
         public int ProductId { get; set; }
+        public int? ProductColorId { get; set; }
         public string? Variant { get; set; }
         public decimal Quantity { get; set; }
         public decimal UnitPrice { get; set; }

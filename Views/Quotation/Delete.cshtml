@@ -1,0 +1,165 @@
+@model GrupoMad.Models.Quotation
+
+@{
+    ViewData["Title"] = "Eliminar Cotización";
+}
+
+<div class="container">
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a asp-action="Index">Cotizaciones</a></li>
+                    <li class="breadcrumb-item"><a asp-action="Details" asp-route-id="@Model.Id">@Model.QuotationNumber</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">Eliminar</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-12">
+            <div class="alert alert-danger" role="alert">
+                <h4 class="alert-heading"><i class="bi bi-exclamation-triangle-fill"></i> Confirmación de Eliminación</h4>
+                <p>¿Está seguro de que desea eliminar esta cotización? Esta acción no se puede deshacer.</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="card shadow">
+                <div class="card-header bg-danger text-white">
+                    <h4 class="mb-0"><i class="bi bi-file-earmark-text"></i> Cotización @Model.QuotationNumber</h4>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-3">
+                        <div class="col-md-3 fw-bold">Número:</div>
+                        <div class="col-md-9">@Model.QuotationNumber</div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-md-3 fw-bold">Estado:</div>
+                        <div class="col-md-9">
+                            @if (Model.Status == GrupoMad.Models.QuotationStatus.Draft)
+                            {
+                                <span class="badge bg-secondary">Borrador</span>
+                            }
+                            else if (Model.Status == GrupoMad.Models.QuotationStatus.Sent)
+                            {
+                                <span class="badge bg-info">Enviada</span>
+                            }
+                            else if (Model.Status == GrupoMad.Models.QuotationStatus.Accepted)
+                            {
+                                <span class="badge bg-success">Aceptada</span>
+                            }
+                            else if (Model.Status == GrupoMad.Models.QuotationStatus.Rejected)
+                            {
+                                <span class="badge bg-warning text-dark">Rechazada</span>
+                            }
+                            else if (Model.Status == GrupoMad.Models.QuotationStatus.Expired)
+                            {
+                                <span class="badge bg-danger">Expirada</span>
+                            }
+                        </div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-md-3 fw-bold">Cliente:</div>
+                        <div class="col-md-9">@Model.Contact?.FirstName @Model.Contact?.LastName</div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-md-3 fw-bold">Tienda:</div>
+                        <div class="col-md-9">
+                            @Model.Store?.Name<br />
+                            <small class="text-muted">@Model.Store?.Company?.Name</small>
+                        </div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-md-3 fw-bold">Fecha de Cotización:</div>
+                        <div class="col-md-9">@Model.QuotationDate.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-md-3 fw-bold">Válida Hasta:</div>
+                        <div class="col-md-9">@Model.ValidUntil.ToLocalTime().ToString("dd/MM/yyyy")</div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-md-3 fw-bold">Dirección de Entrega:</div>
+                        <div class="col-md-9">
+                            @Model.DeliveryFirstName @Model.DeliveryLastName<br />
+                            @Model.DeliveryStreet @Model.DeliveryExteriorNumber@(Model.DeliveryInteriorNumber != null ? $" Int. {Model.DeliveryInteriorNumber}" : "")<br />
+                            @Model.DeliveryNeighborhood, @Model.DeliveryCity<br />
+                            @Model.DeliveryStateID.ToString(), C.P. @Model.DeliveryPostalCode
+                        </div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-md-3 fw-bold">Creada Por:</div>
+                        <div class="col-md-9">@Model.CreatedByUser?.FirstName @Model.CreatedByUser?.LastName</div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-md-3 fw-bold">Número de Items:</div>
+                        <div class="col-md-9">
+                            <span class="badge bg-info">@Model.Items.Count item(s)</span>
+                        </div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-md-3 fw-bold">Total:</div>
+                        <div class="col-md-9">
+                            <h5 class="text-success mb-0">@Model.GetTotal().ToString("C")</h5>
+                        </div>
+                    </div>
+
+                    @if (!string.IsNullOrEmpty(Model.Notes))
+                    {
+                        <div class="row mb-3">
+                            <div class="col-md-3 fw-bold">Notas:</div>
+                            <div class="col-md-9">@Model.Notes</div>
+                        </div>
+                    }
+
+                    <hr />
+
+                    <div class="row">
+                        <div class="col-md-3 fw-bold">Creada:</div>
+                        <div class="col-md-9">
+                            <small class="text-muted">@Model.CreatedAt.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</small>
+                        </div>
+                    </div>
+
+                    @if (Model.UpdatedAt.HasValue)
+                    {
+                        <div class="row">
+                            <div class="col-md-3 fw-bold">Última Actualización:</div>
+                            <div class="col-md-9">
+                                <small class="text-muted">@Model.UpdatedAt.Value.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</small>
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <form asp-action="Delete" method="post">
+        <input type="hidden" asp-for="Id" />
+        <div class="row mt-4">
+            <div class="col-md-12">
+                <div class="d-flex justify-content-between">
+                    <a asp-action="Details" asp-route-id="@Model.Id" class="btn btn-outline-secondary">
+                        <i class="bi bi-arrow-left"></i> Cancelar
+                    </a>
+                    <button type="submit" class="btn btn-danger">
+                        <i class="bi bi-trash"></i> Confirmar Eliminación
+                    </button>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
