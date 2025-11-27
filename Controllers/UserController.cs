@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
 using GrupoMad.Data;
 using GrupoMad.Models;
@@ -7,6 +8,7 @@ using BCrypt.Net;
 
 namespace GrupoMad.Controllers
 {
+    [Authorize]
     public class UserController : Controller
     {
         private readonly ApplicationDbContext _context;

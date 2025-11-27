@@ -1,11 +1,13 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
+using Microsoft.AspNetCore.Authorization;
 using GrupoMad.Services;
 using GrupoMad.Models;
 using GrupoMad.Data;
 
 namespace GrupoMad.Controllers
 {
+    [Authorize]
     public class ProductController : Controller
     {
         private readonly ProductService _productService;

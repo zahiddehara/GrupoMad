@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
 using GrupoMad.Services;
 using GrupoMad.Models;
@@ -7,6 +8,7 @@ using GrupoMad.Data;
 
 namespace GrupoMad.Controllers
 {
+    [Authorize]
     public class PriceListController : Controller
     {
         private readonly PriceListService _priceListService;

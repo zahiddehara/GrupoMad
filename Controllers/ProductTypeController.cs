@@ -1,10 +1,12 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
 using GrupoMad.Data;
 using GrupoMad.Models;
 
 namespace GrupoMad.Controllers
 {
+    [Authorize]
     public class ProductTypeController : Controller
     {
         private readonly ApplicationDbContext _context;
