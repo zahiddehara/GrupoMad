@@ -25,8 +25,8 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
         options.ExpireTimeSpan = TimeSpan.FromHours(48); // Sesión de 48 horas
         options.SlidingExpiration = true; // Renovar automáticamente
         options.Cookie.HttpOnly = true;
-        options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
-        options.Cookie.SameSite = SameSiteMode.Strict;
+        options.Cookie.SecurePolicy = CookieSecurePolicy.None; // Permitir HTTP (ideal: configurar HTTPS en producción)
+        options.Cookie.SameSite = SameSiteMode.Lax;
     });
 
 var app = builder.Build();
