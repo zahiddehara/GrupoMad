@@ -218,7 +218,7 @@
             <div class="col-md-12">
                 <div class="card shadow">
                     <div class="card-header bg-light d-flex justify-content-between align-items-center">
-                        <h5 class="mb-0"><i class="bi bi-list-ul"></i> Items de la Cotización</h5>
+                        <h5 class="mb-0"><i class="bi bi-list-ul"></i> Artículos de la Cotización</h5>
                         <button type="button" class="btn btn-sm btn-success" onclick="addItem()">
                             <i class="bi bi-plus-circle"></i> Agregar Item
                         </button>
@@ -509,9 +509,15 @@
                     loadProductPrice(productId, currentIndex);
                 } else {
                     // Limpiar el dropdown de colores
-                    const colorSelect = row.querySelector('.color-select');
-                    colorSelect.innerHTML = '<option value="">Primero seleccione un producto...</option>';
-                    colorSelect.disabled = true;
+                    const colorSelect = $(row).find('.color-select');
+
+                    // Destruir Select2 si existe
+                    if (colorSelect.hasClass('select2-hidden-accessible')) {
+                        colorSelect.select2('destroy');
+                    }
+
+                    colorSelect.html('<option value="">Primero seleccione un producto...</option>');
+                    colorSelect.prop('disabled', true);
                 }
             });
 
@@ -526,8 +532,20 @@
 
         // Eliminar item
         function removeItem(index) {
-            const row = document.getElementById(`item-${index}`);
-            if (row) {
+            const row = $(`#item-${index}`);
+            if (row.length) {
+                // Destruir Select2 antes de eliminar la fila
+                row.find('.color-select').each(function() {
+                    if ($(this).hasClass('select2-hidden-accessible')) {
+                        $(this).select2('destroy');
+                    }
+                });
+                row.find('.product-select').each(function() {
+                    if ($(this).hasClass('select2-hidden-accessible')) {
+                        $(this).select2('destroy');
+                    }
+                });
+
                 row.remove();
                 calculateTotals();
                 toggleNoItemsMessage();
@@ -542,22 +560,35 @@
                 const response = await fetch(`/Quotation/GetProductColors?productId=${productId}`);
                 const data = await response.json();
 
-                const colorSelect = document.querySelector(`[name="items[${index}].ProductColorId"]`);
+                const colorSelect = $(`[name="items[${index}].ProductColorId"]`);
+
+                // Destruir Select2 si ya existe
+                if (colorSelect.hasClass('select2-hidden-accessible')) {
+                    colorSelect.select2('destroy');
+                }
 
                 if (data.success && data.colors && data.colors.length > 0) {
                     // Poblar el dropdown con los colores
-                    colorSelect.innerHTML = '<option value="">Seleccione un color...</option>';
+                    colorSelect.html('<option value="">Seleccione un color...</option>');
                     data.colors.forEach(color => {
-                        const option = document.createElement('option');
-                        option.value = color.id;
-                        option.textContent = color.name;
-                        colorSelect.appendChild(option);
+                        const option = $('<option></option>')
+                            .val(color.id)
+                            .text(`${color.name} (SKU: ${color.sku})`);
+                        colorSelect.append(option);
                     });
-                    colorSelect.disabled = false;
+                    colorSelect.prop('disabled', false);
+
+                    // Inicializar Select2
+                    colorSelect.select2({
+                        theme: 'bootstrap-5',
+                        placeholder: 'Seleccione un color...',
+                        allowClear: true,
+                        width: '100%'
+                    });
                 } else {
                     // Si no hay colores, mostrar mensaje y deshabilitar
-                    colorSelect.innerHTML = '<option value="">Sin colores disponibles</option>';
-                    colorSelect.disabled = true;
+                    colorSelect.html('<option value="">Sin colores disponibles</option>');
+                    colorSelect.prop('disabled', true);
                 }
             } catch (error) {
                 console.error('Error al cargar colores:', error);
