@@ -31,6 +31,37 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
 
 var app = builder.Build();
 
+// Crear usuario administrador inicial si no existe ningún usuario
+using (var scope = app.Services.CreateScope())
+{
+    var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+
+    // Verificar si existen usuarios
+    if (!context.Users.Any())
+    {
+        var adminUser = new GrupoMad.Models.User
+        {
+            FirstName = "Administrador",
+            LastName = "Sistema",
+            Email = "admin@grupomad.com",
+            PasswordHash = BCrypt.Net.BCrypt.HashPassword("Admin123"),
+            PhoneNumber = null,
+            Role = GrupoMad.Models.UserRole.Administrator,
+            StoreId = null,
+            IsActive = true,
+            CreatedAt = DateTime.UtcNow
+        };
+
+        context.Users.Add(adminUser);
+        context.SaveChanges();
+
+        Console.WriteLine("✓ Usuario administrador creado:");
+        Console.WriteLine("  Email: admin@grupomad.com");
+        Console.WriteLine("  Contraseña: Admin123");
+        Console.WriteLine("  ¡IMPORTANTE! Cambia la contraseña después del primer login.");
+    }
+}
+
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())
 {
