@@ -115,7 +115,7 @@
                 <form asp-action="Login" method="post">
                     <input type="hidden" name="returnUrl" value="@ViewData["ReturnUrl"]" />
 
-                    @if (!ModelState.IsValid)
+                    @if (!ViewData.ModelState.IsValid)
                     {
                         <div class="alert alert-danger" role="alert">
                             <i class="bi bi-exclamation-triangle-fill"></i>
