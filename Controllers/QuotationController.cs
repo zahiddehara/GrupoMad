@@ -147,14 +147,14 @@ namespace GrupoMad.Controllers
                     quotation.ContactId = contact.Id;
                     // Pre-cargar con la dirección principal del contacto
                     quotation.DeliveryFirstName = contact.FirstName;
-                    quotation.DeliveryLastName = contact.LastName;
-                    quotation.DeliveryStreet = contact.Street;
-                    quotation.DeliveryExteriorNumber = contact.ExteriorNumber;
+                    quotation.DeliveryLastName = contact.LastName ?? string.Empty;
+                    quotation.DeliveryStreet = contact.Street ?? string.Empty;
+                    quotation.DeliveryExteriorNumber = contact.ExteriorNumber ?? string.Empty;
                     quotation.DeliveryInteriorNumber = contact.InteriorNumber;
-                    quotation.DeliveryNeighborhood = contact.Neighborhood;
-                    quotation.DeliveryCity = contact.City;
-                    quotation.DeliveryStateID = contact.StateID;
-                    quotation.DeliveryPostalCode = contact.PostalCode;
+                    quotation.DeliveryNeighborhood = contact.Neighborhood ?? string.Empty;
+                    quotation.DeliveryCity = contact.City ?? string.Empty;
+                    quotation.DeliveryStateID = contact.StateID ?? MexicanState.Aguascalientes;
+                    quotation.DeliveryPostalCode = contact.PostalCode ?? string.Empty;
                     quotation.DeliveryRFC = contact.RFC;
                 }
             }
@@ -575,14 +575,14 @@ namespace GrupoMad.Controllers
                 id = 0, // ID 0 indica la dirección principal del contacto
                 label = "Dirección Principal",
                 firstName = contact.FirstName,
-                lastName = contact.LastName,
-                street = contact.Street,
-                exteriorNumber = contact.ExteriorNumber,
+                lastName = contact.LastName ?? "",
+                street = contact.Street ?? "",
+                exteriorNumber = contact.ExteriorNumber ?? "",
                 interiorNumber = contact.InteriorNumber ?? "",
-                neighborhood = contact.Neighborhood,
-                city = contact.City,
-                stateID = (int)contact.StateID,
-                postalCode = contact.PostalCode,
+                neighborhood = contact.Neighborhood ?? "",
+                city = contact.City ?? "",
+                stateID = (int)(contact.StateID ?? MexicanState.Aguascalientes),
+                postalCode = contact.PostalCode ?? "",
                 rfc = contact.RFC ?? "",
                 reference = ""
             };
@@ -591,7 +591,7 @@ namespace GrupoMad.Controllers
             var shippingAddresses = contact.ShippingAddresses.Select(a => new
             {
                 id = a.Id,
-                label = $"{a.Street} {a.ExteriorNumber}, {a.Neighborhood}, {a.City}",
+                label = $"{a.Street ?? ""} {a.ExteriorNumber ?? ""}, {a.Neighborhood ?? ""}, {a.City ?? ""}".Trim(',', ' '),
                 firstName = a.FirstName,
                 lastName = a.LastName,
                 street = a.Street,

@@ -58,7 +58,7 @@ namespace GrupoMad.Controllers
         // POST: Contact/Create
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("Id,FirstName,LastName,Street,ExteriorNumber,InteriorNumber,Neighborhood,City,StateID,PostalCode,RFC,CompanyId")] Contact contact)
+        public async Task<IActionResult> Create([Bind("Id,FirstName,LastName,Street,ExteriorNumber,InteriorNumber,Neighborhood,City,StateID,PostalCode,RFC,Email,CompanyId")] Contact contact)
         {
             ModelState.Remove("Company");
             ModelState.Remove("ShippingAddresses");
@@ -94,7 +94,7 @@ namespace GrupoMad.Controllers
         // POST: Contact/Edit/5
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("Id,FirstName,LastName,Street,ExteriorNumber,InteriorNumber,Neighborhood,City,StateID,PostalCode,RFC,CompanyId,CreatedAt")] Contact contact)
+        public async Task<IActionResult> Edit(int id, [Bind("Id,FirstName,LastName,Street,ExteriorNumber,InteriorNumber,Neighborhood,City,StateID,PostalCode,RFC,Email,CompanyId,CreatedAt")] Contact contact)
         {
             if (id != contact.Id)
             {
@@ -194,14 +194,14 @@ namespace GrupoMad.Controllers
             {
                 ContactID = contact.Id,
                 FirstName = contact.FirstName,
-                LastName = contact.LastName,
-                Street = contact.Street,
-                ExteriorNumber = contact.ExteriorNumber,
+                LastName = contact.LastName ?? string.Empty,
+                Street = contact.Street ?? string.Empty,
+                ExteriorNumber = contact.ExteriorNumber ?? string.Empty,
                 InteriorNumber = contact.InteriorNumber,
-                Neighborhood = contact.Neighborhood,
-                City = contact.City,
-                StateID = contact.StateID,
-                PostalCode = contact.PostalCode,
+                Neighborhood = contact.Neighborhood ?? string.Empty,
+                City = contact.City ?? string.Empty,
+                StateID = contact.StateID ?? MexicanState.Aguascalientes,
+                PostalCode = contact.PostalCode ?? string.Empty,
                 RFC = contact.RFC
             };
 

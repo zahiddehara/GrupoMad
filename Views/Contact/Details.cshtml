@@ -48,33 +48,61 @@
                         </div>
                     }
 
-                    <hr>
-                    <h5 class="mb-3"><i class="bi bi-geo-alt"></i> Dirección Principal</h5>
+                    @if (!string.IsNullOrEmpty(Model.Email))
+                    {
+                        <div class="row mb-3">
+                            <div class="col-md-3 fw-bold">Email:</div>
+                            <div class="col-md-9">
+                                <a href="mailto:@Model.Email">@Model.Email</a>
+                            </div>
+                        </div>
+                    }
 
-                    <div class="row mb-2">
-                        <div class="col-md-3 fw-bold">Calle:</div>
-                        <div class="col-md-9">@Model.Street @Model.ExteriorNumber@(Model.InteriorNumber != null ? $" Int. {Model.InteriorNumber}" : "")</div>
-                    </div>
+                    @if (!string.IsNullOrEmpty(Model.Street) || !string.IsNullOrEmpty(Model.City) || Model.StateID.HasValue)
+                    {
+                        <hr>
+                        <h5 class="mb-3"><i class="bi bi-geo-alt"></i> Dirección Principal</h5>
 
-                    <div class="row mb-2">
-                        <div class="col-md-3 fw-bold">Colonia:</div>
-                        <div class="col-md-9">@Model.Neighborhood</div>
-                    </div>
+                        @if (!string.IsNullOrEmpty(Model.Street))
+                        {
+                            <div class="row mb-2">
+                                <div class="col-md-3 fw-bold">Calle:</div>
+                                <div class="col-md-9">@Model.Street @Model.ExteriorNumber@(Model.InteriorNumber != null ? $" Int. {Model.InteriorNumber}" : "")</div>
+                            </div>
+                        }
 
-                    <div class="row mb-2">
-                        <div class="col-md-3 fw-bold">Ciudad:</div>
-                        <div class="col-md-9">@Model.City</div>
-                    </div>
+                        @if (!string.IsNullOrEmpty(Model.Neighborhood))
+                        {
+                            <div class="row mb-2">
+                                <div class="col-md-3 fw-bold">Colonia:</div>
+                                <div class="col-md-9">@Model.Neighborhood</div>
+                            </div>
+                        }
 
-                    <div class="row mb-2">
-                        <div class="col-md-3 fw-bold">Estado:</div>
-                        <div class="col-md-9">@Model.StateID.ToString()</div>
-                    </div>
+                        @if (!string.IsNullOrEmpty(Model.City))
+                        {
+                            <div class="row mb-2">
+                                <div class="col-md-3 fw-bold">Ciudad:</div>
+                                <div class="col-md-9">@Model.City</div>
+                            </div>
+                        }
 
-                    <div class="row mb-3">
-                        <div class="col-md-3 fw-bold">Código Postal:</div>
-                        <div class="col-md-9">@Model.PostalCode</div>
-                    </div>
+                        @if (Model.StateID.HasValue)
+                        {
+                            <div class="row mb-2">
+                                <div class="col-md-3 fw-bold">Estado:</div>
+                                <div class="col-md-9">@Model.StateID.Value.ToString()</div>
+                            </div>
+                        }
+
+                        @if (!string.IsNullOrEmpty(Model.PostalCode))
+                        {
+                            <div class="row mb-3">
+                                <div class="col-md-3 fw-bold">Código Postal:</div>
+                                <div class="col-md-9">@Model.PostalCode</div>
+                            </div>
+                        }
+                    }
 
                     <hr>
 

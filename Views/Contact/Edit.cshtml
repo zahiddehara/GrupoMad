@@ -52,7 +52,7 @@
                                 <span asp-validation-for="FirstName" class="text-danger small"></span>
                             </div>
                             <div class="col-md-6 mb-3">
-                                <label asp-for="LastName" class="form-label fw-bold">Apellido(s)</label>
+                                <label asp-for="LastName" class="form-label fw-bold">Apellido(s) (Opcional)</label>
                                 <input asp-for="LastName" class="form-control" placeholder="Apellido" />
                                 <span asp-validation-for="LastName" class="text-danger small"></span>
                             </div>
@@ -64,18 +64,24 @@
                             <span asp-validation-for="RFC" class="text-danger small"></span>
                         </div>
 
+                        <div class="mb-3">
+                            <label asp-for="Email" class="form-label fw-bold">Email (Opcional)</label>
+                            <input asp-for="Email" type="email" class="form-control" placeholder="correo@ejemplo.com" />
+                            <span asp-validation-for="Email" class="text-danger small"></span>
+                        </div>
+
                         <hr class="my-4">
-                        <h5 class="mb-3"><i class="bi bi-geo-alt"></i> Dirección</h5>
+                        <h5 class="mb-3"><i class="bi bi-geo-alt"></i> Dirección (Opcional)</h5>
 
                         <div class="mb-3">
-                            <label asp-for="Street" class="form-label fw-bold">Calle</label>
+                            <label asp-for="Street" class="form-label fw-bold">Calle (Opcional)</label>
                             <input asp-for="Street" class="form-control" placeholder="Nombre de la calle" />
                             <span asp-validation-for="Street" class="text-danger small"></span>
                         </div>
 
                         <div class="row">
                             <div class="col-md-6 mb-3">
-                                <label asp-for="ExteriorNumber" class="form-label fw-bold">Número Exterior</label>
+                                <label asp-for="ExteriorNumber" class="form-label fw-bold">Número Exterior (Opcional)</label>
                                 <input asp-for="ExteriorNumber" class="form-control" placeholder="Núm. Ext." />
                                 <span asp-validation-for="ExteriorNumber" class="text-danger small"></span>
                             </div>
@@ -87,26 +93,26 @@
                         </div>
 
                         <div class="mb-3">
-                            <label asp-for="Neighborhood" class="form-label fw-bold">Colonia</label>
+                            <label asp-for="Neighborhood" class="form-label fw-bold">Colonia (Opcional)</label>
                             <input asp-for="Neighborhood" class="form-control" placeholder="Colonia o Barrio" />
                             <span asp-validation-for="Neighborhood" class="text-danger small"></span>
                         </div>
 
                         <div class="row">
                             <div class="col-md-6 mb-3">
-                                <label asp-for="City" class="form-label fw-bold">Ciudad</label>
+                                <label asp-for="City" class="form-label fw-bold">Ciudad (Opcional)</label>
                                 <input asp-for="City" class="form-control" placeholder="Ciudad o Municipio" />
                                 <span asp-validation-for="City" class="text-danger small"></span>
                             </div>
                             <div class="col-md-6 mb-3">
-                                <label asp-for="PostalCode" class="form-label fw-bold">Código Postal</label>
+                                <label asp-for="PostalCode" class="form-label fw-bold">Código Postal (Opcional)</label>
                                 <input asp-for="PostalCode" class="form-control" placeholder="C.P." maxlength="10" />
                                 <span asp-validation-for="PostalCode" class="text-danger small"></span>
                             </div>
                         </div>
 
                         <div class="mb-3">
-                            <label asp-for="StateID" class="form-label fw-bold">Estado</label>
+                            <label asp-for="StateID" class="form-label fw-bold">Estado (Opcional)</label>
                             <select asp-for="StateID" class="form-select" asp-items="Html.GetEnumSelectList<GrupoMad.Models.MexicanState>()">
                                 <option value="">-- Selecciona un estado --</option>
                             </select>
