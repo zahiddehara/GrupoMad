@@ -26,8 +26,8 @@
         <div class="col-md-12">
             <div class="card shadow-sm">
                 <div class="card-body">
-                    <form asp-action="Index" method="get" class="row g-3">
-                        <div class="col-md-4">
+                    <form asp-action="Index" method="get" id="filterForm" class="row g-3">
+                        <div class="col-md-3">
                             <label class="form-label"><i class="bi bi-funnel"></i> Filtrar por Estado</label>
                             <select name="status" class="form-select">
                                 <option value="">Todos los estados</option>
@@ -38,22 +38,86 @@
                                 <option value="@((int)GrupoMad.Models.QuotationStatus.Expired)" selected="@(ViewBag.StatusFilter == GrupoMad.Models.QuotationStatus.Expired ? "selected" : null)">Expirada</option>
                             </select>
                         </div>
-                        <div class="col-md-6">
+                        <div class="col-md-4">
                             <label class="form-label"><i class="bi bi-person"></i> Filtrar por Contacto</label>
                             <select name="contactId" id="contactFilter" class="form-select" asp-items="ViewBag.Contacts">
                                 <option value="">Todos los contactos</option>
                             </select>
                         </div>
-                        <div class="col-md-2 d-flex align-items-end">
-                            <button type="submit" class="btn btn-primary w-100">
-                                <i class="bi bi-search"></i> Filtrar
+                        <div class="col-md-2">
+                            <label class="form-label"><i class="bi bi-calendar"></i> Desde</label>
+                            <input type="date" name="fromDate" class="form-control" value="@ViewBag.FromDate" />
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label"><i class="bi bi-calendar"></i> Hasta</label>
+                            <input type="date" name="toDate" class="form-control" value="@ViewBag.ToDate" />
+                        </div>
+                        <div class="col-md-1 d-flex align-items-end">
+                            <button type="submit" class="btn btn-primary w-100" title="Buscar">
+                                <i class="bi bi-search"></i>
                             </button>
                         </div>
+                        @if (!string.IsNullOrEmpty(ViewBag.FromDate) || !string.IsNullOrEmpty(ViewBag.ToDate) || ViewBag.StatusFilter != null || ViewBag.ContactIdFilter != null)
+                        {
+                            <div class="col-12">
+                                <a asp-action="Index" class="btn btn-outline-secondary btn-sm">
+                                    <i class="bi bi-x-circle"></i> Limpiar Filtros
+                                </a>
+                            </div>
+                        }
                     </form>
                 </div>
             </div>
         </div>
     </div>
+
+    <!-- Indicador de filtros activos -->
+    @if (!string.IsNullOrEmpty(ViewBag.FromDate) || !string.IsNullOrEmpty(ViewBag.ToDate) || ViewBag.StatusFilter != null || ViewBag.ContactIdFilter != null)
+    {
+        <div class="row mb-3">
+            <div class="col-md-12">
+                <div class="alert alert-info d-flex align-items-center" role="alert">
+                    <i class="bi bi-funnel me-2"></i>
+                    <div>
+                        Mostrando <strong>@Model.Count()</strong> cotización(es)
+                        @if (ViewBag.StatusFilter != null)
+                        {
+                            var statusName = ViewBag.StatusFilter == GrupoMad.Models.QuotationStatus.Draft ? "Borrador" :
+                                           ViewBag.StatusFilter == GrupoMad.Models.QuotationStatus.Sent ? "Enviada" :
+                                           ViewBag.StatusFilter == GrupoMad.Models.QuotationStatus.Accepted ? "Aceptada" :
+                                           ViewBag.StatusFilter == GrupoMad.Models.QuotationStatus.Rejected ? "Rechazada" : "Expirada";
+                            <span>con estado "<strong>@statusName</strong>"</span>
+                        }
+                        @if (ViewBag.ContactIdFilter != null)
+                        {
+                            var selectedContact = ((SelectList)ViewBag.Contacts).FirstOrDefault(c => c.Value == ViewBag.ContactIdFilter.ToString());
+                            if (selectedContact != null)
+                            {
+                                <span>del contacto "<strong>@selectedContact.Text</strong>"</span>
+                            }
+                        }
+                        @if (!string.IsNullOrEmpty(ViewBag.FromDate) || !string.IsNullOrEmpty(ViewBag.ToDate))
+                        {
+                            <span>
+                                @if (!string.IsNullOrEmpty(ViewBag.FromDate) && !string.IsNullOrEmpty(ViewBag.ToDate))
+                                {
+                                    <text>desde <strong>@DateTime.Parse(ViewBag.FromDate).ToString("dd/MM/yyyy")</strong> hasta <strong>@DateTime.Parse(ViewBag.ToDate).ToString("dd/MM/yyyy")</strong></text>
+                                }
+                                else if (!string.IsNullOrEmpty(ViewBag.FromDate))
+                                {
+                                    <text>desde <strong>@DateTime.Parse(ViewBag.FromDate).ToString("dd/MM/yyyy")</strong></text>
+                                }
+                                else
+                                {
+                                    <text>hasta <strong>@DateTime.Parse(ViewBag.ToDate).ToString("dd/MM/yyyy")</strong></text>
+                                }
+                            </span>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
 
     <div class="row">
         <div class="col-md-12">
@@ -177,10 +241,20 @@
                                     <tr>
                                         <td colspan="7" class="text-center py-5">
                                             <i class="bi bi-inbox fs-1 text-muted d-block mb-3"></i>
-                                            <p class="text-muted">No hay cotizaciones registradas. ¡Crea una nueva!</p>
-                                            <a asp-action="Create" class="btn btn-primary mt-2">
-                                                <i class="bi bi-plus-circle"></i> Crear Primera Cotización
-                                            </a>
+                                            @if (!string.IsNullOrEmpty(ViewBag.FromDate) || !string.IsNullOrEmpty(ViewBag.ToDate) || ViewBag.StatusFilter != null || ViewBag.ContactIdFilter != null)
+                                            {
+                                                <p class="text-muted">No se encontraron cotizaciones con los filtros aplicados.</p>
+                                                <a asp-action="Index" class="btn btn-outline-secondary mt-2">
+                                                    <i class="bi bi-arrow-counterclockwise"></i> Limpiar Filtros
+                                                </a>
+                                            }
+                                            else
+                                            {
+                                                <p class="text-muted">No hay cotizaciones registradas. ¡Crea una nueva!</p>
+                                                <a asp-action="Create" class="btn btn-primary mt-2">
+                                                    <i class="bi bi-plus-circle"></i> Crear Primera Cotización
+                                                </a>
+                                            }
                                         </td>
                                     </tr>
                                 }
@@ -208,6 +282,37 @@
                 allowClear: true,
                 width: '100%'
             });
+
+            // Auto-submit cuando cambia el contacto (opcional)
+            $('#contactFilter').on('change', function() {
+                // Descomentar la siguiente línea si quieres auto-submit
+                // $('#filterForm').submit();
+            });
+
+            // Validación de fechas
+            const fromDateInput = document.querySelector('input[name="fromDate"]');
+            const toDateInput = document.querySelector('input[name="toDate"]');
+
+            if (fromDateInput && toDateInput) {
+                // Validar que "hasta" no sea menor que "desde"
+                toDateInput.addEventListener('change', function() {
+                    if (fromDateInput.value && toDateInput.value) {
+                        if (new Date(toDateInput.value) < new Date(fromDateInput.value)) {
+                            alert('La fecha "Hasta" no puede ser menor que la fecha "Desde"');
+                            toDateInput.value = '';
+                        }
+                    }
+                });
+
+                fromDateInput.addEventListener('change', function() {
+                    if (fromDateInput.value && toDateInput.value) {
+                        if (new Date(toDateInput.value) < new Date(fromDateInput.value)) {
+                            alert('La fecha "Hasta" no puede ser menor que la fecha "Desde"');
+                            toDateInput.value = '';
+                        }
+                    }
+                });
+            }
         });
     </script>
 }

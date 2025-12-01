@@ -22,7 +22,7 @@ namespace GrupoMad.Controllers
         }
 
         // GET: Quotation
-        public async Task<IActionResult> Index(QuotationStatus? status, int? contactId)
+        public async Task<IActionResult> Index(QuotationStatus? status, int? contactId, DateTime? fromDate, DateTime? toDate)
         {
             var query = _context.Quotations
                 .Include(q => q.Contact)
@@ -50,12 +50,27 @@ namespace GrupoMad.Controllers
                 query = query.Where(q => q.ContactId == contactId.Value);
             }
 
+            // Filtrar por rango de fechas
+            if (fromDate.HasValue)
+            {
+                var fromDateUtc = fromDate.Value.ToUniversalTime();
+                query = query.Where(q => q.QuotationDate >= fromDateUtc);
+            }
+
+            if (toDate.HasValue)
+            {
+                var toDateUtc = toDate.Value.Date.AddDays(1).ToUniversalTime(); // Incluir todo el día
+                query = query.Where(q => q.QuotationDate < toDateUtc);
+            }
+
             var quotations = await query
                 .OrderByDescending(q => q.QuotationDate)
                 .ToListAsync();
 
             ViewBag.StatusFilter = status;
             ViewBag.ContactIdFilter = contactId;
+            ViewBag.FromDate = fromDate?.ToString("yyyy-MM-dd");
+            ViewBag.ToDate = toDate?.ToString("yyyy-MM-dd");
 
             // Cargar lista de contactos para el filtro
             var contactsQuery = _context.Contacts.AsQueryable();
