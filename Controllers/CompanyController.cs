@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace GrupoMad.Controllers
 {
-    [Authorize]
+    [Authorize(Roles = "Administrator")]
     public class CompanyController : Controller
     {
         private readonly ApplicationDbContext _context;

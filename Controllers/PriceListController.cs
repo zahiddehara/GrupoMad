@@ -8,7 +8,7 @@ using GrupoMad.Data;
 
 namespace GrupoMad.Controllers
 {
-    [Authorize]
+    [Authorize(Roles = "Administrator,SalesManager,StoreManager")]
     public class PriceListController : Controller
     {
         private readonly PriceListService _priceListService;

@@ -8,7 +8,7 @@ using BCrypt.Net;
 
 namespace GrupoMad.Controllers
 {
-    [Authorize]
+    [Authorize(Roles = "Administrator")]
     public class UserController : Controller
     {
         private readonly ApplicationDbContext _context;

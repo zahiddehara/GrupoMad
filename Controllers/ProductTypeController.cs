@@ -6,7 +6,7 @@ using GrupoMad.Models;
 
 namespace GrupoMad.Controllers
 {
-    [Authorize]
+    [Authorize(Roles = "Administrator,SalesManager,StoreManager")]
     public class ProductTypeController : Controller
     {
         private readonly ApplicationDbContext _context;
