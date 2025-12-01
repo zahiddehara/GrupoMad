@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
 using GrupoMad.Data;
 using GrupoMad.Models;
+using System.Security.Claims;
 
 namespace GrupoMad.Controllers
 {
@@ -17,13 +18,79 @@ namespace GrupoMad.Controllers
             _context = context;
         }
 
-        // GET: Contact
-        public async Task<IActionResult> Index()
+        private bool IsAdmin()
         {
-            var contacts = await _context.Contacts
+            return User.IsInRole(UserRole.Administrator.ToString());
+        }
+
+        private int? GetUserStoreId()
+        {
+            var storeIdClaim = User.FindFirst("StoreId")?.Value;
+            return int.TryParse(storeIdClaim, out int storeId) ? storeId : null;
+        }
+
+        private async Task<int?> GetUserCompanyIdAsync()
+        {
+            var storeId = GetUserStoreId();
+            if (!storeId.HasValue)
+                return null;
+
+            var store = await _context.Stores.FindAsync(storeId.Value);
+            return store?.CompanyId;
+        }
+
+        // GET: Contact
+        public async Task<IActionResult> Index(string searchTerm, int? companyId)
+        {
+            var isAdmin = IsAdmin();
+
+            // Si no es admin, forzar el filtro por la empresa del usuario
+            if (!isAdmin)
+            {
+                companyId = await GetUserCompanyIdAsync();
+            }
+
+            var query = _context.Contacts
                 .Include(c => c.Company)
                 .Include(c => c.ShippingAddresses)
+                .AsQueryable();
+
+            // Filtrar por término de búsqueda
+            if (!string.IsNullOrWhiteSpace(searchTerm))
+            {
+                searchTerm = searchTerm.ToLower();
+                query = query.Where(c =>
+                    c.FirstName.ToLower().Contains(searchTerm) ||
+                    (c.LastName != null && c.LastName.ToLower().Contains(searchTerm)) ||
+                    (c.RFC != null && c.RFC.ToLower().Contains(searchTerm)) ||
+                    (c.Email != null && c.Email.ToLower().Contains(searchTerm)) ||
+                    (c.City != null && c.City.ToLower().Contains(searchTerm)) ||
+                    c.Company.Name.ToLower().Contains(searchTerm)
+                );
+            }
+
+            // Filtrar por empresa
+            if (companyId.HasValue)
+            {
+                query = query.Where(c => c.CompanyId == companyId.Value);
+            }
+
+            var contacts = await query
+                .OrderBy(c => c.FirstName)
+                .ThenBy(c => c.LastName)
                 .ToListAsync();
+
+            // Pasar datos para filtros
+            ViewBag.SearchTerm = searchTerm;
+            ViewBag.CompanyId = companyId;
+            ViewBag.IsAdmin = isAdmin;
+
+            // Solo cargar empresas si es admin
+            if (isAdmin)
+            {
+                ViewBag.Companies = new SelectList(await _context.Companies.OrderBy(c => c.Name).ToListAsync(), "Id", "Name", companyId);
+            }
+
             return View(contacts);
         }
 
