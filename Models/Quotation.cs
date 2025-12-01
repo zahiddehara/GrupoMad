@@ -53,35 +53,28 @@ namespace GrupoMad.Models
         [StringLength(100)]
         public string DeliveryFirstName { get; set; }
 
-        [Required]
         [StringLength(100)]
-        public string DeliveryLastName { get; set; }
+        public string? DeliveryLastName { get; set; }
 
-        [Required]
         [StringLength(200)]
-        public string DeliveryStreet { get; set; }
+        public string? DeliveryStreet { get; set; }
 
-        [Required]
         [StringLength(20)]
-        public string DeliveryExteriorNumber { get; set; }
+        public string? DeliveryExteriorNumber { get; set; }
 
         [StringLength(20)]
         public string? DeliveryInteriorNumber { get; set; }
 
-        [Required]
         [StringLength(100)]
-        public string DeliveryNeighborhood { get; set; }
+        public string? DeliveryNeighborhood { get; set; }
 
-        [Required]
         [StringLength(100)]
-        public string DeliveryCity { get; set; }
+        public string? DeliveryCity { get; set; }
 
-        [Required]
-        public MexicanState DeliveryStateID { get; set; }
+        public MexicanState? DeliveryStateID { get; set; }
 
-        [Required]
         [StringLength(10)]
-        public string DeliveryPostalCode { get; set; }
+        public string? DeliveryPostalCode { get; set; }
 
         [StringLength(13)]
         public string? DeliveryRFC { get; set; }

@@ -147,14 +147,14 @@ namespace GrupoMad.Controllers
                     quotation.ContactId = contact.Id;
                     // Pre-cargar con la dirección principal del contacto
                     quotation.DeliveryFirstName = contact.FirstName;
-                    quotation.DeliveryLastName = contact.LastName ?? string.Empty;
-                    quotation.DeliveryStreet = contact.Street ?? string.Empty;
-                    quotation.DeliveryExteriorNumber = contact.ExteriorNumber ?? string.Empty;
+                    quotation.DeliveryLastName = contact.LastName;
+                    quotation.DeliveryStreet = contact.Street;
+                    quotation.DeliveryExteriorNumber = contact.ExteriorNumber;
                     quotation.DeliveryInteriorNumber = contact.InteriorNumber;
-                    quotation.DeliveryNeighborhood = contact.Neighborhood ?? string.Empty;
-                    quotation.DeliveryCity = contact.City ?? string.Empty;
-                    quotation.DeliveryStateID = contact.StateID ?? MexicanState.Aguascalientes;
-                    quotation.DeliveryPostalCode = contact.PostalCode ?? string.Empty;
+                    quotation.DeliveryNeighborhood = contact.Neighborhood;
+                    quotation.DeliveryCity = contact.City;
+                    quotation.DeliveryStateID = contact.StateID;
+                    quotation.DeliveryPostalCode = contact.PostalCode;
                     quotation.DeliveryRFC = contact.RFC;
                 }
             }
@@ -581,7 +581,7 @@ namespace GrupoMad.Controllers
                 interiorNumber = contact.InteriorNumber ?? "",
                 neighborhood = contact.Neighborhood ?? "",
                 city = contact.City ?? "",
-                stateID = (int)(contact.StateID ?? MexicanState.Aguascalientes),
+                stateID = contact.StateID.HasValue ? (int?)contact.StateID.Value : null,
                 postalCode = contact.PostalCode ?? "",
                 rfc = contact.RFC ?? "",
                 reference = ""
@@ -593,14 +593,14 @@ namespace GrupoMad.Controllers
                 id = a.Id,
                 label = $"{a.Street ?? ""} {a.ExteriorNumber ?? ""}, {a.Neighborhood ?? ""}, {a.City ?? ""}".Trim(',', ' '),
                 firstName = a.FirstName,
-                lastName = a.LastName,
-                street = a.Street,
-                exteriorNumber = a.ExteriorNumber,
+                lastName = a.LastName ?? "",
+                street = a.Street ?? "",
+                exteriorNumber = a.ExteriorNumber ?? "",
                 interiorNumber = a.InteriorNumber ?? "",
-                neighborhood = a.Neighborhood,
-                city = a.City,
-                stateID = (int)a.StateID,
-                postalCode = a.PostalCode,
+                neighborhood = a.Neighborhood ?? "",
+                city = a.City ?? "",
+                stateID = (int?)a.StateID,
+                postalCode = a.PostalCode ?? "",
                 rfc = a.RFC ?? "",
                 reference = a.DeliveryReference ?? ""
             }).ToList();

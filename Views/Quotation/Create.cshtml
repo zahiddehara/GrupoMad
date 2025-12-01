@@ -102,8 +102,8 @@
                             </div>
                             <div class="col-md-6">
                                 <div class="mb-3">
-                                    <label asp-for="DeliveryLastName" class="form-label">Apellido <span class="text-danger">*</span></label>
-                                    <input asp-for="DeliveryLastName" class="form-control" required />
+                                    <label asp-for="DeliveryLastName" class="form-label">Apellido</label>
+                                    <input asp-for="DeliveryLastName" class="form-control" />
                                     <span asp-validation-for="DeliveryLastName" class="text-danger"></span>
                                 </div>
                             </div>
@@ -111,15 +111,15 @@
                         <div class="row">
                             <div class="col-md-8">
                                 <div class="mb-3">
-                                    <label asp-for="DeliveryStreet" class="form-label">Calle <span class="text-danger">*</span></label>
-                                    <input asp-for="DeliveryStreet" class="form-control" required />
+                                    <label asp-for="DeliveryStreet" class="form-label">Calle</label>
+                                    <input asp-for="DeliveryStreet" class="form-control" />
                                     <span asp-validation-for="DeliveryStreet" class="text-danger"></span>
                                 </div>
                             </div>
                             <div class="col-md-2">
                                 <div class="mb-3">
-                                    <label asp-for="DeliveryExteriorNumber" class="form-label">Núm. Ext. <span class="text-danger">*</span></label>
-                                    <input asp-for="DeliveryExteriorNumber" class="form-control" required />
+                                    <label asp-for="DeliveryExteriorNumber" class="form-label">Núm. Ext.</label>
+                                    <input asp-for="DeliveryExteriorNumber" class="form-control" />
                                     <span asp-validation-for="DeliveryExteriorNumber" class="text-danger"></span>
                                 </div>
                             </div>
@@ -133,22 +133,22 @@
                         <div class="row">
                             <div class="col-md-4">
                                 <div class="mb-3">
-                                    <label asp-for="DeliveryNeighborhood" class="form-label">Colonia <span class="text-danger">*</span></label>
-                                    <input asp-for="DeliveryNeighborhood" class="form-control" required />
+                                    <label asp-for="DeliveryNeighborhood" class="form-label">Colonia</label>
+                                    <input asp-for="DeliveryNeighborhood" class="form-control" />
                                     <span asp-validation-for="DeliveryNeighborhood" class="text-danger"></span>
                                 </div>
                             </div>
                             <div class="col-md-4">
                                 <div class="mb-3">
-                                    <label asp-for="DeliveryCity" class="form-label">Ciudad <span class="text-danger">*</span></label>
-                                    <input asp-for="DeliveryCity" class="form-control" required />
+                                    <label asp-for="DeliveryCity" class="form-label">Ciudad</label>
+                                    <input asp-for="DeliveryCity" class="form-control" />
                                     <span asp-validation-for="DeliveryCity" class="text-danger"></span>
                                 </div>
                             </div>
                             <div class="col-md-4">
                                 <div class="mb-3">
-                                    <label asp-for="DeliveryStateID" class="form-label">Estado <span class="text-danger">*</span></label>
-                                    <select asp-for="DeliveryStateID" class="form-select" required>
+                                    <label asp-for="DeliveryStateID" class="form-label">Estado</label>
+                                    <select asp-for="DeliveryStateID" class="form-select">
                                         <option value="">Seleccione...</option>
                                         <option value="@((int)GrupoMad.Models.MexicanState.Aguascalientes)">Aguascalientes</option>
                                         <option value="@((int)GrupoMad.Models.MexicanState.BajaCalifornia)">Baja California</option>
@@ -190,8 +190,8 @@
                         <div class="row">
                             <div class="col-md-4">
                                 <div class="mb-3">
-                                    <label asp-for="DeliveryPostalCode" class="form-label">Código Postal <span class="text-danger">*</span></label>
-                                    <input asp-for="DeliveryPostalCode" class="form-control" required maxlength="10" />
+                                    <label asp-for="DeliveryPostalCode" class="form-label">Código Postal</label>
+                                    <input asp-for="DeliveryPostalCode" class="form-control" maxlength="10" />
                                     <span asp-validation-for="DeliveryPostalCode" class="text-danger"></span>
                                 </div>
                             </div>
