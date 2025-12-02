@@ -329,6 +329,7 @@
         const products = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(products.Select(p => new {
             id = p.Id,
             name = p.Name,
+            productTypeName = p.ProductType.Name,
             pricingType = p.ProductType.PricingType.ToString()
         })));
 
@@ -356,7 +357,7 @@
                 <td class="px-3 py-2">
                     <select name="items[${itemCounter}].ProductId" class="form-select form-select-sm product-select" data-index="${itemCounter}" required>
                         <option value="">Seleccione...</option>
-                        ${products.map(p => `<option value="${p.id}" ${itemData && itemData.productId === p.id ? 'selected' : ''}>${p.name}</option>`).join('')}
+                        ${products.map(p => `<option value="${p.id}" ${itemData && itemData.productId === p.id ? 'selected' : ''}>${p.name} - ${p.productTypeName}</option>`).join('')}
                     </select>
                 </td>
                 <td class="px-3 py-2">
