@@ -47,6 +47,7 @@ namespace GrupoMad.Services
 
         /// <summary>
         /// Obtiene el precio de un producto desde las listas de precios de una tienda
+        /// Si no existe precio para la tienda específica o el precio es 0, busca en la lista de precios global (StoreId == null)
         /// Retorna el precio con descuento si está disponible
         /// </summary>
         public async Task<(decimal unitPrice, decimal discountedPrice, string? variant)?> GetProductPriceAsync(
@@ -54,7 +55,7 @@ namespace GrupoMad.Services
             int storeId,
             string? variant = null)
         {
-            // Buscar el producto en las listas de precios de la tienda
+            // Primero, buscar el producto en las listas de precios de la tienda específica
             var priceListItem = await _context.PriceListItems
                 .Include(pli => pli.Discounts)
                 .Include(pli => pli.PriceList)
@@ -65,6 +66,21 @@ namespace GrupoMad.Services
                     (variant == null || pli.Variant == variant))
                 .OrderByDescending(pli => pli.PriceList.UpdatedAt ?? pli.PriceList.CreatedAt)
                 .FirstOrDefaultAsync();
+
+            // Si no se encontró precio en la tienda específica O el precio es 0, buscar en la lista de precios global
+            if (priceListItem == null || priceListItem.Price <= 0)
+            {
+                priceListItem = await _context.PriceListItems
+                    .Include(pli => pli.Discounts)
+                    .Include(pli => pli.PriceList)
+                    .Where(pli =>
+                        pli.ProductId == productId &&
+                        pli.PriceList.StoreId == null &&
+                        pli.PriceList.IsActive &&
+                        (variant == null || pli.Variant == variant))
+                    .OrderByDescending(pli => pli.PriceList.UpdatedAt ?? pli.PriceList.CreatedAt)
+                    .FirstOrDefaultAsync();
+            }
 
             if (priceListItem == null)
                 return null;
