@@ -218,14 +218,29 @@ namespace GrupoMad.Controllers
                         for (int i = 0; i < items.Count; i++)
                         {
                             var itemDto = items[i];
+
+                            // SEGURIDAD: Recalcular precios desde el servidor, no confiar en el formulario
+                            var priceResult = await _quotationService.GetProductPriceAsync(
+                                itemDto.ProductId,
+                                quotation.StoreId,
+                                itemDto.Variant
+                            );
+
+                            if (priceResult == null)
+                            {
+                                ModelState.AddModelError("", $"No se encontró precio para el producto en el item {i + 1}");
+                                PrepareViewData(GetUserStoreId(), quotation.ContactId);
+                                return View(quotation);
+                            }
+
                             var quotationItem = new QuotationItem
                             {
                                 ProductId = itemDto.ProductId,
                                 ProductColorId = itemDto.ProductColorId,
                                 Variant = itemDto.Variant,
                                 Quantity = itemDto.Quantity,
-                                UnitPrice = itemDto.UnitPrice,
-                                DiscountedPrice = itemDto.DiscountedPrice,
+                                UnitPrice = priceResult.Value.unitPrice,        // Precio recalculado del servidor
+                                DiscountedPrice = priceResult.Value.discountedPrice, // Precio recalculado del servidor
                                 Width = itemDto.Width,
                                 Height = itemDto.Height,
                                 Description = itemDto.Description,
@@ -363,14 +378,29 @@ namespace GrupoMad.Controllers
                         for (int i = 0; i < items.Count; i++)
                         {
                             var itemDto = items[i];
+
+                            // SEGURIDAD: Recalcular precios desde el servidor, no confiar en el formulario
+                            var priceResult = await _quotationService.GetProductPriceAsync(
+                                itemDto.ProductId,
+                                existingQuotation.StoreId,
+                                itemDto.Variant
+                            );
+
+                            if (priceResult == null)
+                            {
+                                ModelState.AddModelError("", $"No se encontró precio para el producto en el item {i + 1}");
+                                PrepareViewData(GetUserStoreId(), quotation.ContactId);
+                                return View(quotation);
+                            }
+
                             var quotationItem = new QuotationItem
                             {
                                 ProductId = itemDto.ProductId,
                                 ProductColorId = itemDto.ProductColorId,
                                 Variant = itemDto.Variant,
                                 Quantity = itemDto.Quantity,
-                                UnitPrice = itemDto.UnitPrice,
-                                DiscountedPrice = itemDto.DiscountedPrice,
+                                UnitPrice = priceResult.Value.unitPrice,        // Precio recalculado del servidor
+                                DiscountedPrice = priceResult.Value.discountedPrice, // Precio recalculado del servidor
                                 Width = itemDto.Width,
                                 Height = itemDto.Height,
                                 Description = itemDto.Description,
