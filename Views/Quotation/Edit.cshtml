@@ -378,7 +378,7 @@
                     <input name="items[${itemCounter}].UnitPrice" type="number" step="0.01" min="0" class="form-control form-control-sm price-input" data-index="${itemCounter}" value="${itemData?.unitPrice || ''}" readonly />
                 </td>
                 <td class="px-3 py-2">
-                    <input name="items[${itemCounter}].DiscountedPrice" type="number" step="0.01" min="0" class="form-control form-control-sm discounted-price-input" data-index="${itemCounter}" value="${itemData?.discountedPrice || ''}" required />
+                    <input name="items[${itemCounter}].DiscountedPrice" type="number" step="0.01" min="0" class="form-control form-control-sm discounted-price-input" data-index="${itemCounter}" value="${itemData?.discountedPrice || ''}" required readonly />
                 </td>
                 <td class="px-3 py-2">
                     <strong class="item-total" data-index="${itemCounter}">$0.00</strong>
