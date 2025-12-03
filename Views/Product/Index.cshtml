@@ -7,15 +7,17 @@
 <div class="container-fluid">
     <div class="row mb-4">
         <div class="col-md-12">
-            <h1>Productos</h1>
-        </div>
-    </div>
-
-    <div class="row mb-3">
-        <div class="col-md-12">
-            <a asp-action="Create" class="btn btn-primary">
-                <i class="bi bi-plus-circle"></i> Crear Nuevo Producto
-            </a>
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h2 class="fw-bold"><i class="bi bi-basket text-primary"></i> Productos</h2>
+                    <p class="text-muted">Administra los productos de tu empresa</p>
+                </div>
+                <div>
+                    <a asp-action="Create" class="btn btn-primary">
+                        <i class="bi bi-plus-circle"></i> Crear Nuevo Producto
+                    </a>
+                </div>
+            </div>
         </div>
     </div>
 
