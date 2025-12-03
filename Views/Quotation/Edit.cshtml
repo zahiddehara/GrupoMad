@@ -348,6 +348,32 @@
         let itemCounter = 0;
         const storeId = @Model.StoreId;
 
+        // Actualizar estado de campos de dimensiones según tipo de precio
+        function updateDimensionFields(productId, index) {
+            const product = products.find(p => p.id === parseInt(productId));
+            const widthInput = document.querySelector(`[name="items[${index}].Width"]`);
+            const heightInput = document.querySelector(`[name="items[${index}].Height"]`);
+
+            if (!product || !widthInput || !heightInput) return;
+
+            if (product.pricingType === 'PerUnit') {
+                // Deshabilitar ambos campos
+                widthInput.disabled = true;
+                heightInput.disabled = true;
+                widthInput.value = '';
+                heightInput.value = '';
+            } else if (product.pricingType === 'PerLinearMeter') {
+                // Solo habilitar ancho
+                widthInput.disabled = false;
+                heightInput.disabled = true;
+                heightInput.value = '';
+            } else if (product.pricingType === 'PerSquareMeter') {
+                // Habilitar ambos
+                widthInput.disabled = false;
+                heightInput.disabled = false;
+            }
+        }
+
         // Agregar nuevo item
         function addItem(itemData = null) {
             const tbody = document.getElementById('itemsTableBody');
@@ -410,6 +436,7 @@
                 if (productId) {
                     loadProductColors(productId, currentIndex);
                     loadProductPrice(productId, currentIndex);
+                    updateDimensionFields(productId, currentIndex);
                 } else {
                     // Limpiar el dropdown de colores
                     const colorSelect = $(row).find('.color-select');
@@ -421,6 +448,12 @@
 
                     colorSelect.html('<option value="">Primero seleccione un producto...</option>');
                     colorSelect.prop('disabled', true);
+
+                    // Habilitar campos de dimensiones por defecto
+                    const widthInput = document.querySelector(`[name="items[${currentIndex}].Width"]`);
+                    const heightInput = document.querySelector(`[name="items[${currentIndex}].Height"]`);
+                    if (widthInput) widthInput.disabled = false;
+                    if (heightInput) heightInput.disabled = false;
                 }
             });
 
@@ -432,6 +465,7 @@
             // Si hay datos existentes, cargar los colores y seleccionar el color correcto
             if (itemData && itemData.productId) {
                 loadProductColors(itemData.productId, currentIndex, itemData.productColorId);
+                updateDimensionFields(itemData.productId, currentIndex);
                 calculateItemTotal(currentIndex);
             }
 
