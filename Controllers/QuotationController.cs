@@ -219,16 +219,50 @@ namespace GrupoMad.Controllers
                         {
                             var itemDto = items[i];
 
+                            // Obtener el producto para verificar su tipo de precio
+                            var product = await _context.Products
+                                .Include(p => p.ProductType)
+                                .FirstOrDefaultAsync(p => p.Id == itemDto.ProductId);
+
+                            if (product == null)
+                            {
+                                ModelState.AddModelError("", $"Producto no encontrado en el item {i + 1}");
+                                PrepareViewData(GetUserStoreId(), quotation.ContactId);
+                                return View(quotation);
+                            }
+
+                            // Validar dimensiones según el tipo de precio
+                            if (product.ProductType.PricingType == PricingType.PerRangeLength)
+                            {
+                                if (!itemDto.Width.HasValue || itemDto.Width.Value <= 0)
+                                {
+                                    ModelState.AddModelError("", $"El item {i + 1} requiere especificar el largo (ancho) para productos con precio por rango de largo");
+                                    PrepareViewData(GetUserStoreId(), quotation.ContactId);
+                                    return View(quotation);
+                                }
+                            }
+                            else if (product.ProductType.PricingType == PricingType.PerRangeDimensions)
+                            {
+                                if (!itemDto.Width.HasValue || itemDto.Width.Value <= 0 || !itemDto.Height.HasValue || itemDto.Height.Value <= 0)
+                                {
+                                    ModelState.AddModelError("", $"El item {i + 1} requiere especificar ancho y alto para productos con precio por rango de dimensiones");
+                                    PrepareViewData(GetUserStoreId(), quotation.ContactId);
+                                    return View(quotation);
+                                }
+                            }
+
                             // SEGURIDAD: Recalcular precios desde el servidor, no confiar en el formulario
                             var priceResult = await _quotationService.GetProductPriceAsync(
                                 itemDto.ProductId,
                                 quotation.StoreId,
-                                itemDto.Variant
+                                itemDto.Variant,
+                                itemDto.Width,
+                                itemDto.Height
                             );
 
                             if (priceResult == null)
                             {
-                                ModelState.AddModelError("", $"No se encontró precio para el producto en el item {i + 1}");
+                                ModelState.AddModelError("", $"No se encontró precio para el producto en el item {i + 1}. Verifique que las dimensiones estén dentro de los rangos configurados.");
                                 PrepareViewData(GetUserStoreId(), quotation.ContactId);
                                 return View(quotation);
                             }
@@ -379,16 +413,50 @@ namespace GrupoMad.Controllers
                         {
                             var itemDto = items[i];
 
+                            // Obtener el producto para verificar su tipo de precio
+                            var product = await _context.Products
+                                .Include(p => p.ProductType)
+                                .FirstOrDefaultAsync(p => p.Id == itemDto.ProductId);
+
+                            if (product == null)
+                            {
+                                ModelState.AddModelError("", $"Producto no encontrado en el item {i + 1}");
+                                PrepareViewData(GetUserStoreId(), quotation.ContactId);
+                                return View(quotation);
+                            }
+
+                            // Validar dimensiones según el tipo de precio
+                            if (product.ProductType.PricingType == PricingType.PerRangeLength)
+                            {
+                                if (!itemDto.Width.HasValue || itemDto.Width.Value <= 0)
+                                {
+                                    ModelState.AddModelError("", $"El item {i + 1} requiere especificar el largo (ancho) para productos con precio por rango de largo");
+                                    PrepareViewData(GetUserStoreId(), quotation.ContactId);
+                                    return View(quotation);
+                                }
+                            }
+                            else if (product.ProductType.PricingType == PricingType.PerRangeDimensions)
+                            {
+                                if (!itemDto.Width.HasValue || itemDto.Width.Value <= 0 || !itemDto.Height.HasValue || itemDto.Height.Value <= 0)
+                                {
+                                    ModelState.AddModelError("", $"El item {i + 1} requiere especificar ancho y alto para productos con precio por rango de dimensiones");
+                                    PrepareViewData(GetUserStoreId(), quotation.ContactId);
+                                    return View(quotation);
+                                }
+                            }
+
                             // SEGURIDAD: Recalcular precios desde el servidor, no confiar en el formulario
                             var priceResult = await _quotationService.GetProductPriceAsync(
                                 itemDto.ProductId,
                                 existingQuotation.StoreId,
-                                itemDto.Variant
+                                itemDto.Variant,
+                                itemDto.Width,
+                                itemDto.Height
                             );
 
                             if (priceResult == null)
                             {
-                                ModelState.AddModelError("", $"No se encontró precio para el producto en el item {i + 1}");
+                                ModelState.AddModelError("", $"No se encontró precio para el producto en el item {i + 1}. Verifique que las dimensiones estén dentro de los rangos configurados.");
                                 PrepareViewData(GetUserStoreId(), quotation.ContactId);
                                 return View(quotation);
                             }
@@ -560,13 +628,13 @@ namespace GrupoMad.Controllers
 
         // API: Obtener precio de producto
         [HttpGet]
-        public async Task<IActionResult> GetProductPrice(int productId, int storeId, string? variant = null)
+        public async Task<IActionResult> GetProductPrice(int productId, int storeId, string? variant = null, decimal? width = null, decimal? height = null)
         {
-            var price = await _quotationService.GetProductPriceAsync(productId, storeId, variant);
+            var price = await _quotationService.GetProductPriceAsync(productId, storeId, variant, width, height);
 
             if (price == null)
             {
-                return Json(new { success = false, message = "Precio no encontrado" });
+                return Json(new { success = false, message = "Precio no encontrado. Para productos con precios por rangos, asegúrate de especificar las dimensiones correctas." });
             }
 
             return Json(new

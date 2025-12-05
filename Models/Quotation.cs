@@ -234,13 +234,19 @@ namespace GrupoMad.Models
         // Campos para productos que requieren medidas/dimensiones
 
         /// <summary>
-        /// Ancho (en metros) - Para productos PerSquareMeter o PerLinearMeter
+        /// Ancho/Largo (en metros)
+        /// - Para PerSquareMeter: representa el ancho
+        /// - Para PerLinearMeter: representa el ancho
+        /// - Para PerRangeLength: representa el largo del producto
+        /// - Para PerRangeDimensions: representa el ancho
         /// </summary>
         [Column(TypeName = "decimal(18,2)")]
         public decimal? Width { get; set; }
 
         /// <summary>
-        /// Alto (en metros) - Para productos PerSquareMeter
+        /// Alto (en metros)
+        /// - Para PerSquareMeter: representa el alto
+        /// - Para PerRangeDimensions: representa el alto
         /// </summary>
         [Column(TypeName = "decimal(18,2)")]
         public decimal? Height { get; set; }
@@ -283,8 +289,12 @@ namespace GrupoMad.Models
                         return Width.Value * Quantity;
                     break;
 
+                case PricingType.PerRangeLength:
+                case PricingType.PerRangeDimensions:
+                    // Para rangos, la cantidad es directa (el precio ya considera las dimensiones)
+                    return Quantity;
+
                 case PricingType.PerUnit:
-                case PricingType.PerRange:
                 default:
                     // Cantidad = Cantidad directa
                     return Quantity;

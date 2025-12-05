@@ -151,14 +151,25 @@ else
                                         case GrupoMad.Models.PricingType.PerLinearMeter:
                                             <span class="badge bg-warning">Metro</span>
                                             break;
-                                        case GrupoMad.Models.PricingType.PerRange:
-                                            <span class="badge bg-secondary">Rango</span>
+                                        case GrupoMad.Models.PricingType.PerRangeLength:
+                                            <span class="badge bg-secondary">Rango Largo</span>
+                                            break;
+                                        case GrupoMad.Models.PricingType.PerRangeDimensions:
+                                            <span class="badge bg-secondary">Rango Dim</span>
                                             break;
                                     }
                                 }
                             </td>
                             <td>
-                                @if (Model.StoreId.HasValue)
+                                @* No mostrar precio base para productos con precios por rangos *@
+                                @if (item.Product?.ProductType?.PricingType == GrupoMad.Models.PricingType.PerRangeLength ||
+                                     item.Product?.ProductType?.PricingType == GrupoMad.Models.PricingType.PerRangeDimensions)
+                                {
+                                    <span class="text-muted">
+                                        <i class="bi bi-dash-circle"></i> Definir rangos
+                                    </span>
+                                }
+                                else if (Model.StoreId.HasValue)
                                 {
                                     @* Para listas de tienda: mostrar precio pero no permitir edición directa *@
                                     <div class="input-group input-group-sm" style="width: 150px;">
@@ -187,45 +198,87 @@ else
                                 }
                             </td>
                             <td>
-                                <form asp-action="UpdateItem" method="post" class="d-inline">
-                                    @Html.AntiForgeryToken()
-                                    <input type="hidden" name="itemId" value="@item.Id" />
-                                    <input type="hidden" name="priceListId" value="@Model.Id" />
-                                    <input type="hidden" name="price" value="@item.Price" />
-                                    <div class="input-group input-group-sm" style="width: 120px;">
-                                        <input type="text" name="variant" value="@item.Variant"
-                                               class="form-control form-control-sm" placeholder="Opcional" />
-                                        <button type="submit" class="btn btn-primary btn-sm">💾</button>
-                                    </div>
-                                </form>
-                            </td>
-                            <td>
-                                @{
-                                    var finalPrice = item.GetFinalPrice();
-                                }
-                                <strong class="text-primary">$@finalPrice.ToString("N2")</strong>
-                            </td>
-                            <td>
-                                @{
-                                    var activeDiscount = item.GetActiveDiscount();
-                                    var discountApplied = item.GetDiscountApplied();
-                                }
-                                @if (activeDiscount != null && discountApplied > 0)
-                                {
-                                    <span class="badge bg-success" title="Descuento vigente hasta @activeDiscount.ValidUntil.ToString("dd/MM/yyyy")">
-                                        -$@discountApplied.ToString("N2")
-                                        <small>(P@(activeDiscount.Priority))</small>
-                                    </span>
-                                }
-                                else
+                                @* No mostrar variante para productos con precios por rangos *@
+                                @if (item.Product?.ProductType?.PricingType == GrupoMad.Models.PricingType.PerRangeLength ||
+                                     item.Product?.ProductType?.PricingType == GrupoMad.Models.PricingType.PerRangeDimensions)
                                 {
                                     <span class="text-muted">-</span>
                                 }
+                                else
+                                {
+                                    <form asp-action="UpdateItem" method="post" class="d-inline">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="itemId" value="@item.Id" />
+                                        <input type="hidden" name="priceListId" value="@Model.Id" />
+                                        <input type="hidden" name="price" value="@item.Price" />
+                                        <div class="input-group input-group-sm" style="width: 120px;">
+                                            <input type="text" name="variant" value="@item.Variant"
+                                                   class="form-control form-control-sm" placeholder="Opcional" />
+                                            <button type="submit" class="btn btn-primary btn-sm">💾</button>
+                                        </div>
+                                    </form>
+                                }
                             </td>
                             <td>
-                                <a asp-action="ManageDiscounts" asp-route-itemId="@item.Id" class="btn btn-sm btn-light" title="Gestionar Descuentos">
-                                    Descuentos
-                                </a>
+                                @* Para productos por rangos no aplica precio final *@
+                                @if (item.Product?.ProductType?.PricingType == GrupoMad.Models.PricingType.PerRangeLength ||
+                                     item.Product?.ProductType?.PricingType == GrupoMad.Models.PricingType.PerRangeDimensions)
+                                {
+                                    <span class="text-muted">Ver rangos</span>
+                                }
+                                else
+                                {
+                                    var finalPrice = item.GetFinalPrice();
+                                    <strong class="text-primary">$@finalPrice.ToString("N2")</strong>
+                                }
+                            </td>
+                            <td>
+                                @* Para productos por rangos no aplica descuentos *@
+                                @if (item.Product?.ProductType?.PricingType == GrupoMad.Models.PricingType.PerRangeLength ||
+                                     item.Product?.ProductType?.PricingType == GrupoMad.Models.PricingType.PerRangeDimensions)
+                                {
+                                    <span class="text-muted">-</span>
+                                }
+                                else
+                                {
+                                    var activeDiscount = item.GetActiveDiscount();
+                                    var discountApplied = item.GetDiscountApplied();
+
+                                    if (activeDiscount != null && discountApplied > 0)
+                                    {
+                                        <span class="badge bg-success" title="Descuento vigente hasta @activeDiscount.ValidUntil.ToString("dd/MM/yyyy")">
+                                            -$@discountApplied.ToString("N2")
+                                            <small>(P@(activeDiscount.Priority))</small>
+                                        </span>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted">-</span>
+                                    }
+                                }
+                            </td>
+                            <td>
+                                @* Botón de rangos para productos con tipo PerRangeLength o PerRangeDimensions *@
+                                @if (item.Product?.ProductType?.PricingType == GrupoMad.Models.PricingType.PerRangeLength)
+                                {
+                                    <a asp-action="ManageRangesByLength" asp-route-itemId="@item.Id" class="btn btn-sm btn-info" title="Gestionar Rangos por Largo">
+                                        <i class="bi bi-rulers"></i> Rangos
+                                    </a>
+                                }
+                                else if (item.Product?.ProductType?.PricingType == GrupoMad.Models.PricingType.PerRangeDimensions)
+                                {
+                                    <a asp-action="ManageRangesByDimensions" asp-route-itemId="@item.Id" class="btn btn-sm btn-info" title="Gestionar Rangos por Dimensiones">
+                                        <i class="bi bi-bounding-box"></i> Rangos
+                                    </a>
+                                }
+                                else
+                                {
+                                    @* Botón de descuentos solo para productos que no son por rangos *@
+                                    <a asp-action="ManageDiscounts" asp-route-itemId="@item.Id" class="btn btn-sm btn-light" title="Gestionar Descuentos">
+                                        <i class="bi bi-percent"></i> Descuentos
+                                    </a>
+                                }
+
                                 <form asp-action="RemoveItem" method="post" style="display: inline;">
                                     @Html.AntiForgeryToken()
                                     <input type="hidden" name="itemId" value="@item.Id" />

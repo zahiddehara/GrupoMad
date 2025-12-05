@@ -1,0 +1,240 @@
+@model GrupoMad.Models.PriceListItem
+
+@{
+    ViewData["Title"] = "Gestionar Rangos por Dimensiones";
+}
+
+<h1>Gestionar Rangos por Dimensiones</h1>
+
+<div class="card mb-4">
+    <div class="card-header">
+        <h5>Información del Producto</h5>
+    </div>
+    <div class="card-body">
+        <dl class="row">
+            <dt class="col-sm-3">Producto</dt>
+            <dd class="col-sm-9"><strong>@Model.Product.Name</strong> <code>(@Model.Product.SKU)</code></dd>
+
+            <dt class="col-sm-3">Lista de Precios</dt>
+            <dd class="col-sm-9">@Model.PriceList.Name</dd>
+
+            <dt class="col-sm-3">Tipo de Precio</dt>
+            <dd class="col-sm-9"><span class="badge bg-info">Por Rango de Dimensiones (Ancho y Alto)</span></dd>
+        </dl>
+    </div>
+</div>
+
+@if (TempData["Success"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        @TempData["Success"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+
+@if (TempData["Error"] != null)
+{
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        @TempData["Error"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+
+<hr />
+
+<div class="row">
+    <!-- Rangos existentes -->
+    <div class="col-md-9">
+        <h3>Rangos Configurados</h3>
+
+        @if (Model.PriceRangesByDimensions != null && Model.PriceRangesByDimensions.Any())
+        {
+            <div class="table-responsive">
+                <table class="table table-striped table-sm">
+                    <thead>
+                        <tr>
+                            <th>Ancho Mín (m)</th>
+                            <th>Ancho Máx (m)</th>
+                            <th>Alto Mín (m)</th>
+                            <th>Alto Máx (m)</th>
+                            <th>Precio</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var range in Model.PriceRangesByDimensions.OrderBy(r => r.MinWidth).ThenBy(r => r.MinHeight))
+                        {
+                            <tr>
+                                <td>
+                                    <form asp-action="UpdateRangeByDimensions" method="post" class="d-inline">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="rangeId" value="@range.Id" />
+                                        <input type="hidden" name="priceListItemId" value="@Model.Id" />
+                                        <input type="hidden" name="maxWidth" value="@range.MaxWidth" />
+                                        <input type="hidden" name="minHeight" value="@range.MinHeight" />
+                                        <input type="hidden" name="maxHeight" value="@range.MaxHeight" />
+                                        <input type="hidden" name="price" value="@range.Price" />
+                                        <div class="input-group input-group-sm" style="width: 100px;">
+                                            <input type="number" name="minWidth" value="@range.MinWidth"
+                                                   class="form-control form-control-sm" step="0.01" min="0" required />
+                                            <button type="submit" class="btn btn-primary btn-sm">💾</button>
+                                        </div>
+                                    </form>
+                                </td>
+                                <td>
+                                    <form asp-action="UpdateRangeByDimensions" method="post" class="d-inline">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="rangeId" value="@range.Id" />
+                                        <input type="hidden" name="priceListItemId" value="@Model.Id" />
+                                        <input type="hidden" name="minWidth" value="@range.MinWidth" />
+                                        <input type="hidden" name="minHeight" value="@range.MinHeight" />
+                                        <input type="hidden" name="maxHeight" value="@range.MaxHeight" />
+                                        <input type="hidden" name="price" value="@range.Price" />
+                                        <div class="input-group input-group-sm" style="width: 100px;">
+                                            <input type="number" name="maxWidth" value="@range.MaxWidth"
+                                                   class="form-control form-control-sm" step="0.01" min="0" required />
+                                            <button type="submit" class="btn btn-primary btn-sm">💾</button>
+                                        </div>
+                                    </form>
+                                </td>
+                                <td>
+                                    <form asp-action="UpdateRangeByDimensions" method="post" class="d-inline">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="rangeId" value="@range.Id" />
+                                        <input type="hidden" name="priceListItemId" value="@Model.Id" />
+                                        <input type="hidden" name="minWidth" value="@range.MinWidth" />
+                                        <input type="hidden" name="maxWidth" value="@range.MaxWidth" />
+                                        <input type="hidden" name="maxHeight" value="@range.MaxHeight" />
+                                        <input type="hidden" name="price" value="@range.Price" />
+                                        <div class="input-group input-group-sm" style="width: 100px;">
+                                            <input type="number" name="minHeight" value="@range.MinHeight"
+                                                   class="form-control form-control-sm" step="0.01" min="0" required />
+                                            <button type="submit" class="btn btn-primary btn-sm">💾</button>
+                                        </div>
+                                    </form>
+                                </td>
+                                <td>
+                                    <form asp-action="UpdateRangeByDimensions" method="post" class="d-inline">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="rangeId" value="@range.Id" />
+                                        <input type="hidden" name="priceListItemId" value="@Model.Id" />
+                                        <input type="hidden" name="minWidth" value="@range.MinWidth" />
+                                        <input type="hidden" name="maxWidth" value="@range.MaxWidth" />
+                                        <input type="hidden" name="minHeight" value="@range.MinHeight" />
+                                        <input type="hidden" name="price" value="@range.Price" />
+                                        <div class="input-group input-group-sm" style="width: 100px;">
+                                            <input type="number" name="maxHeight" value="@range.MaxHeight"
+                                                   class="form-control form-control-sm" step="0.01" min="0" required />
+                                            <button type="submit" class="btn btn-primary btn-sm">💾</button>
+                                        </div>
+                                    </form>
+                                </td>
+                                <td>
+                                    <form asp-action="UpdateRangeByDimensions" method="post" class="d-inline">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="rangeId" value="@range.Id" />
+                                        <input type="hidden" name="priceListItemId" value="@Model.Id" />
+                                        <input type="hidden" name="minWidth" value="@range.MinWidth" />
+                                        <input type="hidden" name="maxWidth" value="@range.MaxWidth" />
+                                        <input type="hidden" name="minHeight" value="@range.MinHeight" />
+                                        <input type="hidden" name="maxHeight" value="@range.MaxHeight" />
+                                        <div class="input-group input-group-sm" style="width: 120px;">
+                                            <span class="input-group-text">$</span>
+                                            <input type="number" name="price" value="@range.Price"
+                                                   class="form-control form-control-sm" step="0.01" min="0" required />
+                                            <button type="submit" class="btn btn-primary btn-sm">💾</button>
+                                        </div>
+                                    </form>
+                                </td>
+                                <td>
+                                    <form asp-action="DeleteRangeByDimensions" method="post" style="display: inline;">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="rangeId" value="@range.Id" />
+                                        <input type="hidden" name="priceListItemId" value="@Model.Id" />
+                                        <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('¿Eliminar este rango?');">
+                                            🗑️
+                                        </button>
+                                    </form>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+        else
+        {
+            <div class="alert alert-info">
+                No hay rangos configurados para este producto. Agrega rangos usando el formulario a la derecha.
+            </div>
+        }
+    </div>
+
+    <!-- Agregar nuevo rango -->
+    <div class="col-md-3">
+        <h3>Agregar Rango</h3>
+
+        <div class="card">
+            <div class="card-body">
+                <form asp-action="AddRangeByDimensions" method="post">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="priceListItemId" value="@Model.Id" />
+
+                    <div class="mb-3">
+                        <label for="minWidth" class="form-label">Ancho Mínimo (m)</label>
+                        <input type="number" name="minWidth" id="minWidth"
+                               class="form-control form-control-sm" step="0.01" min="0" placeholder="Ej: 1.00" required />
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="maxWidth" class="form-label">Ancho Máximo (m)</label>
+                        <input type="number" name="maxWidth" id="maxWidth"
+                               class="form-control form-control-sm" step="0.01" min="0" placeholder="Ej: 1.39" required />
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="minHeight" class="form-label">Alto Mínimo (m)</label>
+                        <input type="number" name="minHeight" id="minHeight"
+                               class="form-control form-control-sm" step="0.01" min="0" placeholder="Ej: 1.00" required />
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="maxHeight" class="form-label">Alto Máximo (m)</label>
+                        <input type="number" name="maxHeight" id="maxHeight"
+                               class="form-control form-control-sm" step="0.01" min="0" placeholder="Ej: 1.09" required />
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="price" class="form-label">Precio</label>
+                        <div class="input-group input-group-sm">
+                            <span class="input-group-text">$</span>
+                            <input type="number" name="price" id="price"
+                                   class="form-control form-control-sm" step="0.01" min="0" placeholder="285.00" required />
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn btn-success w-100 btn-sm">
+                        <i class="bi bi-plus-circle"></i> Agregar
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <div class="alert alert-info mt-3 small">
+            <strong>💡 Ejemplo:</strong><br/>
+            Ancho: 1.00-1.39m<br/>
+            Alto: 1.00-1.09m<br/>
+            Precio: $285.00
+        </div>
+    </div>
+</div>
+
+<hr />
+<div>
+    <a asp-action="ManageItems" asp-route-id="@Model.PriceListId" class="btn btn-secondary">
+        <i class="bi bi-arrow-left"></i> Volver a Gestionar Productos
+    </a>
+    <a asp-action="Details" asp-route-id="@Model.PriceListId" class="btn btn-info">
+        <i class="bi bi-eye"></i> Ver Lista de Precios
+    </a>
+</div>

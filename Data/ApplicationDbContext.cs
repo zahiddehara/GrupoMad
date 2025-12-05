@@ -112,6 +112,8 @@ namespace GrupoMad.Data
         public DbSet<PriceList> PriceLists { get; set; }
         public DbSet<PriceListItem> PriceListItems { get; set; }
         public DbSet<PriceListItemDiscount> PriceListItemDiscounts { get; set; }
+        public DbSet<PriceRangeByLength> PriceRangesByLength { get; set; }
+        public DbSet<PriceRangeByDimensions> PriceRangesByDimensions { get; set; }
         public DbSet<Contact> Contacts { get; set; }
         public DbSet<ShippingAddress> ShippingAddresses { get; set; }
         public DbSet<User> Users { get; set; }

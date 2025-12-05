@@ -32,8 +32,9 @@
                         <option value="">-- Seleccione un tipo de precio --</option>
                         <option value="@GrupoMad.Models.PricingType.PerSquareMeter">Por Metro Cuadrado (m²)</option>
                         <option value="@GrupoMad.Models.PricingType.PerUnit">Por Unidad</option>
-                        <option value="@GrupoMad.Models.PricingType.PerRange">Por Rango</option>
                         <option value="@GrupoMad.Models.PricingType.PerLinearMeter">Por Metro Lineal (m)</option>
+                        <option value="@GrupoMad.Models.PricingType.PerRangeLength">Por Rango de Largo</option>
+                        <option value="@GrupoMad.Models.PricingType.PerRangeDimensions">Por Rango de Dimensiones (Ancho y Alto)</option>
                     </select>
                     <span asp-validation-for="PricingType" class="text-danger"></span>
                     <small class="form-text text-muted">
@@ -72,11 +73,14 @@
                         <dt>Por Unidad</dt>
                         <dd>El precio se aplica por cada unidad del producto. Ideal para muebles, accesorios, artículos individuales.</dd>
 
-                        <dt>Por Rango</dt>
-                        <dd>El precio varía según rangos de cantidad o medida. Ideal para productos con descuentos por volumen.</dd>
-
                         <dt>Por Metro Lineal (m)</dt>
                         <dd>El precio se calcula por metro lineal. Ideal para molduras, zócalos, cortinas, perfiles.</dd>
+
+                        <dt>Por Rango de Largo</dt>
+                        <dd>El precio varía según rangos de largo. El usuario define rangos (ej: 1.00 a 2.50m = $7000). Ideal para cortinas, persianas enrollables.</dd>
+
+                        <dt>Por Rango de Dimensiones</dt>
+                        <dd>El precio varía según rangos de ancho y alto. El usuario define rangos bidimensionales. Ideal para ventanas, puertas, persianas de aluminio.</dd>
                     </dl>
                 </div>
             </div>

@@ -4,10 +4,11 @@ namespace GrupoMad.Models
 {
     public enum PricingType
     {
-        PerSquareMeter,
-        PerUnit,
-        PerRange,
-        PerLinearMeter
+        PerSquareMeter,      // Por metro cuadrado (ancho * alto)
+        PerUnit,             // Por unidad
+        PerLinearMeter,      // Por metro lineal (ancho)
+        PerRangeLength,      // Por rango de largo (1D)
+        PerRangeDimensions   // Por rango de dimensiones (2D: ancho y alto)
     }
 
     public class ProductType

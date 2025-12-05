@@ -49,16 +49,23 @@ namespace GrupoMad.Services
         /// Obtiene el precio de un producto desde las listas de precios de una tienda
         /// Si no existe precio para la tienda específica o el precio es 0, busca en la lista de precios global (StoreId == null)
         /// Retorna el precio con descuento si está disponible
+        /// Para productos con precios por rangos, opcionalmente se pueden proporcionar dimensiones para obtener el precio específico
         /// </summary>
         public async Task<(decimal unitPrice, decimal discountedPrice, string? variant)?> GetProductPriceAsync(
             int productId,
             int storeId,
-            string? variant = null)
+            string? variant = null,
+            decimal? width = null,
+            decimal? height = null)
         {
             // Primero, buscar el producto en las listas de precios de la tienda específica
             var priceListItem = await _context.PriceListItems
                 .Include(pli => pli.Discounts)
                 .Include(pli => pli.PriceList)
+                .Include(pli => pli.PriceRangesByLength)
+                .Include(pli => pli.PriceRangesByDimensions)
+                .Include(pli => pli.Product)
+                    .ThenInclude(p => p.ProductType)
                 .Where(pli =>
                     pli.ProductId == productId &&
                     pli.PriceList.StoreId == storeId &&
@@ -73,6 +80,10 @@ namespace GrupoMad.Services
                 priceListItem = await _context.PriceListItems
                     .Include(pli => pli.Discounts)
                     .Include(pli => pli.PriceList)
+                    .Include(pli => pli.PriceRangesByLength)
+                    .Include(pli => pli.PriceRangesByDimensions)
+                    .Include(pli => pli.Product)
+                        .ThenInclude(p => p.ProductType)
                     .Where(pli =>
                         pli.ProductId == productId &&
                         pli.PriceList.StoreId == null &&
@@ -85,8 +96,62 @@ namespace GrupoMad.Services
             if (priceListItem == null)
                 return null;
 
-            var unitPrice = priceListItem.GetBasePrice();
-            var discountedPrice = priceListItem.GetFinalPrice();
+            decimal unitPrice;
+            decimal discountedPrice;
+
+            // Para productos con precios por rangos, obtener el precio del rango correspondiente
+            if (priceListItem.Product?.ProductType?.PricingType == PricingType.PerRangeLength)
+            {
+                if (!width.HasValue)
+                {
+                    // Si no se proporcionó el ancho (largo), retornar el precio base
+                    unitPrice = priceListItem.GetBasePrice();
+                    discountedPrice = priceListItem.GetFinalPrice();
+                }
+                else
+                {
+                    var rangePrice = priceListItem.GetPriceByLength(width.Value);
+                    if (rangePrice.HasValue)
+                    {
+                        unitPrice = rangePrice.Value;
+                        discountedPrice = rangePrice.Value; // Los rangos no tienen descuentos adicionales
+                    }
+                    else
+                    {
+                        // No se encontró rango que coincida
+                        return null;
+                    }
+                }
+            }
+            else if (priceListItem.Product?.ProductType?.PricingType == PricingType.PerRangeDimensions)
+            {
+                if (!width.HasValue || !height.HasValue)
+                {
+                    // Si no se proporcionaron ambas dimensiones, retornar el precio base
+                    unitPrice = priceListItem.GetBasePrice();
+                    discountedPrice = priceListItem.GetFinalPrice();
+                }
+                else
+                {
+                    var rangePrice = priceListItem.GetPriceByDimensions(width.Value, height.Value);
+                    if (rangePrice.HasValue)
+                    {
+                        unitPrice = rangePrice.Value;
+                        discountedPrice = rangePrice.Value; // Los rangos no tienen descuentos adicionales
+                    }
+                    else
+                    {
+                        // No se encontró rango que coincida
+                        return null;
+                    }
+                }
+            }
+            else
+            {
+                // Para productos con precios normales (PerUnit, PerLinearMeter, PerSquareMeter)
+                unitPrice = priceListItem.GetBasePrice();
+                discountedPrice = priceListItem.GetFinalPrice();
+            }
 
             return (unitPrice, discountedPrice, priceListItem.Variant);
         }

@@ -787,5 +787,337 @@ namespace GrupoMad.Controllers
                 return RedirectToAction(nameof(CreateByProductTypesForStores));
             }
         }
+
+        #region Gestión de Rangos de Precio
+
+        // GET: PriceList/ManageRangesByLength/5
+        public async Task<IActionResult> ManageRangesByLength(int? itemId)
+        {
+            if (itemId == null)
+            {
+                return NotFound();
+            }
+
+            var item = await _context.PriceListItems
+                .Include(pli => pli.Product)
+                    .ThenInclude(p => p.ProductType)
+                .Include(pli => pli.PriceList)
+                .Include(pli => pli.PriceRangesByLength)
+                .FirstOrDefaultAsync(pli => pli.Id == itemId);
+
+            if (item == null)
+            {
+                return NotFound();
+            }
+
+            // Verificar que el producto sea del tipo PerRangeLength
+            if (item.Product?.ProductType?.PricingType != PricingType.PerRangeLength)
+            {
+                TempData["Error"] = "Este producto no es del tipo 'Por Rango de Largo'";
+                return RedirectToAction(nameof(ManageItems), new { id = item.PriceListId });
+            }
+
+            return View(item);
+        }
+
+        // POST: PriceList/AddRangeByLength
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> AddRangeByLength(int priceListItemId, decimal minLength, decimal maxLength, decimal price)
+        {
+            try
+            {
+                // Validar que min < max
+                if (minLength >= maxLength)
+                {
+                    TempData["Error"] = "El largo mínimo debe ser menor que el largo máximo";
+                    return RedirectToAction(nameof(ManageRangesByLength), new { itemId = priceListItemId });
+                }
+
+                // Validar que no se solape con rangos existentes
+                var existingRanges = await _context.PriceRangesByLength
+                    .Where(r => r.PriceListItemId == priceListItemId)
+                    .ToListAsync();
+
+                var overlaps = existingRanges.Any(r =>
+                    (minLength >= r.MinLength && minLength <= r.MaxLength) ||
+                    (maxLength >= r.MinLength && maxLength <= r.MaxLength) ||
+                    (minLength <= r.MinLength && maxLength >= r.MaxLength)
+                );
+
+                if (overlaps)
+                {
+                    TempData["Error"] = "El rango se solapa con un rango existente. Verifica que los valores no se traslapen con rangos ya configurados.";
+                    return RedirectToAction(nameof(ManageRangesByLength), new { itemId = priceListItemId });
+                }
+
+                var range = new PriceRangeByLength
+                {
+                    PriceListItemId = priceListItemId,
+                    MinLength = minLength,
+                    MaxLength = maxLength,
+                    Price = price
+                };
+
+                _context.PriceRangesByLength.Add(range);
+                await _context.SaveChangesAsync();
+
+                TempData["Success"] = "Rango agregado exitosamente";
+            }
+            catch (Exception ex)
+            {
+                TempData["Error"] = $"Error al agregar rango: {ex.Message}";
+            }
+
+            return RedirectToAction(nameof(ManageRangesByLength), new { itemId = priceListItemId });
+        }
+
+        // POST: PriceList/UpdateRangeByLength
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> UpdateRangeByLength(int rangeId, int priceListItemId, decimal minLength, decimal maxLength, decimal price)
+        {
+            try
+            {
+                // Validar que min < max
+                if (minLength >= maxLength)
+                {
+                    TempData["Error"] = "El largo mínimo debe ser menor que el largo máximo";
+                    return RedirectToAction(nameof(ManageRangesByLength), new { itemId = priceListItemId });
+                }
+
+                // Validar que no se solape con otros rangos (excluyendo el que estamos editando)
+                var existingRanges = await _context.PriceRangesByLength
+                    .Where(r => r.PriceListItemId == priceListItemId && r.Id != rangeId)
+                    .ToListAsync();
+
+                var overlaps = existingRanges.Any(r =>
+                    (minLength >= r.MinLength && minLength <= r.MaxLength) ||
+                    (maxLength >= r.MinLength && maxLength <= r.MaxLength) ||
+                    (minLength <= r.MinLength && maxLength >= r.MaxLength)
+                );
+
+                if (overlaps)
+                {
+                    TempData["Error"] = "El rango se solapa con un rango existente. Verifica que los valores no se traslapen con rangos ya configurados.";
+                    return RedirectToAction(nameof(ManageRangesByLength), new { itemId = priceListItemId });
+                }
+
+                var range = await _context.PriceRangesByLength.FindAsync(rangeId);
+                if (range != null)
+                {
+                    range.MinLength = minLength;
+                    range.MaxLength = maxLength;
+                    range.Price = price;
+                    range.UpdatedAt = DateTime.UtcNow;
+
+                    await _context.SaveChangesAsync();
+                    TempData["Success"] = "Rango actualizado exitosamente";
+                }
+            }
+            catch (Exception ex)
+            {
+                TempData["Error"] = $"Error al actualizar rango: {ex.Message}";
+            }
+
+            return RedirectToAction(nameof(ManageRangesByLength), new { itemId = priceListItemId });
+        }
+
+        // POST: PriceList/DeleteRangeByLength
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> DeleteRangeByLength(int rangeId, int priceListItemId)
+        {
+            try
+            {
+                var range = await _context.PriceRangesByLength.FindAsync(rangeId);
+                if (range != null)
+                {
+                    _context.PriceRangesByLength.Remove(range);
+                    await _context.SaveChangesAsync();
+                    TempData["Success"] = "Rango eliminado exitosamente";
+                }
+            }
+            catch (Exception ex)
+            {
+                TempData["Error"] = $"Error al eliminar rango: {ex.Message}";
+            }
+
+            return RedirectToAction(nameof(ManageRangesByLength), new { itemId = priceListItemId });
+        }
+
+        // GET: PriceList/ManageRangesByDimensions/5
+        public async Task<IActionResult> ManageRangesByDimensions(int? itemId)
+        {
+            if (itemId == null)
+            {
+                return NotFound();
+            }
+
+            var item = await _context.PriceListItems
+                .Include(pli => pli.Product)
+                    .ThenInclude(p => p.ProductType)
+                .Include(pli => pli.PriceList)
+                .Include(pli => pli.PriceRangesByDimensions)
+                .FirstOrDefaultAsync(pli => pli.Id == itemId);
+
+            if (item == null)
+            {
+                return NotFound();
+            }
+
+            // Verificar que el producto sea del tipo PerRangeDimensions
+            if (item.Product?.ProductType?.PricingType != PricingType.PerRangeDimensions)
+            {
+                TempData["Error"] = "Este producto no es del tipo 'Por Rango de Dimensiones'";
+                return RedirectToAction(nameof(ManageItems), new { id = item.PriceListId });
+            }
+
+            return View(item);
+        }
+
+        // POST: PriceList/AddRangeByDimensions
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> AddRangeByDimensions(int priceListItemId, decimal minWidth, decimal maxWidth, decimal minHeight, decimal maxHeight, decimal price)
+        {
+            try
+            {
+                // Validar que min < max
+                if (minWidth >= maxWidth)
+                {
+                    TempData["Error"] = "El ancho mínimo debe ser menor que el ancho máximo";
+                    return RedirectToAction(nameof(ManageRangesByDimensions), new { itemId = priceListItemId });
+                }
+
+                if (minHeight >= maxHeight)
+                {
+                    TempData["Error"] = "El alto mínimo debe ser menor que el alto máximo";
+                    return RedirectToAction(nameof(ManageRangesByDimensions), new { itemId = priceListItemId });
+                }
+
+                // Validar que no se solape con rangos existentes
+                var existingRanges = await _context.PriceRangesByDimensions
+                    .Where(r => r.PriceListItemId == priceListItemId)
+                    .ToListAsync();
+
+                var overlaps = existingRanges.Any(r =>
+                    // Verifica si hay solapamiento en ambas dimensiones (ancho Y alto)
+                    ((minWidth >= r.MinWidth && minWidth <= r.MaxWidth) || (maxWidth >= r.MinWidth && maxWidth <= r.MaxWidth) || (minWidth <= r.MinWidth && maxWidth >= r.MaxWidth)) &&
+                    ((minHeight >= r.MinHeight && minHeight <= r.MaxHeight) || (maxHeight >= r.MinHeight && maxHeight <= r.MaxHeight) || (minHeight <= r.MinHeight && maxHeight >= r.MaxHeight))
+                );
+
+                if (overlaps)
+                {
+                    TempData["Error"] = "El rango se solapa con un rango existente. Verifica que los valores no se traslapen con rangos ya configurados.";
+                    return RedirectToAction(nameof(ManageRangesByDimensions), new { itemId = priceListItemId });
+                }
+
+                var range = new PriceRangeByDimensions
+                {
+                    PriceListItemId = priceListItemId,
+                    MinWidth = minWidth,
+                    MaxWidth = maxWidth,
+                    MinHeight = minHeight,
+                    MaxHeight = maxHeight,
+                    Price = price
+                };
+
+                _context.PriceRangesByDimensions.Add(range);
+                await _context.SaveChangesAsync();
+
+                TempData["Success"] = "Rango agregado exitosamente";
+            }
+            catch (Exception ex)
+            {
+                TempData["Error"] = $"Error al agregar rango: {ex.Message}";
+            }
+
+            return RedirectToAction(nameof(ManageRangesByDimensions), new { itemId = priceListItemId });
+        }
+
+        // POST: PriceList/UpdateRangeByDimensions
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> UpdateRangeByDimensions(int rangeId, int priceListItemId, decimal minWidth, decimal maxWidth, decimal minHeight, decimal maxHeight, decimal price)
+        {
+            try
+            {
+                // Validar que min < max
+                if (minWidth >= maxWidth)
+                {
+                    TempData["Error"] = "El ancho mínimo debe ser menor que el ancho máximo";
+                    return RedirectToAction(nameof(ManageRangesByDimensions), new { itemId = priceListItemId });
+                }
+
+                if (minHeight >= maxHeight)
+                {
+                    TempData["Error"] = "El alto mínimo debe ser menor que el alto máximo";
+                    return RedirectToAction(nameof(ManageRangesByDimensions), new { itemId = priceListItemId });
+                }
+
+                // Validar que no se solape con otros rangos (excluyendo el que estamos editando)
+                var existingRanges = await _context.PriceRangesByDimensions
+                    .Where(r => r.PriceListItemId == priceListItemId && r.Id != rangeId)
+                    .ToListAsync();
+
+                var overlaps = existingRanges.Any(r =>
+                    // Verifica si hay solapamiento en ambas dimensiones (ancho Y alto)
+                    ((minWidth >= r.MinWidth && minWidth <= r.MaxWidth) || (maxWidth >= r.MinWidth && maxWidth <= r.MaxWidth) || (minWidth <= r.MinWidth && maxWidth >= r.MaxWidth)) &&
+                    ((minHeight >= r.MinHeight && minHeight <= r.MaxHeight) || (maxHeight >= r.MinHeight && maxHeight <= r.MaxHeight) || (minHeight <= r.MinHeight && maxHeight >= r.MaxHeight))
+                );
+
+                if (overlaps)
+                {
+                    TempData["Error"] = "El rango se solapa con un rango existente. Verifica que los valores no se traslapen con rangos ya configurados.";
+                    return RedirectToAction(nameof(ManageRangesByDimensions), new { itemId = priceListItemId });
+                }
+
+                var range = await _context.PriceRangesByDimensions.FindAsync(rangeId);
+                if (range != null)
+                {
+                    range.MinWidth = minWidth;
+                    range.MaxWidth = maxWidth;
+                    range.MinHeight = minHeight;
+                    range.MaxHeight = maxHeight;
+                    range.Price = price;
+                    range.UpdatedAt = DateTime.UtcNow;
+
+                    await _context.SaveChangesAsync();
+                    TempData["Success"] = "Rango actualizado exitosamente";
+                }
+            }
+            catch (Exception ex)
+            {
+                TempData["Error"] = $"Error al actualizar rango: {ex.Message}";
+            }
+
+            return RedirectToAction(nameof(ManageRangesByDimensions), new { itemId = priceListItemId });
+        }
+
+        // POST: PriceList/DeleteRangeByDimensions
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> DeleteRangeByDimensions(int rangeId, int priceListItemId)
+        {
+            try
+            {
+                var range = await _context.PriceRangesByDimensions.FindAsync(rangeId);
+                if (range != null)
+                {
+                    _context.PriceRangesByDimensions.Remove(range);
+                    await _context.SaveChangesAsync();
+                    TempData["Success"] = "Rango eliminado exitosamente";
+                }
+            }
+            catch (Exception ex)
+            {
+                TempData["Error"] = $"Error al eliminar rango: {ex.Message}";
+            }
+
+            return RedirectToAction(nameof(ManageRangesByDimensions), new { itemId = priceListItemId });
+        }
+
+        #endregion
     }
 }

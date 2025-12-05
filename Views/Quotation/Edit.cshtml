@@ -371,6 +371,15 @@
                 // Habilitar ambos
                 widthInput.disabled = false;
                 heightInput.disabled = false;
+            } else if (product.pricingType === 'PerRangeLength') {
+                // Solo habilitar ancho (que representa el largo)
+                widthInput.disabled = false;
+                heightInput.disabled = true;
+                heightInput.value = '';
+            } else if (product.pricingType === 'PerRangeDimensions') {
+                // Habilitar ambos campos (ancho y alto)
+                widthInput.disabled = false;
+                heightInput.disabled = false;
             }
         }
 
@@ -458,8 +467,23 @@
             });
 
             // Event listeners para recalcular
-            row.querySelectorAll('.quantity-input, .dimension-input, .discounted-price-input').forEach(input => {
+            row.querySelectorAll('.quantity-input, .discounted-price-input').forEach(input => {
                 input.addEventListener('input', () => calculateItemTotal(currentIndex));
+            });
+
+            // Event listeners especiales para dimensiones: recargar precio si es producto por rangos
+            row.querySelectorAll('.dimension-input').forEach(input => {
+                input.addEventListener('change', () => {
+                    const productId = document.querySelector(`[name="items[${currentIndex}].ProductId"]`).value;
+                    const product = products.find(p => p.id === parseInt(productId));
+
+                    // Si es producto por rangos, recargar precio
+                    if (product && (product.pricingType === 'PerRangeLength' || product.pricingType === 'PerRangeDimensions')) {
+                        loadProductPrice(productId, currentIndex);
+                    } else {
+                        calculateItemTotal(currentIndex);
+                    }
+                });
             });
 
             // Si hay datos existentes, cargar los colores y seleccionar el color correcto
@@ -548,8 +572,17 @@
         async function loadProductPrice(productId, index) {
             if (!productId) return;
 
+            // Obtener dimensiones si están disponibles
+            const widthInput = document.querySelector(`[name="items[${index}].Width"]`);
+            const heightInput = document.querySelector(`[name="items[${index}].Height"]`);
+            const width = widthInput && !widthInput.disabled ? (parseFloat(widthInput.value) || null) : null;
+            const height = heightInput && !heightInput.disabled ? (parseFloat(heightInput.value) || null) : null;
+
             try {
-                const url = `/Quotation/GetProductPrice?productId=${productId}&storeId=${storeId}`;
+                let url = `/Quotation/GetProductPrice?productId=${productId}&storeId=${storeId}`;
+                if (width !== null) url += `&width=${width}`;
+                if (height !== null) url += `&height=${height}`;
+
                 const response = await fetch(url);
                 const data = await response.json();
 
@@ -558,7 +591,7 @@
                     document.querySelector(`[name="items[${index}].DiscountedPrice"]`).value = data.discountedPrice.toFixed(2);
                     calculateItemTotal(index);
                 } else {
-                    alert('No se encontró precio para este producto');
+                    alert(data.message || 'No se encontró precio para este producto');
                 }
             } catch (error) {
                 console.error('Error al cargar precio:', error);
@@ -582,6 +615,12 @@
                     effectiveQuantity = width * height * quantity;
                 } else if (product.pricingType === 'PerLinearMeter' && width > 0) {
                     effectiveQuantity = width * quantity;
+                } else if (product.pricingType === 'PerRangeLength') {
+                    // Para rangos por largo, el precio ya viene calculado por rango, solo multiplicar por cantidad
+                    effectiveQuantity = quantity;
+                } else if (product.pricingType === 'PerRangeDimensions') {
+                    // Para rangos por dimensiones, el precio ya viene calculado por rango, solo multiplicar por cantidad
+                    effectiveQuantity = quantity;
                 }
             }
 

@@ -61,6 +61,10 @@ namespace GrupoMad.Models
 
         public List<PriceListItemDiscount>? Discounts { get; set; }
 
+        public List<PriceRangeByLength>? PriceRangesByLength { get; set; }
+
+        public List<PriceRangeByDimensions>? PriceRangesByDimensions { get; set; }
+
         // Métodos helper para cálculo de precios
 
         /// <summary>
@@ -124,6 +128,28 @@ namespace GrupoMad.Models
                 .Where(d => d.ValidFrom <= checkDate && d.ValidUntil >= checkDate)
                 .OrderBy(d => d.Priority)
                 .FirstOrDefault();
+        }
+
+        /// <summary>
+        /// Obtiene el precio basado en un valor de largo (para productos PerRangeLength)
+        /// </summary>
+        public decimal? GetPriceByLength(decimal length)
+        {
+            var range = PriceRangesByLength?
+                .FirstOrDefault(r => r.IsInRange(length));
+
+            return range?.Price;
+        }
+
+        /// <summary>
+        /// Obtiene el precio basado en ancho y alto (para productos PerRangeDimensions)
+        /// </summary>
+        public decimal? GetPriceByDimensions(decimal width, decimal height)
+        {
+            var range = PriceRangesByDimensions?
+                .FirstOrDefault(r => r.IsInRange(width, height));
+
+            return range?.Price;
         }
     }
 
