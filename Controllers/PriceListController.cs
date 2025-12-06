@@ -263,6 +263,26 @@ namespace GrupoMad.Controllers
                 return NotFound();
             }
 
+            // Sincronizar automáticamente si la lista está vinculada a un ProductType
+            if (priceList.ProductTypeId.HasValue)
+            {
+                try
+                {
+                    var changesCount = await _priceListService.SyncProductsToPriceListAsync(priceList.Id);
+
+                    if (changesCount > 0)
+                    {
+                        TempData["Success"] = $"Sincronización automática completada: se realizaron {changesCount} cambio(s) (productos agregados y/o removidos).";
+                        // Recargar la lista de precios después de la sincronización
+                        priceList = await _priceListService.GetPriceListByIdAsync(id.Value);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    TempData["Error"] = $"Error al sincronizar automáticamente: {ex.Message}";
+                }
+            }
+
             ViewBag.PricingTypes = Enum.GetValues(typeof(PricingType));
 
             return View(priceList);
