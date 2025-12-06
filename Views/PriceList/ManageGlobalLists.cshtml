@@ -1,0 +1,668 @@
+@model List<GrupoMad.Models.PriceList>
+
+@{
+    ViewData["Title"] = "Gestionar Múltiples Listas Globales";
+    var allGlobalLists = ViewBag.AllGlobalLists as List<GrupoMad.Models.PriceList>;
+    var pricingTypes = ViewBag.PricingTypes;
+}
+
+<h1>Gestionar Múltiples Listas Globales</h1>
+<p class="text-muted">Selecciona una o más listas globales para gestionar sus productos, precios y descuentos de forma eficiente.</p>
+
+<hr />
+
+@* Selector de Listas con Select2 *@
+<div class="card mb-4">
+    <div class="card-body">
+        <div class="row g-3">
+            <div class="col-md-8">
+                <label for="listSearch" class="form-label">
+                    <i class="bi bi-search"></i> Buscar Listas Globales
+                </label>
+                <select id="listSearch" class="form-select" style="width: 100%;">
+                    <option value=""></option>
+                    @if (allGlobalLists != null)
+                    {
+                        foreach (var list in allGlobalLists)
+                        {
+                            var itemCount = list.PriceListItems?.Count ?? 0;
+                            var productTypeName = list.ProductType?.Name ?? "Sin tipo";
+                            <option value="@list.Id"
+                                    data-name="@list.Name"
+                                    data-type="@productTypeName"
+                                    data-count="@itemCount">
+                                @list.Name (@productTypeName - @itemCount productos)
+                            </option>
+                        }
+                    }
+                </select>
+                <small class="form-text text-muted">
+                    Busca una lista y haz click en "Agregar". Puedes agregar hasta 10 listas.
+                </small>
+            </div>
+            <div class="col-md-4 d-flex align-items-end">
+                <button type="button" id="addListBtn" class="btn btn-success w-100" disabled>
+                    <i class="bi bi-plus-circle"></i> Agregar Lista
+                </button>
+            </div>
+        </div>
+
+        @* Listas Seleccionadas (Chips) *@
+        <div class="mt-4" id="selectedListsContainer">
+            <h6 class="mb-2">
+                <i class="bi bi-list-check"></i> Listas Seleccionadas:
+                <span class="badge bg-primary" id="selectedCount">0</span>
+            </h6>
+            <div id="selectedListsChips" class="d-flex flex-wrap gap-2 mb-3">
+                <span class="text-muted" id="emptyMessage">Ninguna lista seleccionada</span>
+            </div>
+            <form method="get" asp-action="ManageGlobalLists" id="listSelectorForm">
+                <div id="hiddenInputs"></div>
+                <button type="button" id="clearAllBtn" class="btn btn-outline-danger" disabled>
+                    <i class="bi bi-trash"></i> Limpiar Todas las Listas
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+
+@* Mensajes de TempData *@
+@if (TempData["Success"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        @TempData["Success"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+
+@if (TempData["Error"] != null)
+{
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        @TempData["Error"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+
+@if (TempData["Info"] != null)
+{
+    <div class="alert alert-info alert-dismissible fade show" role="alert">
+        @TempData["Info"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+
+@* Mostrar Listas Seleccionadas *@
+@if (Model != null && Model.Any())
+{
+    <div class="mb-3 d-flex justify-content-between align-items-center">
+        <h5 class="mb-0">
+            <i class="bi bi-list-check"></i> Listas Cargadas: <span class="badge bg-primary">@Model.Count</span>
+        </h5>
+
+        @* Contador de cambios sin guardar *@
+        <div id="unsavedChangesCounter" class="alert alert-warning mb-0 py-2 px-3" style="display: none;">
+            <i class="bi bi-exclamation-triangle"></i>
+            <strong id="changesCount">0</strong> cambio(s) sin guardar en <strong id="listsWithChanges">0</strong> lista(s)
+            <button type="button" class="btn btn-sm btn-outline-warning ms-2" onclick="location.reload()">
+                <i class="bi bi-arrow-clockwise"></i> Descartar Cambios
+            </button>
+        </div>
+    </div>
+
+    @* Anclas rápidas para navegación *@
+    @if (Model.Count > 1)
+    {
+        <div class="card mb-3">
+            <div class="card-body">
+                <h6 class="mb-2"><i class="bi bi-bookmark"></i> Navegación Rápida:</h6>
+                <div class="d-flex flex-wrap gap-2">
+                    @foreach (var list in Model)
+                    {
+                        <a href="#list-@list.Id" class="btn btn-sm btn-outline-primary">
+                            @list.Name
+                        </a>
+                    }
+                </div>
+            </div>
+        </div>
+    }
+
+    @* Listas apiladas verticalmente *@
+    @foreach (var priceList in Model)
+    {
+        <div id="list-@priceList.Id" class="mb-5">
+            @* Separador/Header de Lista - Sticky *@
+            <div class="list-separator sticky-top bg-white shadow-sm border-bottom border-3 border-primary py-3 mb-3" style="top: 0; z-index: 100;">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h3 class="mb-1">
+                            <i class="bi bi-list-ul"></i> @priceList.Name
+                            @if (priceList.ProductType != null)
+                            {
+                                <span class="badge bg-secondary">@priceList.ProductType.Name</span>
+                            }
+                        </h3>
+                        <div class="text-muted">
+                            <small>
+                                <i class="bi bi-box"></i> @(priceList.PriceListItems?.Count ?? 0) productos
+                                @if (priceList.ProductTypeId.HasValue)
+                                {
+                                    <span class="ms-2">
+                                        <i class="bi bi-link-45deg"></i> Lista vinculada a tipo de producto
+                                    </span>
+                                }
+                            </small>
+                        </div>
+                    </div>
+                    <div>
+                        <a asp-action="ManageItems" asp-route-id="@priceList.Id" class="btn btn-sm btn-outline-primary" target="_blank" title="Abrir en vista individual">
+                            <i class="bi bi-box-arrow-up-right"></i> Vista Individual
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            @* Tabla de Productos (Reutilizada de ManageItems) *@
+            @if (priceList.PriceListItems != null && priceList.PriceListItems.Any())
+            {
+                <div class="table-responsive">
+                    <table class="table table-striped table-hover">
+                        <thead class="table-light">
+                            <tr>
+                                <th>SKU</th>
+                                <th>Producto</th>
+                                <th>Tipo</th>
+                                <th>Precio Base</th>
+                                <th>Variante</th>
+                                <th>Precio Final</th>
+                                <th>Descuentos Activos</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var item in priceList.PriceListItems.OrderBy(p => p.Product.Name))
+                            {
+                                <tr>
+                                    <td><code>@item.Product.SKU</code></td>
+                                    <td><strong>@item.Product.Name</strong></td>
+                                    <td>
+                                        @if (item.Product.ProductType != null)
+                                        {
+                                            @switch (item.Product.ProductType.PricingType)
+                                            {
+                                                case GrupoMad.Models.PricingType.PerSquareMeter:
+                                                    <span class="badge bg-info">m²</span>
+                                                    break;
+                                                case GrupoMad.Models.PricingType.PerUnit:
+                                                    <span class="badge bg-success">Unidad</span>
+                                                    break;
+                                                case GrupoMad.Models.PricingType.PerLinearMeter:
+                                                    <span class="badge bg-warning">Metro</span>
+                                                    break;
+                                                case GrupoMad.Models.PricingType.PerRangeLength:
+                                                    <span class="badge bg-secondary">Rango Largo</span>
+                                                    break;
+                                                case GrupoMad.Models.PricingType.PerRangeDimensions:
+                                                    <span class="badge bg-secondary">Rango Dim</span>
+                                                    break;
+                                            }
+                                        }
+                                    </td>
+                                    <td>
+                                        @* No mostrar precio base para productos con precios por rangos *@
+                                        @if (item.Product?.ProductType?.PricingType == GrupoMad.Models.PricingType.PerRangeLength ||
+                                             item.Product?.ProductType?.PricingType == GrupoMad.Models.PricingType.PerRangeDimensions)
+                                        {
+                                            <span class="text-muted">
+                                                <i class="bi bi-dash-circle"></i> Definir rangos
+                                            </span>
+                                        }
+                                        else
+                                        {
+                                            @* Para listas globales: permitir edición directa *@
+                                            <form asp-action="UpdateItem" method="post" class="d-inline">
+                                                @Html.AntiForgeryToken()
+                                                <input type="hidden" name="itemId" value="@item.Id" />
+                                                <input type="hidden" name="priceListId" value="@priceList.Id" />
+                                                <input type="hidden" name="variant" value="@item.Variant" />
+                                                @* Pasar los listIds para redirigir correctamente *@
+                                                @foreach (var list in Model)
+                                                {
+                                                    <input type="hidden" name="listIds" value="@list.Id" />
+                                                }
+                                                <div class="input-group input-group-sm" style="width: 150px;">
+                                                    <span class="input-group-text">$</span>
+                                                    <input type="number" name="price" value="@item.Price"
+                                                           class="form-control form-control-sm" step="0.01" min="0" required />
+                                                    <button type="submit" class="btn btn-primary btn-sm" title="Guardar precio">💾</button>
+                                                </div>
+                                            </form>
+                                        }
+                                    </td>
+                                    <td>
+                                        @* No mostrar variante para productos con precios por rangos *@
+                                        @if (item.Product?.ProductType?.PricingType == GrupoMad.Models.PricingType.PerRangeLength ||
+                                             item.Product?.ProductType?.PricingType == GrupoMad.Models.PricingType.PerRangeDimensions)
+                                        {
+                                            <span class="text-muted">-</span>
+                                        }
+                                        else
+                                        {
+                                            <form asp-action="UpdateItem" method="post" class="d-inline">
+                                                @Html.AntiForgeryToken()
+                                                <input type="hidden" name="itemId" value="@item.Id" />
+                                                <input type="hidden" name="priceListId" value="@priceList.Id" />
+                                                <input type="hidden" name="price" value="@item.Price" />
+                                                @* Pasar los listIds para redirigir correctamente *@
+                                                @foreach (var list in Model)
+                                                {
+                                                    <input type="hidden" name="listIds" value="@list.Id" />
+                                                }
+                                                <div class="input-group input-group-sm" style="width: 120px;">
+                                                    <input type="text" name="variant" value="@item.Variant"
+                                                           class="form-control form-control-sm" placeholder="Opcional" />
+                                                    <button type="submit" class="btn btn-primary btn-sm" title="Guardar variante">💾</button>
+                                                </div>
+                                            </form>
+                                        }
+                                    </td>
+                                    <td>
+                                        @* Para productos por rangos no aplica precio final *@
+                                        @if (item.Product?.ProductType?.PricingType == GrupoMad.Models.PricingType.PerRangeLength ||
+                                             item.Product?.ProductType?.PricingType == GrupoMad.Models.PricingType.PerRangeDimensions)
+                                        {
+                                            <span class="text-muted">Ver rangos</span>
+                                        }
+                                        else
+                                        {
+                                            var finalPrice = item.GetFinalPrice();
+                                            <strong class="text-primary">$@finalPrice.ToString("N2")</strong>
+                                        }
+                                    </td>
+                                    <td>
+                                        @* Para productos por rangos no aplica descuentos *@
+                                        @if (item.Product?.ProductType?.PricingType == GrupoMad.Models.PricingType.PerRangeLength ||
+                                             item.Product?.ProductType?.PricingType == GrupoMad.Models.PricingType.PerRangeDimensions)
+                                        {
+                                            <span class="text-muted">-</span>
+                                        }
+                                        else
+                                        {
+                                            var activeDiscount = item.GetActiveDiscount();
+                                            var discountApplied = item.GetDiscountApplied();
+
+                                            if (activeDiscount != null && discountApplied > 0)
+                                            {
+                                                <span class="badge bg-success" title="Descuento vigente hasta @activeDiscount.ValidUntil.ToString("dd/MM/yyyy")">
+                                                    -$@discountApplied.ToString("N2")
+                                                    <small>(P@(activeDiscount.Priority))</small>
+                                                </span>
+                                            }
+                                            else
+                                            {
+                                                <span class="text-muted">-</span>
+                                            }
+                                        }
+                                    </td>
+                                    <td>
+                                        @* Botón de rangos para productos con tipo PerRangeLength o PerRangeDimensions *@
+                                        @if (item.Product?.ProductType?.PricingType == GrupoMad.Models.PricingType.PerRangeLength)
+                                        {
+                                            <a asp-action="ManageRangesByLength" asp-route-itemId="@item.Id" class="btn btn-sm btn-info" title="Gestionar Rangos por Largo">
+                                                <i class="bi bi-rulers"></i> Rangos
+                                            </a>
+                                        }
+                                        else if (item.Product?.ProductType?.PricingType == GrupoMad.Models.PricingType.PerRangeDimensions)
+                                        {
+                                            <a asp-action="ManageRangesByDimensions" asp-route-itemId="@item.Id" class="btn btn-sm btn-info" title="Gestionar Rangos por Dimensiones">
+                                                <i class="bi bi-bounding-box"></i> Rangos
+                                            </a>
+                                        }
+                                        else
+                                        {
+                                            @* Botón de descuentos solo para productos que no son por rangos *@
+                                            <a asp-action="ManageDiscounts" asp-route-itemId="@item.Id" class="btn btn-sm btn-light" title="Gestionar Descuentos">
+                                                <i class="bi bi-percent"></i> Descuentos
+                                            </a>
+                                        }
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+            else
+            {
+                <div class="alert alert-info">
+                    No hay productos en esta lista.
+                </div>
+            }
+        </div>
+    }
+}
+else
+{
+    @* Estado vacío *@
+    <div class="alert alert-info text-center py-5">
+        <i class="bi bi-inbox" style="font-size: 3rem;"></i>
+        <h4 class="mt-3">No hay listas seleccionadas</h4>
+        <p class="text-muted">Usa el selector de arriba para buscar y seleccionar listas globales para gestionar.</p>
+    </div>
+}
+
+<hr />
+<div>
+    <a asp-action="Index" class="btn btn-secondary">
+        <i class="bi bi-arrow-left"></i> Volver al Índice
+    </a>
+</div>
+
+@section Scripts {
+    <!-- Select2 CSS y JS -->
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+    <link href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" rel="stylesheet" />
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+
+    <script>
+        $(document).ready(function() {
+            const MAX_LISTS = 10;
+            let selectedLists = [];
+
+            // Tracking de cambios sin guardar
+            let unsavedChanges = {
+                count: 0,
+                listIds: new Set()
+            };
+
+            // Guardar valores originales de los inputs
+            const originalValues = new Map();
+            $('input[name="price"], input[name="variant"]').each(function() {
+                const $input = $(this);
+                const key = $input.closest('form').find('input[name="itemId"]').val() + '_' + $input.attr('name');
+                originalValues.set(key, $input.val());
+            });
+
+            // Detectar cambios en precios y variantes
+            $(document).on('input', 'input[name="price"], input[name="variant"]', function() {
+                const $input = $(this);
+                const $form = $input.closest('form');
+                const itemId = $form.find('input[name="itemId"]').val();
+                const priceListId = $form.find('input[name="priceListId"]').val();
+                const fieldName = $input.attr('name');
+                const key = itemId + '_' + fieldName;
+
+                const originalValue = originalValues.get(key);
+                const currentValue = $input.val();
+
+                // Verificar si hay cambio
+                if (originalValue !== currentValue) {
+                    unsavedChanges.listIds.add(priceListId);
+                    // Contar todos los campos modificados
+                    let modifiedCount = 0;
+                    $('input[name="price"], input[name="variant"]').each(function() {
+                        const $inp = $(this);
+                        const k = $inp.closest('form').find('input[name="itemId"]').val() + '_' + $inp.attr('name');
+                        if (originalValues.get(k) !== $inp.val()) {
+                            modifiedCount++;
+                        }
+                    });
+                    unsavedChanges.count = modifiedCount;
+                } else {
+                    // Verificar si todavía hay cambios en esta lista
+                    let hasChangesInList = false;
+                    $form.closest('table').find('input[name="price"], input[name="variant"]').each(function() {
+                        const $inp = $(this);
+                        const k = $inp.closest('form').find('input[name="itemId"]').val() + '_' + $inp.attr('name');
+                        if (originalValues.get(k) !== $inp.val()) {
+                            hasChangesInList = true;
+                        }
+                    });
+
+                    if (!hasChangesInList) {
+                        unsavedChanges.listIds.delete(priceListId);
+                    }
+
+                    // Recalcular total
+                    let modifiedCount = 0;
+                    $('input[name="price"], input[name="variant"]').each(function() {
+                        const $inp = $(this);
+                        const k = $inp.closest('form').find('input[name="itemId"]').val() + '_' + $inp.attr('name');
+                        if (originalValues.get(k) !== $inp.val()) {
+                            modifiedCount++;
+                        }
+                    });
+                    unsavedChanges.count = modifiedCount;
+                }
+
+                updateUnsavedChangesCounter();
+            });
+
+            // Actualizar contador de cambios sin guardar
+            function updateUnsavedChangesCounter() {
+                const $counter = $('#unsavedChangesCounter');
+
+                if (unsavedChanges.count > 0) {
+                    $('#changesCount').text(unsavedChanges.count);
+                    $('#listsWithChanges').text(unsavedChanges.listIds.size);
+                    $counter.fadeIn();
+                } else {
+                    $counter.fadeOut();
+                }
+            }
+
+            // Prevenir navegación con cambios sin guardar
+            window.addEventListener('beforeunload', function (e) {
+                if (unsavedChanges.count > 0) {
+                    e.preventDefault();
+                    e.returnValue = ''; // Chrome requiere returnValue
+                    return '¿Está seguro de salir? Tiene cambios sin guardar.';
+                }
+            });
+
+            // No prevenir navegación cuando se guarda un cambio
+            $(document).on('submit', 'form[action*="UpdateItem"]', function() {
+                // Temporalmente desactivar la prevención
+                window.onbeforeunload = null;
+            });
+
+            // Inicializar Select2 en el buscador
+            const $listSearch = $('#listSearch');
+            $listSearch.select2({
+                theme: 'bootstrap-5',
+                placeholder: 'Buscar una lista global...',
+                allowClear: true,
+                width: '100%',
+                language: {
+                    noResults: function() {
+                        return 'No se encontraron listas';
+                    },
+                    searching: function() {
+                        return 'Buscando...';
+                    }
+                }
+            });
+
+            // Habilitar botón "Agregar" cuando se selecciona una lista
+            $listSearch.on('select2:select', function(e) {
+                const selectedValue = $(this).val();
+                console.log('Lista seleccionada:', selectedValue);
+                $('#addListBtn').prop('disabled', false);
+            });
+
+            // Deshabilitar botón "Agregar" cuando se limpia la selección
+            $listSearch.on('select2:clear', function(e) {
+                console.log('Selección limpiada');
+                $('#addListBtn').prop('disabled', true);
+            });
+
+            // Agregar lista al hacer click en "Agregar"
+            $('#addListBtn').on('click', function() {
+                const selectedValue = $('#listSearch').val();
+                if (!selectedValue) return;
+
+                // Verificar si ya está agregada
+                if (selectedLists.some(list => list.id == selectedValue)) {
+                    alert('Esta lista ya está agregada');
+                    return;
+                }
+
+                // Verificar límite
+                if (selectedLists.length >= MAX_LISTS) {
+                    alert('Solo puedes agregar un máximo de ' + MAX_LISTS + ' listas');
+                    return;
+                }
+
+                // Obtener datos de la opción seleccionada
+                const selectedOption = $('#listSearch option:selected');
+                const listData = {
+                    id: selectedValue,
+                    name: selectedOption.data('name'),
+                    type: selectedOption.data('type'),
+                    count: selectedOption.data('count')
+                };
+
+                // Agregar a la lista
+                selectedLists.push(listData);
+
+                // Actualizar UI para mostrar la nueva lista en chips
+                updateSelectedListsUI();
+
+                // Guardar en localStorage
+                saveToLocalStorage();
+
+                // Automáticamente cargar las listas (submit del form)
+                $('#listSelectorForm').submit();
+            });
+
+            // Remover lista
+            $(document).on('click', '.remove-list-btn', function() {
+                const listId = $(this).data('id');
+                selectedLists = selectedLists.filter(list => list.id != listId);
+                updateSelectedListsUI();
+                saveToLocalStorage();
+
+                // Automáticamente recargar las listas
+                $('#listSelectorForm').submit();
+            });
+
+            // Limpiar todo
+            $('#clearAllBtn').on('click', function() {
+                if (confirm('¿Está seguro de limpiar todas las listas seleccionadas?')) {
+                    selectedLists = [];
+                    localStorage.removeItem('selectedPriceLists');
+                    // Redirigir a la página sin parámetros
+                    window.location.href = '@Url.Action("ManageGlobalLists", "PriceList")';
+                }
+            });
+
+            // Actualizar UI de listas seleccionadas
+            function updateSelectedListsUI() {
+                const container = $('#selectedListsChips');
+                const hiddenInputs = $('#hiddenInputs');
+
+                // Limpiar
+                container.empty();
+                hiddenInputs.empty();
+
+                // Actualizar contador
+                $('#selectedCount').text(selectedLists.length);
+
+                if (selectedLists.length === 0) {
+                    container.html('<span class="text-muted" id="emptyMessage">Ninguna lista seleccionada</span>');
+                    $('#clearAllBtn').prop('disabled', true);
+                } else {
+                    selectedLists.forEach(list => {
+                        // Crear chip
+                        const chip = $('<span>', {
+                            class: 'badge bg-primary fs-6 d-inline-flex align-items-center gap-2',
+                            html: `
+                                <div>
+                                    <i class="bi bi-list-ul"></i> ${list.name}
+                                    <small class="ms-1">(${list.type} - ${list.count} productos)</small>
+                                </div>
+                                <button type="button" class="btn-close btn-close-white remove-list-btn"
+                                        data-id="${list.id}" title="Remover lista"></button>
+                            `
+                        });
+                        container.append(chip);
+
+                        // Crear input hidden para el form
+                        hiddenInputs.append(`<input type="hidden" name="listIds" value="${list.id}" />`);
+                    });
+
+                    $('#clearAllBtn').prop('disabled', false);
+                }
+            }
+
+            // Guardar en localStorage
+            function saveToLocalStorage() {
+                localStorage.setItem('selectedPriceLists', JSON.stringify(selectedLists));
+            }
+
+            // Restaurar desde localStorage
+            function loadFromLocalStorage() {
+                const saved = localStorage.getItem('selectedPriceLists');
+                if (saved) {
+                    try {
+                        const parsed = JSON.parse(saved);
+                        // Solo restaurar si no hay listas ya cargadas en el modelo
+                        @if (Model == null || !Model.Any())
+                        {
+                            <text>
+                            if (Array.isArray(parsed) && parsed.length > 0) {
+                                selectedLists = parsed;
+                                updateSelectedListsUI();
+                            }
+                            </text>
+                        }
+                    } catch (e) {
+                        console.error('Error al restaurar selección:', e);
+                        localStorage.removeItem('selectedPriceLists');
+                    }
+                }
+            }
+
+            // Inicializar desde listas cargadas en el modelo
+            @if (Model != null && Model.Any())
+            {
+                <text>
+                selectedLists = [
+                    @foreach (var list in Model)
+                    {
+                        var itemCount = list.PriceListItems?.Count ?? 0;
+                        var productTypeName = list.ProductType?.Name ?? "Sin tipo";
+                        <text>
+                        {
+                            id: '@list.Id',
+                            name: '@Html.Raw(list.Name)',
+                            type: '@Html.Raw(productTypeName)',
+                            count: @itemCount
+                        },
+                        </text>
+                    }
+                ];
+                updateSelectedListsUI();
+                </text>
+            }
+            else
+            {
+                <text>
+                // Cargar desde localStorage solo si no hay modelo
+                loadFromLocalStorage();
+                </text>
+            }
+
+            // Smooth scroll para las anclas de navegación rápida
+            $(document).on('click', 'a[href^="#list-"]', function(e) {
+                e.preventDefault();
+                var target = $(this.getAttribute('href'));
+                if (target.length) {
+                    $('html, body').stop().animate({
+                        scrollTop: target.offset().top - 20
+                    }, 500);
+                }
+            });
+        });
+    </script>
+}
