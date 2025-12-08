@@ -319,24 +319,6 @@ namespace GrupoMad.Controllers
             return RedirectToAction(nameof(ManageItems), new { id = priceListId });
         }
 
-        // POST: PriceList/RemoveItem
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> RemoveItem(int itemId, int priceListId)
-        {
-            var result = await _priceListService.RemoveItemFromPriceListAsync(itemId);
-            if (!result)
-            {
-                TempData["Error"] = "No se pudo eliminar el producto de la lista.";
-            }
-            else
-            {
-                TempData["Success"] = "Producto eliminado de la lista exitosamente.";
-            }
-
-            return RedirectToAction(nameof(ManageItems), new { id = priceListId });
-        }
-
         // ==================== Operaciones en Lote ====================
 
         // POST: PriceList/ApplyPercentageFromGlobal

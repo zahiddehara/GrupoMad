@@ -159,16 +159,6 @@ namespace GrupoMad.Services
             return item;
         }
 
-        public async Task<bool> RemoveItemFromPriceListAsync(int itemId)
-        {
-            var item = await _context.PriceListItems.FindAsync(itemId);
-            if (item == null) return false;
-
-            _context.PriceListItems.Remove(item);
-            await _context.SaveChangesAsync();
-            return true;
-        }
-
         // ==================== Consultas de Precios ====================
 
         // Obtener el precio de un producto en una lista específica
