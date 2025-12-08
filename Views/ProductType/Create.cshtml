@@ -49,6 +49,22 @@
                     </label>
                 </div>
 
+                <div class="form-check mb-3">
+                    <input asp-for="HasVariants" class="form-check-input" type="checkbox" id="hasVariantsCheckbox" />
+                    <label asp-for="HasVariants" class="form-check-label">
+                        Tiene Variantes
+                    </label>
+                    <small class="form-text text-muted d-block">Marcar si este tipo requiere variantes (ej: Panel con 3/4/5 vías)</small>
+                </div>
+
+                <div id="variantsSection" style="display: none;" class="mb-3">
+                    <label class="control-label">Variantes</label>
+                    <div id="variantsList"></div>
+                    <button type="button" class="btn btn-sm btn-outline-primary mt-2" id="addVariantBtn">
+                        <i class="bi bi-plus-circle"></i> Agregar Variante
+                    </button>
+                </div>
+
                 <div class="form-group">
                     <button type="submit" class="btn btn-primary">
                         <i class="bi bi-save"></i> Crear
@@ -90,4 +106,39 @@
 
 @section Scripts {
     @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+    <script>
+        let variantIndex = 0;
+
+        document.getElementById('hasVariantsCheckbox').addEventListener('change', function() {
+            const variantsSection = document.getElementById('variantsSection');
+            variantsSection.style.display = this.checked ? 'block' : 'none';
+        });
+
+        document.getElementById('addVariantBtn').addEventListener('click', function() {
+            const variantsList = document.getElementById('variantsList');
+            const variantHtml = `
+                <div class="input-group mb-2 variant-row" data-index="${variantIndex}">
+                    <input type="text" name="Variants[${variantIndex}].Name" class="form-control" placeholder="Nombre de variante (ej: 3 vías)" required />
+                    <input type="hidden" name="Variants[${variantIndex}].Id" value="0" />
+                    <input type="hidden" name="Variants[${variantIndex}].DisplayOrder" value="${variantIndex + 1}" />
+                    <input type="hidden" name="Variants[${variantIndex}].IsActive" value="true" />
+                    <input type="hidden" name="Variants[${variantIndex}].IsDeleted" value="false" class="is-deleted-field" />
+                    <button type="button" class="btn btn-outline-danger remove-variant-btn">
+                        <i class="bi bi-trash"></i>
+                    </button>
+                </div>
+            `;
+            variantsList.insertAdjacentHTML('beforeend', variantHtml);
+            variantIndex++;
+        });
+
+        document.getElementById('variantsList').addEventListener('click', function(e) {
+            if (e.target.closest('.remove-variant-btn')) {
+                const row = e.target.closest('.variant-row');
+                const isDeletedField = row.querySelector('.is-deleted-field');
+                isDeletedField.value = 'true';
+                row.style.display = 'none';
+            }
+        });
+    </script>
 }

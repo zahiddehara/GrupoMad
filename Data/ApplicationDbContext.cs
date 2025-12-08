@@ -10,7 +10,6 @@ namespace GrupoMad.Data
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
-            // Configurar ProductColor con clave primaria Id
             modelBuilder.Entity<ProductColor>()
                 .HasKey(pc => pc.Id);
 
@@ -19,12 +18,17 @@ namespace GrupoMad.Data
                 .WithMany(p => p.ProductColors)
                 .HasForeignKey(pc => pc.ProductId);
 
-            // Configurar relación Product - ProductType
             modelBuilder.Entity<Product>()
                 .HasOne(p => p.ProductType)
                 .WithMany(pt => pt.Products)
                 .HasForeignKey(p => p.ProductTypeId)
                 .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<ProductTypeVariant>()
+                .HasOne(ptv => ptv.ProductType)
+                .WithMany(pt => pt.ProductTypeVariants)
+                .HasForeignKey(ptv => ptv.ProductTypeId)
+                .OnDelete(DeleteBehavior.Cascade);
 
             // Configurar relación ShippingAddress - Contact
             modelBuilder.Entity<ShippingAddress>()
@@ -107,6 +111,7 @@ namespace GrupoMad.Data
         public DbSet<Company> Companies { get; set; }
         public DbSet<Store> Stores { get; set; }
         public DbSet<ProductType> ProductTypes { get; set; }
+        public DbSet<ProductTypeVariant> ProductTypeVariants { get; set; }
         public DbSet<Product> Products { get; set; }
         public DbSet<ProductColor> ProductColors { get; set; }
         public DbSet<PriceList> PriceLists { get; set; }

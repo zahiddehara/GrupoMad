@@ -312,6 +312,45 @@ namespace GrupoMad.Controllers
             return RedirectToAction(nameof(ManageItems), new { id = priceListId });
         }
 
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> SaveAllVariantPrices(int priceListId, Dictionary<int, decimal> prices)
+        {
+            try
+            {
+                int updated = 0;
+                foreach (var kvp in prices)
+                {
+                    var itemId = kvp.Key;
+                    var price = kvp.Value;
+
+                    var item = await _context.PriceListItems.FindAsync(itemId);
+                    if (item != null && item.PriceListId == priceListId)
+                    {
+                        item.Price = price;
+                        item.UpdatedAt = DateTime.UtcNow;
+                        updated++;
+                    }
+                }
+
+                if (updated > 0)
+                {
+                    await _context.SaveChangesAsync();
+                    TempData["Success"] = $"Se actualizaron {updated} precio(s) exitosamente.";
+                }
+                else
+                {
+                    TempData["Info"] = "No se realizaron cambios.";
+                }
+            }
+            catch (Exception ex)
+            {
+                TempData["Error"] = $"Error al guardar los precios: {ex.Message}";
+            }
+
+            return RedirectToAction(nameof(ManageItems), new { id = priceListId });
+        }
+
         // ==================== Operaciones en Lote ====================
 
         // POST: PriceList/ApplyPercentageFromGlobal

@@ -39,6 +39,7 @@ namespace GrupoMad.Services
             return await _context.PriceLists
                 .Include(pl => pl.Store)
                 .Include(pl => pl.ProductType)
+                    .ThenInclude(pt => pt.ProductTypeVariants)
                 .Include(pl => pl.PriceListItems)
                     .ThenInclude(pli => pli.Product)
                         .ThenInclude(p => p.ProductColors)
@@ -370,20 +371,22 @@ namespace GrupoMad.Services
         /// </summary>
         public async Task<int> SyncProductsToPriceListAsync(int priceListId)
         {
-            var priceList = await _context.PriceLists.FindAsync(priceListId);
+            var priceList = await _context.PriceLists
+                .Include(pl => pl.ProductType)
+                    .ThenInclude(pt => pt.ProductTypeVariants)
+                .FirstOrDefaultAsync(pl => pl.Id == priceListId);
+
             if (priceList?.ProductTypeId == null) return 0;
 
-            // Productos que DEBERÍAN estar en la lista (activos del ProductType)
-            var validProductIds = await _context.Products
+            var validProducts = await _context.Products
                 .Where(p => p.ProductTypeId == priceList.ProductTypeId && p.IsActive)
-                .Select(p => p.Id)
                 .ToListAsync();
 
-            // 1. ELIMINAR productos huérfanos (que ya no pertenecen al ProductType o están inactivos)
+            var validProductIds = validProducts.Select(p => p.Id).ToList();
+
             var orphanedItems = await _context.PriceListItems
                 .Include(pli => pli.Product)
                 .Where(pli => pli.PriceListId == priceListId
-                           && pli.Variant == null // Solo productos base (no variantes)
                            && !validProductIds.Contains(pli.ProductId))
                 .ToListAsync();
 
@@ -392,26 +395,51 @@ namespace GrupoMad.Services
                 _context.PriceListItems.RemoveRange(orphanedItems);
             }
 
-            // 2. AGREGAR productos nuevos que faltan
             int added = 0;
             foreach (var productId in validProductIds)
             {
-                var exists = await _context.PriceListItems
-                    .AnyAsync(pli => pli.PriceListId == priceListId
-                                  && pli.ProductId == productId
-                                  && pli.Variant == null);
-
-                if (!exists)
+                if (priceList.ProductType.HasVariants && priceList.ProductType.ProductTypeVariants.Any())
                 {
-                    _context.PriceListItems.Add(new PriceListItem
+                    foreach (var variant in priceList.ProductType.ProductTypeVariants.Where(v => v.IsActive).OrderBy(v => v.DisplayOrder))
                     {
-                        PriceListId = priceListId,
-                        ProductId = productId,
-                        Price = 0,
-                        Variant = null,
-                        CreatedAt = DateTime.UtcNow
-                    });
-                    added++;
+                        var exists = await _context.PriceListItems
+                            .AnyAsync(pli => pli.PriceListId == priceListId
+                                          && pli.ProductId == productId
+                                          && pli.Variant == variant.Name);
+
+                        if (!exists)
+                        {
+                            _context.PriceListItems.Add(new PriceListItem
+                            {
+                                PriceListId = priceListId,
+                                ProductId = productId,
+                                Price = 0,
+                                Variant = variant.Name,
+                                CreatedAt = DateTime.UtcNow
+                            });
+                            added++;
+                        }
+                    }
+                }
+                else
+                {
+                    var exists = await _context.PriceListItems
+                        .AnyAsync(pli => pli.PriceListId == priceListId
+                                      && pli.ProductId == productId
+                                      && pli.Variant == null);
+
+                    if (!exists)
+                    {
+                        _context.PriceListItems.Add(new PriceListItem
+                        {
+                            PriceListId = priceListId,
+                            ProductId = productId,
+                            Price = 0,
+                            Variant = null,
+                            CreatedAt = DateTime.UtcNow
+                        });
+                        added++;
+                    }
                 }
             }
 
@@ -420,7 +448,7 @@ namespace GrupoMad.Services
                 await _context.SaveChangesAsync();
             }
 
-            return added + orphanedItems.Count; // Total de cambios realizados
+            return added + orphanedItems.Count;
         }
 
         /// <summary>
@@ -429,10 +457,13 @@ namespace GrupoMad.Services
         /// </summary>
         public async Task<int> SyncNewProductToLinkedPriceListsAsync(int productId)
         {
-            var product = await _context.Products.FindAsync(productId);
+            var product = await _context.Products
+                .Include(p => p.ProductType)
+                    .ThenInclude(pt => pt.ProductTypeVariants)
+                .FirstOrDefaultAsync(p => p.Id == productId);
+
             if (product == null || product.ProductTypeId == 0 || !product.IsActive) return 0;
 
-            // Buscar todas las listas vinculadas a este ProductType
             var linkedLists = await _context.PriceLists
                 .Where(pl => pl.ProductTypeId == product.ProductTypeId && pl.IsActive)
                 .ToListAsync();
@@ -440,21 +471,46 @@ namespace GrupoMad.Services
             int added = 0;
             foreach (var priceList in linkedLists)
             {
-                // Verificar que no exista ya
-                var exists = await _context.PriceListItems
-                    .AnyAsync(pli => pli.PriceListId == priceList.Id && pli.ProductId == productId && pli.Variant == null);
-
-                if (!exists)
+                if (product.ProductType.HasVariants && product.ProductType.ProductTypeVariants.Any())
                 {
-                    _context.PriceListItems.Add(new PriceListItem
+                    foreach (var variant in product.ProductType.ProductTypeVariants.Where(v => v.IsActive).OrderBy(v => v.DisplayOrder))
                     {
-                        PriceListId = priceList.Id,
-                        ProductId = productId,
-                        Price = 0,
-                        Variant = null,
-                        CreatedAt = DateTime.UtcNow
-                    });
-                    added++;
+                        var exists = await _context.PriceListItems
+                            .AnyAsync(pli => pli.PriceListId == priceList.Id
+                                          && pli.ProductId == productId
+                                          && pli.Variant == variant.Name);
+
+                        if (!exists)
+                        {
+                            _context.PriceListItems.Add(new PriceListItem
+                            {
+                                PriceListId = priceList.Id,
+                                ProductId = productId,
+                                Price = 0,
+                                Variant = variant.Name,
+                                CreatedAt = DateTime.UtcNow
+                            });
+                            added++;
+                        }
+                    }
+                }
+                else
+                {
+                    var exists = await _context.PriceListItems
+                        .AnyAsync(pli => pli.PriceListId == priceList.Id && pli.ProductId == productId && pli.Variant == null);
+
+                    if (!exists)
+                    {
+                        _context.PriceListItems.Add(new PriceListItem
+                        {
+                            PriceListId = priceList.Id,
+                            ProductId = productId,
+                            Price = 0,
+                            Variant = null,
+                            CreatedAt = DateTime.UtcNow
+                        });
+                        added++;
+                    }
                 }
             }
 

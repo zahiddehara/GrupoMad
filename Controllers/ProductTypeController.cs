@@ -52,11 +52,15 @@ namespace GrupoMad.Controllers
             return View();
         }
 
-        // POST: ProductType/Create
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("Name,Description,PricingType,IsActive")] ProductTypeCreateViewModel model)
+        public async Task<IActionResult> Create(ProductTypeCreateViewModel model)
         {
+            if (model.HasVariants && (model.Variants == null || !model.Variants.Any(v => !v.IsDeleted)))
+            {
+                ModelState.AddModelError("", "Debe agregar al menos una variante activa cuando 'Tiene Variantes' está marcado.");
+            }
+
             if (ModelState.IsValid)
             {
                 var productType = new ProductType
@@ -65,11 +69,30 @@ namespace GrupoMad.Controllers
                     Description = model.Description,
                     PricingType = model.PricingType,
                     IsActive = model.IsActive,
+                    HasVariants = model.HasVariants,
                     CreatedAt = DateTime.UtcNow
                 };
 
                 _context.Add(productType);
                 await _context.SaveChangesAsync();
+
+                if (model.HasVariants && model.Variants != null)
+                {
+                    int displayOrder = 1;
+                    foreach (var variantVm in model.Variants.Where(v => !v.IsDeleted))
+                    {
+                        var variant = new ProductTypeVariant
+                        {
+                            ProductTypeId = productType.Id,
+                            Name = variantVm.Name,
+                            DisplayOrder = displayOrder++,
+                            IsActive = variantVm.IsActive,
+                            CreatedAt = DateTime.UtcNow
+                        };
+                        _context.ProductTypeVariants.Add(variant);
+                    }
+                    await _context.SaveChangesAsync();
+                }
 
                 TempData["Success"] = "Tipo de producto creado exitosamente.";
                 return RedirectToAction(nameof(Index));
@@ -77,7 +100,6 @@ namespace GrupoMad.Controllers
             return View(model);
         }
 
-        // GET: ProductType/Edit/5
         public async Task<IActionResult> Edit(int? id)
         {
             if (id == null)
@@ -85,7 +107,10 @@ namespace GrupoMad.Controllers
                 return NotFound();
             }
 
-            var productType = await _context.ProductTypes.FindAsync(id);
+            var productType = await _context.ProductTypes
+                .Include(pt => pt.ProductTypeVariants)
+                .FirstOrDefaultAsync(pt => pt.Id == id);
+
             if (productType == null)
             {
                 return NotFound();
@@ -97,27 +122,42 @@ namespace GrupoMad.Controllers
                 Name = productType.Name,
                 Description = productType.Description,
                 PricingType = productType.PricingType,
-                IsActive = productType.IsActive
+                IsActive = productType.IsActive,
+                HasVariants = productType.HasVariants,
+                Variants = productType.ProductTypeVariants.Select(v => new ProductTypeVariantViewModel
+                {
+                    Id = v.Id,
+                    Name = v.Name,
+                    DisplayOrder = v.DisplayOrder,
+                    IsActive = v.IsActive
+                }).OrderBy(v => v.DisplayOrder).ToList()
             };
 
             return View(viewModel);
         }
 
-        // POST: ProductType/Edit/5
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("Id,Name,Description,PricingType,IsActive")] ProductTypeEditViewModel model)
+        public async Task<IActionResult> Edit(int id, ProductTypeEditViewModel model)
         {
             if (id != model.Id)
             {
                 return NotFound();
             }
 
+            if (model.HasVariants && (model.Variants == null || !model.Variants.Any(v => !v.IsDeleted)))
+            {
+                ModelState.AddModelError("", "Debe tener al menos una variante activa cuando 'Tiene Variantes' está marcado.");
+            }
+
             if (ModelState.IsValid)
             {
                 try
                 {
-                    var productType = await _context.ProductTypes.FindAsync(id);
+                    var productType = await _context.ProductTypes
+                        .Include(pt => pt.ProductTypeVariants)
+                        .FirstOrDefaultAsync(pt => pt.Id == id);
+
                     if (productType == null)
                     {
                         return NotFound();
@@ -127,11 +167,52 @@ namespace GrupoMad.Controllers
                     productType.Description = model.Description;
                     productType.PricingType = model.PricingType;
                     productType.IsActive = model.IsActive;
+                    productType.HasVariants = model.HasVariants;
                     productType.UpdatedAt = DateTime.UtcNow;
 
-                    _context.Update(productType);
-                    await _context.SaveChangesAsync();
+                    if (model.HasVariants && model.Variants != null)
+                    {
+                        var existingVariantIds = productType.ProductTypeVariants.Select(v => v.Id).ToList();
+                        var submittedVariantIds = model.Variants.Where(v => v.Id > 0 && !v.IsDeleted).Select(v => v.Id).ToList();
 
+                        var variantsToDelete = productType.ProductTypeVariants.Where(v => !submittedVariantIds.Contains(v.Id)).ToList();
+                        _context.ProductTypeVariants.RemoveRange(variantsToDelete);
+
+                        int displayOrder = 1;
+                        foreach (var variantVm in model.Variants.Where(v => !v.IsDeleted))
+                        {
+                            if (variantVm.Id > 0)
+                            {
+                                var existingVariant = productType.ProductTypeVariants.FirstOrDefault(v => v.Id == variantVm.Id);
+                                if (existingVariant != null)
+                                {
+                                    existingVariant.Name = variantVm.Name;
+                                    existingVariant.DisplayOrder = displayOrder++;
+                                    existingVariant.IsActive = variantVm.IsActive;
+                                    existingVariant.UpdatedAt = DateTime.UtcNow;
+                                }
+                            }
+                            else
+                            {
+                                var newVariant = new ProductTypeVariant
+                                {
+                                    ProductTypeId = productType.Id,
+                                    Name = variantVm.Name,
+                                    DisplayOrder = displayOrder++,
+                                    IsActive = variantVm.IsActive,
+                                    CreatedAt = DateTime.UtcNow
+                                };
+                                _context.ProductTypeVariants.Add(newVariant);
+                            }
+                        }
+                    }
+                    else
+                    {
+                        var allVariants = productType.ProductTypeVariants.ToList();
+                        _context.ProductTypeVariants.RemoveRange(allVariants);
+                    }
+
+                    await _context.SaveChangesAsync();
                     TempData["Success"] = "Tipo de producto actualizado exitosamente.";
                 }
                 catch (DbUpdateConcurrencyException)
@@ -242,16 +323,16 @@ namespace GrupoMad.Controllers
         }
     }
 
-    // ViewModel para crear tipos de producto
     public class ProductTypeCreateViewModel
     {
         public required string Name { get; set; }
         public string? Description { get; set; }
         public PricingType PricingType { get; set; }
         public bool IsActive { get; set; } = true;
+        public bool HasVariants { get; set; } = false;
+        public List<ProductTypeVariantViewModel> Variants { get; set; } = new List<ProductTypeVariantViewModel>();
     }
 
-    // ViewModel para editar tipos de producto
     public class ProductTypeEditViewModel
     {
         public int Id { get; set; }
@@ -259,5 +340,16 @@ namespace GrupoMad.Controllers
         public string? Description { get; set; }
         public PricingType PricingType { get; set; }
         public bool IsActive { get; set; }
+        public bool HasVariants { get; set; }
+        public List<ProductTypeVariantViewModel> Variants { get; set; } = new List<ProductTypeVariantViewModel>();
+    }
+
+    public class ProductTypeVariantViewModel
+    {
+        public int Id { get; set; }
+        public string Name { get; set; } = string.Empty;
+        public int DisplayOrder { get; set; }
+        public bool IsActive { get; set; } = true;
+        public bool IsDeleted { get; set; } = false;
     }
 }

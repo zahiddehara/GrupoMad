@@ -23,9 +23,13 @@ namespace GrupoMad.Models
         [Required]
         public PricingType PricingType { get; set; }
 
+        public bool HasVariants { get; set; } = false;
+
         public bool IsActive { get; set; } = true;
 
         public List<Product> Products { get; set; } = new List<Product>();
+
+        public List<ProductTypeVariant> ProductTypeVariants { get; set; } = new List<ProductTypeVariant>();
 
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
