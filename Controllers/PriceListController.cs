@@ -291,7 +291,7 @@ namespace GrupoMad.Controllers
         // POST: PriceList/UpdateItem
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> UpdateItem(int itemId, int priceListId, decimal price, string? variant, int[] listIds = null)
+        public async Task<IActionResult> UpdateItem(int itemId, int priceListId, decimal price, string? variant)
         {
             var updatedItem = new PriceListItem
             {
@@ -309,13 +309,6 @@ namespace GrupoMad.Controllers
                 TempData["Success"] = "Precio actualizado exitosamente.";
             }
 
-            // Si viene desde ManageGlobalLists, redirigir de vuelta con los listIds
-            if (listIds != null && listIds.Length > 0)
-            {
-                return RedirectToAction(nameof(ManageGlobalLists), new { listIds = listIds });
-            }
-
-            // Si no, redirigir a la vista individual
             return RedirectToAction(nameof(ManageItems), new { id = priceListId });
         }
 
@@ -480,46 +473,6 @@ namespace GrupoMad.Controllers
             ViewBag.ProductId = productId;
 
             return View(priceListItems);
-        }
-
-        // ==================== Gestión Multi-Lista ====================
-
-        // GET: PriceList/ManageGlobalLists
-        public async Task<IActionResult> ManageGlobalLists(int[] listIds)
-        {
-            // Obtener todas las listas globales disponibles para el selector
-            var allGlobalLists = await _context.PriceLists
-                .Include(pl => pl.ProductType)
-                .Include(pl => pl.PriceListItems)
-                .Where(pl => pl.StoreId == null && pl.IsActive) // Solo listas globales activas
-                .OrderBy(pl => pl.Name)
-                .ToListAsync();
-
-            ViewBag.AllGlobalLists = allGlobalLists;
-
-            // Si se especificaron IDs, cargar las listas seleccionadas con todos sus datos
-            List<PriceList> selectedLists = new List<PriceList>();
-            if (listIds != null && listIds.Length > 0)
-            {
-                selectedLists = await _context.PriceLists
-                    .Where(pl => listIds.Contains(pl.Id) && pl.StoreId == null) // Solo listas globales
-                    .Include(pl => pl.ProductType)
-                    .Include(pl => pl.Store)
-                    .Include(pl => pl.PriceListItems)
-                        .ThenInclude(pli => pli.Product)
-                            .ThenInclude(p => p.ProductType)
-                    .Include(pl => pl.PriceListItems)
-                        .ThenInclude(pli => pli.Discounts)
-                    .Include(pl => pl.PriceListItems)
-                        .ThenInclude(pli => pli.PriceRangesByLength)
-                    .Include(pl => pl.PriceListItems)
-                        .ThenInclude(pli => pli.PriceRangesByDimensions)
-                    .OrderBy(pl => pl.Name)
-                    .ToListAsync();
-            }
-
-            ViewBag.PricingTypes = Enum.GetValues(typeof(PricingType));
-            return View(selectedLists);
         }
 
         // ==================== Gestión de Descuentos ====================
