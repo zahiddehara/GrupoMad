@@ -387,3 +387,142 @@ else
     <a asp-action="Details" asp-route-id="@Model.Id" class="btn btn-info">Ver Detalles</a>
     <a asp-action="Index" class="btn btn-secondary">Volver a la Lista</a>
 </div>
+
+@* Estilos para inputs modificados *@
+<style>
+    .price-input-modified {
+        background-color: #fff3cd !important;
+        border-color: #ffc107 !important;
+        border-width: 2px !important;
+        animation: highlight-pulse 0.3s ease;
+    }
+
+    @@keyframes highlight-pulse {
+        0% { background-color: #fff; }
+        50% { background-color: #ffffcc; }
+        100% { background-color: #fff3cd; }
+    }
+
+    #unsavedChangesCounter {
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        z-index: 1050;
+        display: none;
+        animation: slide-in 0.3s ease;
+    }
+
+    @@keyframes slide-in {
+        from {
+            transform: translateY(100px);
+            opacity: 0;
+        }
+        to {
+            transform: translateY(0);
+            opacity: 1;
+        }
+    }
+</style>
+
+@* Contador de cambios sin guardar *@
+<div id="unsavedChangesCounter" class="alert alert-warning shadow-lg" role="alert">
+    <i class="bi bi-exclamation-triangle-fill"></i>
+    <strong><span id="changesCount">0</span> cambio(s) sin guardar</strong>
+</div>
+
+@* Script para detectar cambios y advertir al cerrar *@
+<script>
+    (function() {
+        let hasUnsavedChanges = false;
+        let unsavedCount = 0;
+        const originalValues = new Map();
+        const counter = document.getElementById('unsavedChangesCounter');
+        const countDisplay = document.getElementById('changesCount');
+
+        // Función para actualizar el contador visual
+        function updateCounter() {
+            if (unsavedCount > 0) {
+                countDisplay.textContent = unsavedCount;
+                counter.style.display = 'block';
+            } else {
+                counter.style.display = 'none';
+            }
+        }
+
+        // Detectar cambios en inputs de precios - Sección de variantes
+        const variantPriceInputs = document.querySelectorAll('input[type="number"][name^="prices["]');
+        variantPriceInputs.forEach(input => {
+            // Guardar valor original
+            originalValues.set(input, input.value);
+
+            input.addEventListener('input', function() {
+                const originalValue = originalValues.get(this);
+                const currentValue = this.value;
+
+                if (currentValue !== originalValue) {
+                    // El valor cambió
+                    if (!this.classList.contains('price-input-modified')) {
+                        this.classList.add('price-input-modified');
+                        unsavedCount++;
+                        hasUnsavedChanges = true;
+                        updateCounter();
+                    }
+                } else {
+                    // El valor volvió al original
+                    if (this.classList.contains('price-input-modified')) {
+                        this.classList.remove('price-input-modified');
+                        unsavedCount--;
+                        hasUnsavedChanges = unsavedCount > 0;
+                        updateCounter();
+                    }
+                }
+            });
+        });
+
+        // Detectar cambios en inputs de precios - Sección sin variantes
+        const standardPriceInputs = document.querySelectorAll('input[type="number"][name="price"]');
+        standardPriceInputs.forEach(input => {
+            // Guardar valor original
+            originalValues.set(input, input.value);
+
+            input.addEventListener('input', function() {
+                const originalValue = originalValues.get(this);
+                const currentValue = this.value;
+
+                if (currentValue !== originalValue) {
+                    if (!this.classList.contains('price-input-modified')) {
+                        this.classList.add('price-input-modified');
+                        unsavedCount++;
+                        hasUnsavedChanges = true;
+                        updateCounter();
+                    }
+                } else {
+                    if (this.classList.contains('price-input-modified')) {
+                        this.classList.remove('price-input-modified');
+                        unsavedCount--;
+                        hasUnsavedChanges = unsavedCount > 0;
+                        updateCounter();
+                    }
+                }
+            });
+        });
+
+        // Advertir al cerrar/recargar la página
+        window.addEventListener('beforeunload', function(e) {
+            if (hasUnsavedChanges) {
+                e.preventDefault();
+                e.returnValue = 'Tienes cambios sin guardar. ¿Estás seguro de que quieres salir?';
+                return e.returnValue;
+            }
+        });
+
+        // Resetear flag al enviar formularios
+        const forms = document.querySelectorAll('form');
+        forms.forEach(form => {
+            form.addEventListener('submit', function() {
+                hasUnsavedChanges = false;
+                unsavedCount = 0;
+            });
+        });
+    })();
+</script>
