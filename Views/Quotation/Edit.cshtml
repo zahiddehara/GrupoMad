@@ -212,14 +212,15 @@
                             <table class="table table-hover align-middle mb-0" id="itemsTable">
                                 <thead class="table-light">
                                     <tr>
-                                        <th class="px-3 py-2" style="width: 20%">Producto</th>
-                                        <th class="px-3 py-2" style="width: 12%">Color</th>
-                                        <th class="px-3 py-2" style="width: 8%">Ancho (m)</th>
-                                        <th class="px-3 py-2" style="width: 8%">Alto (m)</th>
-                                        <th class="px-3 py-2" style="width: 8%">Cantidad</th>
-                                        <th class="px-3 py-2" style="width: 12%">Precio Unit.</th>
-                                        <th class="px-3 py-2" style="width: 12%">Precio c/Desc.</th>
-                                        <th class="px-3 py-2" style="width: 12%">Total</th>
+                                        <th class="px-3 py-2" style="width: 18%">Producto</th>
+                                        <th class="px-3 py-2" style="width: 10%">Variante</th>
+                                        <th class="px-3 py-2" style="width: 10%">Color</th>
+                                        <th class="px-3 py-2" style="width: 7%">Ancho (m)</th>
+                                        <th class="px-3 py-2" style="width: 7%">Alto (m)</th>
+                                        <th class="px-3 py-2" style="width: 7%">Cantidad</th>
+                                        <th class="px-3 py-2" style="width: 11%">Precio Unit.</th>
+                                        <th class="px-3 py-2" style="width: 11%">Precio c/Desc.</th>
+                                        <th class="px-3 py-2" style="width: 11%">Total</th>
                                         <th class="px-3 py-2" style="width: 5%"></th>
                                     </tr>
                                 </thead>
@@ -336,6 +337,7 @@
         // Items existentes
         const existingItems = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.Items.OrderBy(i => i.DisplayOrder).Select(i => new {
             productId = i.ProductId,
+            variant = i.Variant,
             productColorId = i.ProductColorId,
             quantity = i.Quantity,
             width = i.Width,
@@ -396,6 +398,11 @@
                     </select>
                 </td>
                 <td class="px-3 py-2">
+                    <select name="items[${itemCounter}].Variant" class="form-select form-select-sm variant-select" data-index="${itemCounter}" disabled>
+                        <option value="">N/A</option>
+                    </select>
+                </td>
+                <td class="px-3 py-2">
                     <select name="items[${itemCounter}].ProductColorId" class="form-select form-select-sm color-select" data-index="${itemCounter}" disabled>
                         <option value="">Primero seleccione un producto...</option>
                     </select>
@@ -443,18 +450,23 @@
             productSelect.on('change', function() {
                 const productId = this.value;
                 if (productId) {
+                    loadProductVariants(productId, currentIndex);
                     loadProductColors(productId, currentIndex);
-                    loadProductPrice(productId, currentIndex);
                     updateDimensionFields(productId, currentIndex);
                 } else {
+                    // Limpiar el dropdown de variantes
+                    const variantSelect = $(row).find('.variant-select');
+                    if (variantSelect.hasClass('select2-hidden-accessible')) {
+                        variantSelect.select2('destroy');
+                    }
+                    variantSelect.html('<option value="">N/A</option>');
+                    variantSelect.prop('disabled', true);
+
                     // Limpiar el dropdown de colores
                     const colorSelect = $(row).find('.color-select');
-
-                    // Destruir Select2 si existe
                     if (colorSelect.hasClass('select2-hidden-accessible')) {
                         colorSelect.select2('destroy');
                     }
-
                     colorSelect.html('<option value="">Primero seleccione un producto...</option>');
                     colorSelect.prop('disabled', true);
 
@@ -486,8 +498,9 @@
                 });
             });
 
-            // Si hay datos existentes, cargar los colores y seleccionar el color correcto
+            // Si hay datos existentes, cargar las variantes, colores y seleccionar correctamente
             if (itemData && itemData.productId) {
+                loadProductVariants(itemData.productId, currentIndex, itemData.variant);
                 loadProductColors(itemData.productId, currentIndex, itemData.productColorId);
                 updateDimensionFields(itemData.productId, currentIndex);
                 calculateItemTotal(currentIndex);
@@ -502,6 +515,11 @@
             const row = $(`#item-${index}`);
             if (row.length) {
                 // Destruir Select2 antes de eliminar la fila
+                row.find('.variant-select').each(function() {
+                    if ($(this).hasClass('select2-hidden-accessible')) {
+                        $(this).select2('destroy');
+                    }
+                });
                 row.find('.color-select').each(function() {
                     if ($(this).hasClass('select2-hidden-accessible')) {
                         $(this).select2('destroy');
@@ -516,6 +534,55 @@
                 row.remove();
                 calculateTotals();
                 toggleNoItemsMessage();
+            }
+        }
+
+        // Cargar variantes del producto
+        async function loadProductVariants(productId, index, selectedVariant = null) {
+            if (!productId) return;
+
+            try {
+                const response = await fetch(`/Quotation/GetProductVariants?productId=${productId}`);
+                const data = await response.json();
+
+                const variantSelect = $(`[name="items[${index}].Variant"]`);
+
+                if (variantSelect.hasClass('select2-hidden-accessible')) {
+                    variantSelect.select2('destroy');
+                }
+
+                if (data.success && data.variants && data.variants.length > 0) {
+                    variantSelect.html('<option value="">Seleccione una variante...</option>');
+                    data.variants.forEach(variant => {
+                        const option = $('<option></option>')
+                            .val(variant.name)
+                            .text(variant.name);
+
+                        if (selectedVariant && variant.name === selectedVariant) {
+                            option.prop('selected', true);
+                        }
+
+                        variantSelect.append(option);
+                    });
+                    variantSelect.prop('disabled', false);
+
+                    variantSelect.select2({
+                        theme: 'bootstrap-5',
+                        placeholder: 'Seleccione una variante...',
+                        allowClear: true,
+                        width: '100%'
+                    });
+
+                    variantSelect.on('change', function() {
+                        loadProductPrice(productId, index);
+                    });
+                } else {
+                    variantSelect.html('<option value="">N/A</option>');
+                    variantSelect.prop('disabled', true);
+                    loadProductPrice(productId, index);
+                }
+            } catch (error) {
+                console.error('Error al cargar variantes:', error);
             }
         }
 
@@ -572,7 +639,9 @@
         async function loadProductPrice(productId, index) {
             if (!productId) return;
 
-            // Obtener dimensiones si están disponibles
+            const variantInput = document.querySelector(`[name="items[${index}].Variant"]`);
+            const variant = variantInput && !variantInput.disabled && variantInput.value ? variantInput.value : null;
+
             const widthInput = document.querySelector(`[name="items[${index}].Width"]`);
             const heightInput = document.querySelector(`[name="items[${index}].Height"]`);
             const width = widthInput && !widthInput.disabled ? (parseFloat(widthInput.value) || null) : null;
@@ -580,6 +649,7 @@
 
             try {
                 let url = `/Quotation/GetProductPrice?productId=${productId}&storeId=${storeId}`;
+                if (variant) url += `&variant=${encodeURIComponent(variant)}`;
                 if (width !== null) url += `&width=${width}`;
                 if (height !== null) url += `&height=${height}`;
 

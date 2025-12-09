@@ -669,7 +669,37 @@ namespace GrupoMad.Controllers
             return Json(new { success = true, colors = colors });
         }
 
-        // API: Obtener direcciones de un contacto
+        [HttpGet]
+        public async Task<IActionResult> GetProductVariants(int productId)
+        {
+            var product = await _context.Products
+                .Include(p => p.ProductType)
+                    .ThenInclude(pt => pt.ProductTypeVariants)
+                .FirstOrDefaultAsync(p => p.Id == productId);
+
+            if (product == null)
+            {
+                return Json(new { success = false, message = "Producto no encontrado" });
+            }
+
+            if (product.ProductType == null || !product.ProductType.HasVariants)
+            {
+                return Json(new { success = false, variants = new List<object>() });
+            }
+
+            var variants = product.ProductType.ProductTypeVariants
+                .Where(v => v.IsActive)
+                .OrderBy(v => v.DisplayOrder)
+                .Select(v => new
+                {
+                    id = v.Id,
+                    name = v.Name,
+                    displayOrder = v.DisplayOrder
+                }).ToList();
+
+            return Json(new { success = true, variants = variants });
+        }
+
         [HttpGet]
         public async Task<IActionResult> GetContactAddresses(int contactId)
         {
