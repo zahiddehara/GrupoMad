@@ -291,12 +291,12 @@ namespace GrupoMad.Controllers
         // POST: PriceList/UpdateItem
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> UpdateItem(int itemId, int priceListId, decimal price, string? variant)
+        public async Task<IActionResult> UpdateItem(int itemId, int priceListId, decimal price, int? variantId)
         {
             var updatedItem = new PriceListItem
             {
                 Price = price,
-                Variant = variant
+                ProductTypeVariantId = variantId
             };
 
             var result = await _priceListService.UpdatePriceListItemAsync(itemId, updatedItem);

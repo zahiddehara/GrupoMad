@@ -251,11 +251,20 @@ namespace GrupoMad.Controllers
                                 }
                             }
 
+                            // Convertir nombre de variante a ID si es necesario
+                            int? variantId = null;
+                            if (!string.IsNullOrEmpty(itemDto.Variant))
+                            {
+                                var variantEntity = await _context.ProductTypeVariants
+                                    .FirstOrDefaultAsync(v => v.Name == itemDto.Variant);
+                                variantId = variantEntity?.Id;
+                            }
+
                             // SEGURIDAD: Recalcular precios desde el servidor, no confiar en el formulario
                             var priceResult = await _quotationService.GetProductPriceAsync(
                                 itemDto.ProductId,
                                 quotation.StoreId,
-                                itemDto.Variant,
+                                variantId,
                                 itemDto.Width,
                                 itemDto.Height
                             );
@@ -445,11 +454,20 @@ namespace GrupoMad.Controllers
                                 }
                             }
 
+                            // Convertir nombre de variante a ID si es necesario
+                            int? variantId = null;
+                            if (!string.IsNullOrEmpty(itemDto.Variant))
+                            {
+                                var variantEntity = await _context.ProductTypeVariants
+                                    .FirstOrDefaultAsync(v => v.Name == itemDto.Variant);
+                                variantId = variantEntity?.Id;
+                            }
+
                             // SEGURIDAD: Recalcular precios desde el servidor, no confiar en el formulario
                             var priceResult = await _quotationService.GetProductPriceAsync(
                                 itemDto.ProductId,
                                 existingQuotation.StoreId,
-                                itemDto.Variant,
+                                variantId,
                                 itemDto.Width,
                                 itemDto.Height
                             );
@@ -630,7 +648,16 @@ namespace GrupoMad.Controllers
         [HttpGet]
         public async Task<IActionResult> GetProductPrice(int productId, int storeId, string? variant = null, decimal? width = null, decimal? height = null)
         {
-            var price = await _quotationService.GetProductPriceAsync(productId, storeId, variant, width, height);
+            // Convertir nombre de variante a ID si es necesario
+            int? variantId = null;
+            if (!string.IsNullOrEmpty(variant))
+            {
+                var variantEntity = await _context.ProductTypeVariants
+                    .FirstOrDefaultAsync(v => v.Name == variant);
+                variantId = variantEntity?.Id;
+            }
+
+            var price = await _quotationService.GetProductPriceAsync(productId, storeId, variantId, width, height);
 
             if (price == null)
             {

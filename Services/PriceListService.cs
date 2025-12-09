@@ -153,7 +153,7 @@ namespace GrupoMad.Services
             if (item == null) return null;
 
             item.Price = updatedItem.Price;
-            item.Variant = updatedItem.Variant;
+            item.ProductTypeVariantId = updatedItem.ProductTypeVariantId;
             item.UpdatedAt = DateTime.UtcNow;
 
             await _context.SaveChangesAsync();
@@ -310,7 +310,7 @@ namespace GrupoMad.Services
                         PriceListId = toPriceListId,
                         ProductId = sourceItem.ProductId,
                         Price = sourceItem.Price,
-                        Variant = sourceItem.Variant,
+                        ProductTypeVariantId = sourceItem.ProductTypeVariantId,
                         CreatedAt = DateTime.UtcNow
                     });
                     copied++;
@@ -405,7 +405,7 @@ namespace GrupoMad.Services
                         var exists = await _context.PriceListItems
                             .AnyAsync(pli => pli.PriceListId == priceListId
                                           && pli.ProductId == productId
-                                          && pli.Variant == variant.Name);
+                                          && pli.ProductTypeVariantId == variant.Id);
 
                         if (!exists)
                         {
@@ -414,7 +414,7 @@ namespace GrupoMad.Services
                                 PriceListId = priceListId,
                                 ProductId = productId,
                                 Price = 0,
-                                Variant = variant.Name,
+                                ProductTypeVariantId = variant.Id,
                                 CreatedAt = DateTime.UtcNow
                             });
                             added++;
@@ -426,7 +426,7 @@ namespace GrupoMad.Services
                     var exists = await _context.PriceListItems
                         .AnyAsync(pli => pli.PriceListId == priceListId
                                       && pli.ProductId == productId
-                                      && pli.Variant == null);
+                                      && pli.ProductTypeVariantId == null);
 
                     if (!exists)
                     {
@@ -435,7 +435,7 @@ namespace GrupoMad.Services
                             PriceListId = priceListId,
                             ProductId = productId,
                             Price = 0,
-                            Variant = null,
+                            ProductTypeVariantId = null,
                             CreatedAt = DateTime.UtcNow
                         });
                         added++;
@@ -478,7 +478,7 @@ namespace GrupoMad.Services
                         var exists = await _context.PriceListItems
                             .AnyAsync(pli => pli.PriceListId == priceList.Id
                                           && pli.ProductId == productId
-                                          && pli.Variant == variant.Name);
+                                          && pli.ProductTypeVariantId == variant.Id);
 
                         if (!exists)
                         {
@@ -487,7 +487,7 @@ namespace GrupoMad.Services
                                 PriceListId = priceList.Id,
                                 ProductId = productId,
                                 Price = 0,
-                                Variant = variant.Name,
+                                ProductTypeVariantId = variant.Id,
                                 CreatedAt = DateTime.UtcNow
                             });
                             added++;
@@ -497,7 +497,7 @@ namespace GrupoMad.Services
                 else
                 {
                     var exists = await _context.PriceListItems
-                        .AnyAsync(pli => pli.PriceListId == priceList.Id && pli.ProductId == productId && pli.Variant == null);
+                        .AnyAsync(pli => pli.PriceListId == priceList.Id && pli.ProductId == productId && pli.ProductTypeVariantId == null);
 
                     if (!exists)
                     {
@@ -506,7 +506,7 @@ namespace GrupoMad.Services
                             PriceListId = priceList.Id,
                             ProductId = productId,
                             Price = 0,
-                            Variant = null,
+                            ProductTypeVariantId = null,
                             CreatedAt = DateTime.UtcNow
                         });
                         added++;
@@ -526,7 +526,7 @@ namespace GrupoMad.Services
         /// Obtiene el precio de un producto para una tienda específica.
         /// Si la tienda no tiene precio definido (o es 0), hereda del precio global.
         /// </summary>
-        public async Task<decimal?> GetProductPriceForStoreAsync(int productId, int storeId, int productTypeId, string? variant = null)
+        public async Task<decimal?> GetProductPriceForStoreAsync(int productId, int storeId, int productTypeId, int? variantId = null)
         {
             // 1. Buscar precio específico de la tienda
             var storePriceList = await _context.PriceLists
@@ -540,7 +540,7 @@ namespace GrupoMad.Services
                     .Include(pli => pli.Discounts)
                     .Where(pli => pli.PriceListId == storePriceList.Id
                                && pli.ProductId == productId
-                               && pli.Variant == variant)
+                               && pli.ProductTypeVariantId == variantId)
                     .FirstOrDefaultAsync();
 
                 // Si tiene precio específico Y no es 0, usarlo
@@ -562,7 +562,7 @@ namespace GrupoMad.Services
                     .Include(pli => pli.Discounts)
                     .Where(pli => pli.PriceListId == globalPriceList.Id
                                && pli.ProductId == productId
-                               && pli.Variant == variant)
+                               && pli.ProductTypeVariantId == variantId)
                     .FirstOrDefaultAsync();
 
                 if (globalPrice != null && globalPrice.Price > 0)

@@ -63,9 +63,9 @@
                             <strong class="text-success">@item.Price.ToString("C")</strong>
                         </td>
                         <td>
-                            @if (!string.IsNullOrEmpty(item.Variant))
+                            @if (item.ProductTypeVariant != null)
                             {
-                                <span class="badge bg-info">@item.Variant</span>
+                                <span class="badge bg-info">@item.ProductTypeVariant.Name</span>
                             }
                             else
                             {

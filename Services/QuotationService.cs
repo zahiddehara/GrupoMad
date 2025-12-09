@@ -54,7 +54,7 @@ namespace GrupoMad.Services
         public async Task<(decimal unitPrice, decimal discountedPrice, string? variant)?> GetProductPriceAsync(
             int productId,
             int storeId,
-            string? variant = null,
+            int? variantId = null,
             decimal? width = null,
             decimal? height = null)
         {
@@ -66,11 +66,12 @@ namespace GrupoMad.Services
                 .Include(pli => pli.PriceRangesByDimensions)
                 .Include(pli => pli.Product)
                     .ThenInclude(p => p.ProductType)
+                .Include(pli => pli.ProductTypeVariant)
                 .Where(pli =>
                     pli.ProductId == productId &&
                     pli.PriceList.StoreId == storeId &&
                     pli.PriceList.IsActive &&
-                    (variant == null || pli.Variant == variant))
+                    (variantId == null || pli.ProductTypeVariantId == variantId))
                 .OrderByDescending(pli => pli.PriceList.UpdatedAt ?? pli.PriceList.CreatedAt)
                 .FirstOrDefaultAsync();
 
@@ -84,11 +85,12 @@ namespace GrupoMad.Services
                     .Include(pli => pli.PriceRangesByDimensions)
                     .Include(pli => pli.Product)
                         .ThenInclude(p => p.ProductType)
+                    .Include(pli => pli.ProductTypeVariant)
                     .Where(pli =>
                         pli.ProductId == productId &&
                         pli.PriceList.StoreId == null &&
                         pli.PriceList.IsActive &&
-                        (variant == null || pli.Variant == variant))
+                        (variantId == null || pli.ProductTypeVariantId == variantId))
                     .OrderByDescending(pli => pli.PriceList.UpdatedAt ?? pli.PriceList.CreatedAt)
                     .FirstOrDefaultAsync();
             }
@@ -153,7 +155,7 @@ namespace GrupoMad.Services
                 discountedPrice = priceListItem.GetFinalPrice();
             }
 
-            return (unitPrice, discountedPrice, priceListItem.Variant);
+            return (unitPrice, discountedPrice, priceListItem.ProductTypeVariant?.Name);
         }
 
         /// <summary>

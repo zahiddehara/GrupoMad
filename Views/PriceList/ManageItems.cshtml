@@ -124,7 +124,7 @@ else
                 .Select(g => new {
                     ProductId = g.Key,
                     Product = g.First().Product,
-                    Items = g.OrderBy(i => Model.ProductType.ProductTypeVariants.FirstOrDefault(v => v.Name == i.Variant)?.DisplayOrder ?? 999).ToList()
+                    Items = g.OrderBy(i => Model.ProductType.ProductTypeVariants.FirstOrDefault(v => v.Id == i.ProductTypeVariantId)?.DisplayOrder ?? 999).ToList()
                 })
                 .OrderBy(g => g.Product.Name)
                 .ToList();
@@ -154,7 +154,7 @@ else
                                     <td><strong>@productGroup.Product.Name</strong></td>
                                     @foreach (var variant in Model.ProductType.ProductTypeVariants.Where(v => v.IsActive).OrderBy(v => v.DisplayOrder))
                                     {
-                                        var variantItem = productGroup.Items.FirstOrDefault(i => i.Variant == variant.Name);
+                                        var variantItem = productGroup.Items.FirstOrDefault(i => i.ProductTypeVariantId == variant.Id);
                                         <td class="text-center">
                                             @if (variantItem != null)
                                             {
@@ -276,7 +276,7 @@ else
                                         @Html.AntiForgeryToken()
                                         <input type="hidden" name="itemId" value="@item.Id" />
                                         <input type="hidden" name="priceListId" value="@Model.Id" />
-                                        <input type="hidden" name="variant" value="@item.Variant" />
+                                        <input type="hidden" name="variantId" value="@item.ProductTypeVariantId" />
                                         <div class="input-group input-group-sm" style="width: 150px;">
                                             <span class="input-group-text">$</span>
                                             <input type="number" name="price" value="@item.Price"
@@ -295,17 +295,15 @@ else
                                 }
                                 else
                                 {
-                                    <form asp-action="UpdateItem" method="post" class="d-inline">
-                                        @Html.AntiForgeryToken()
-                                        <input type="hidden" name="itemId" value="@item.Id" />
-                                        <input type="hidden" name="priceListId" value="@Model.Id" />
-                                        <input type="hidden" name="price" value="@item.Price" />
-                                        <div class="input-group input-group-sm" style="width: 120px;">
-                                            <input type="text" name="variant" value="@item.Variant"
-                                                   class="form-control form-control-sm" placeholder="Opcional" />
-                                            <button type="submit" class="btn btn-primary btn-sm">💾</button>
-                                        </div>
-                                    </form>
+                                    @* Mostrar el nombre de la variante si existe *@
+                                    @if (item.ProductTypeVariant != null)
+                                    {
+                                        <span class="badge bg-secondary">@item.ProductTypeVariant.Name</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted">-</span>
+                                    }
                                 }
                             </td>
                             <td>

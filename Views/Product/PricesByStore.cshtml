@@ -107,9 +107,9 @@
                                         <span>@item.Price.ToString("C")</span>
                                     </td>
                                     <td>
-                                        @if (!string.IsNullOrEmpty(item.Variant))
+                                        @if (item.ProductTypeVariant != null)
                                         {
-                                            <span class="badge bg-info">@item.Variant</span>
+                                            <span class="badge bg-info">@item.ProductTypeVariant.Name</span>
                                         }
                                         else
                                         {
@@ -172,9 +172,9 @@
                                             <span>@item.Price.ToString("C")</span>
                                         </td>
                                         <td>
-                                            @if (!string.IsNullOrEmpty(item.Variant))
+                                            @if (item.ProductTypeVariant != null)
                                             {
-                                                <span class="badge bg-info">@item.Variant</span>
+                                                <span class="badge bg-info">@item.ProductTypeVariant.Name</span>
                                             }
                                             else
                                             {

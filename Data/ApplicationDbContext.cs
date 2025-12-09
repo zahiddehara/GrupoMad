@@ -30,6 +30,13 @@ namespace GrupoMad.Data
                 .HasForeignKey(ptv => ptv.ProductTypeId)
                 .OnDelete(DeleteBehavior.Cascade);
 
+            // Configurar relación PriceListItem - ProductTypeVariant
+            modelBuilder.Entity<PriceListItem>()
+                .HasOne(pli => pli.ProductTypeVariant)
+                .WithMany()
+                .HasForeignKey(pli => pli.ProductTypeVariantId)
+                .OnDelete(DeleteBehavior.Restrict);
+
             // Configurar relación ShippingAddress - Contact
             modelBuilder.Entity<ShippingAddress>()
                 .HasOne(sa => sa.Contact)

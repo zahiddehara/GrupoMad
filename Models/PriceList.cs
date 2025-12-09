@@ -50,10 +50,15 @@ namespace GrupoMad.Models
         public decimal Price { get; set; }
 
         /// <summary>
-        /// Variante del producto (ej: "3 vías", "4 vías", "5 vías").
+        /// ID de la variante del producto (FK a ProductTypeVariant).
         /// Null si el producto no tiene variantes.
         /// </summary>
-        public string? Variant { get; set; }
+        public int? ProductTypeVariantId { get; set; }
+
+        /// <summary>
+        /// Navegación a la variante del tipo de producto
+        /// </summary>
+        public ProductTypeVariant? ProductTypeVariant { get; set; }
 
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
