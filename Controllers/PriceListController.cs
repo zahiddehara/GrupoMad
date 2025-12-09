@@ -322,14 +322,32 @@ namespace GrupoMad.Controllers
                 foreach (var kvp in prices)
                 {
                     var itemId = kvp.Key;
-                    var price = kvp.Value;
+                    var newPrice = kvp.Value;
 
-                    var item = await _context.PriceListItems.FindAsync(itemId);
+                    var item = await _context.PriceListItems
+                        .Include(pli => pli.Discounts)
+                        .FirstOrDefaultAsync(pli => pli.Id == itemId);
+
                     if (item != null && item.PriceListId == priceListId)
                     {
-                        item.Price = price;
+                        var oldPrice = item.Price;
+                        item.Price = newPrice;
                         item.UpdatedAt = DateTime.UtcNow;
                         updated++;
+
+                        // Recalcular descuentos existentes para mantener el mismo porcentaje
+                        if (item.Discounts != null && item.Discounts.Any() && oldPrice > 0)
+                        {
+                            foreach (var discount in item.Discounts)
+                            {
+                                // Calcular el porcentaje de descuento original
+                                var discountPercent = ((oldPrice - discount.DiscountedPrice) / oldPrice) * 100;
+
+                                // Aplicar el mismo porcentaje al nuevo precio
+                                discount.DiscountedPrice = newPrice * (1 - (discountPercent / 100));
+                                discount.UpdatedAt = DateTime.UtcNow;
+                            }
+                        }
                     }
                 }
 
@@ -619,6 +637,76 @@ namespace GrupoMad.Controllers
             }
 
             return RedirectToAction(nameof(ManageDiscounts), new { itemId = priceListItemId });
+        }
+
+        // POST: PriceList/ApplyPercentageDiscountToVariants
+        [HttpPost]
+        public async Task<IActionResult> ApplyPercentageDiscountToVariants(string itemIds, decimal discountPercent)
+        {
+            try
+            {
+                var itemIdList = itemIds.Split(',').Select(int.Parse).ToList();
+
+                // Si el descuento es 0 o negativo, eliminar todos los descuentos de estos items
+                if (discountPercent <= 0)
+                {
+                    var discountsToRemove = await _context.PriceListItemDiscounts
+                        .Where(d => itemIdList.Contains(d.PriceListItemId))
+                        .ToListAsync();
+
+                    _context.PriceListItemDiscounts.RemoveRange(discountsToRemove);
+                    await _context.SaveChangesAsync();
+
+                    return Json(new { success = true, message = "Descuentos eliminados" });
+                }
+
+                // Obtener todos los items
+                var items = await _context.PriceListItems
+                    .Where(pli => itemIdList.Contains(pli.Id))
+                    .ToListAsync();
+
+                foreach (var item in items)
+                {
+                    // Calcular el precio con descuento
+                    var discountedPrice = item.Price * (1 - (discountPercent / 100));
+
+                    // Buscar si ya existe un descuento para este item
+                    var existingDiscount = await _context.PriceListItemDiscounts
+                        .FirstOrDefaultAsync(d => d.PriceListItemId == item.Id);
+
+                    if (existingDiscount != null)
+                    {
+                        // Actualizar descuento existente
+                        existingDiscount.DiscountedPrice = discountedPrice;
+                        existingDiscount.ValidFrom = DateTime.UtcNow.AddDays(-1); // Vigente desde ayer
+                        existingDiscount.ValidUntil = DateTime.MaxValue; // Sin fecha de expiración
+                        existingDiscount.Priority = 1;
+                        existingDiscount.UpdatedAt = DateTime.UtcNow;
+                    }
+                    else
+                    {
+                        // Crear nuevo descuento
+                        var newDiscount = new PriceListItemDiscount
+                        {
+                            PriceListItemId = item.Id,
+                            DiscountedPrice = discountedPrice,
+                            ValidFrom = DateTime.UtcNow.AddDays(-1),
+                            ValidUntil = DateTime.MaxValue,
+                            Priority = 1,
+                            CreatedAt = DateTime.UtcNow
+                        };
+                        _context.PriceListItemDiscounts.Add(newDiscount);
+                    }
+                }
+
+                await _context.SaveChangesAsync();
+
+                return Json(new { success = true, message = $"Descuento del {discountPercent}% aplicado a {items.Count} variante(s)" });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = $"Error: {ex.Message}" });
+            }
         }
 
         // ==================== Crear PriceLists por ProductType ====================
