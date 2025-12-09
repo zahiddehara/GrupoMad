@@ -179,7 +179,10 @@ namespace GrupoMad.Services
         /// </summary>
         public async Task<bool> ChangeStatusAsync(int quotationId, QuotationStatus newStatus, int userId)
         {
-            var quotation = await _context.Quotations.FindAsync(quotationId);
+            var quotation = await _context.Quotations
+                .Include(q => q.Items)
+                    .ThenInclude(i => i.ProductTypeVariant)
+                .FirstOrDefaultAsync(q => q.Id == quotationId);
 
             if (quotation == null || !CanChangeStatus(quotation, newStatus))
                 return false;
@@ -191,8 +194,12 @@ namespace GrupoMad.Services
             {
                 case QuotationStatus.Sent:
                     quotation.SentAt = DateTime.UtcNow;
+                    FreezeVariantNames(quotation);
                     break;
                 case QuotationStatus.Accepted:
+                    quotation.RespondedAt = DateTime.UtcNow;
+                    FreezeVariantNames(quotation);
+                    break;
                 case QuotationStatus.Rejected:
                     quotation.RespondedAt = DateTime.UtcNow;
                     break;
@@ -200,6 +207,17 @@ namespace GrupoMad.Services
 
             await _context.SaveChangesAsync();
             return true;
+        }
+
+        private void FreezeVariantNames(Quotation quotation)
+        {
+            foreach (var item in quotation.Items)
+            {
+                if (item.ProductTypeVariantId.HasValue && item.ProductTypeVariant != null)
+                {
+                    item.Variant = item.ProductTypeVariant.Name;
+                }
+            }
         }
 
         /// <summary>

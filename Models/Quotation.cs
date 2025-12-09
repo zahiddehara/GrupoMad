@@ -201,12 +201,11 @@ namespace GrupoMad.Models
         public int? ProductColorId { get; set; }
         public ProductColor? ProductColor { get; set; }
 
-        /// <summary>
-        /// Variante del producto (si aplica)
-        /// Por ejemplo: "3 vías", "4 vías", etc.
-        /// </summary>
         [StringLength(100)]
         public string? Variant { get; set; }
+
+        public int? ProductTypeVariantId { get; set; }
+        public ProductTypeVariant? ProductTypeVariant { get; set; }
 
         /// <summary>
         /// Cantidad de productos

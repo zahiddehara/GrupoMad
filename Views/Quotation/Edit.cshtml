@@ -337,7 +337,7 @@
         // Items existentes
         const existingItems = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.Items.OrderBy(i => i.DisplayOrder).Select(i => new {
             productId = i.ProductId,
-            variant = i.Variant,
+            variant = Model.Status == GrupoMad.Models.QuotationStatus.Draft && i.ProductTypeVariantId.HasValue ? i.ProductTypeVariant?.Name : i.Variant,
             productColorId = i.ProductColorId,
             quantity = i.Quantity,
             width = i.Width,

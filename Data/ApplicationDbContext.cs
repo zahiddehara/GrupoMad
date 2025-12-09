@@ -98,6 +98,12 @@ namespace GrupoMad.Data
                 .HasForeignKey(qi => qi.ProductId)
                 .OnDelete(DeleteBehavior.Restrict);
 
+            modelBuilder.Entity<QuotationItem>()
+                .HasOne(qi => qi.ProductTypeVariant)
+                .WithMany()
+                .HasForeignKey(qi => qi.ProductTypeVariantId)
+                .OnDelete(DeleteBehavior.Restrict);
+
             modelBuilder.Entity<Company>().HasData(
                 new Company { Id = 1, Name = "Deconolux" },
                 new Company { Id = 2, Name = "Persianas Mad" },

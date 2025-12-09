@@ -113,6 +113,8 @@ namespace GrupoMad.Controllers
                         .ThenInclude(p => p.ProductType)
                 .Include(q => q.Items)
                     .ThenInclude(i => i.ProductColor)
+                .Include(q => q.Items)
+                    .ThenInclude(i => i.ProductTypeVariant)
                 .FirstOrDefaultAsync(m => m.Id == id);
 
             if (quotation == null)
@@ -281,9 +283,10 @@ namespace GrupoMad.Controllers
                                 ProductId = itemDto.ProductId,
                                 ProductColorId = itemDto.ProductColorId,
                                 Variant = itemDto.Variant,
+                                ProductTypeVariantId = variantId,
                                 Quantity = itemDto.Quantity,
-                                UnitPrice = priceResult.Value.unitPrice,        // Precio recalculado del servidor
-                                DiscountedPrice = priceResult.Value.discountedPrice, // Precio recalculado del servidor
+                                UnitPrice = priceResult.Value.unitPrice,
+                                DiscountedPrice = priceResult.Value.discountedPrice,
                                 Width = itemDto.Width,
                                 Height = itemDto.Height,
                                 Description = itemDto.Description,
@@ -323,6 +326,8 @@ namespace GrupoMad.Controllers
                     .ThenInclude(i => i.Product)
                 .Include(q => q.Items)
                     .ThenInclude(i => i.ProductColor)
+                .Include(q => q.Items)
+                    .ThenInclude(i => i.ProductTypeVariant)
                 .FirstOrDefaultAsync(q => q.Id == id);
 
             if (quotation == null)
@@ -484,9 +489,10 @@ namespace GrupoMad.Controllers
                                 ProductId = itemDto.ProductId,
                                 ProductColorId = itemDto.ProductColorId,
                                 Variant = itemDto.Variant,
+                                ProductTypeVariantId = variantId,
                                 Quantity = itemDto.Quantity,
-                                UnitPrice = priceResult.Value.unitPrice,        // Precio recalculado del servidor
-                                DiscountedPrice = priceResult.Value.discountedPrice, // Precio recalculado del servidor
+                                UnitPrice = priceResult.Value.unitPrice,
+                                DiscountedPrice = priceResult.Value.discountedPrice,
                                 Width = itemDto.Width,
                                 Height = itemDto.Height,
                                 Description = itemDto.Description,
