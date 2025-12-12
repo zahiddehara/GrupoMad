@@ -1,0 +1,215 @@
+/**
+ * Price Matrix Styles
+ * Styles for dimension-based pricing matrix with sticky headers
+ */
+
+/* Matrix container with horizontal scroll */
+.matrix-container {
+    overflow-x: auto;
+    overflow-y: visible;
+    max-width: 100%;
+    border: 1px solid #dee2e6;
+    border-radius: 0.25rem;
+    background: white;
+}
+
+/* Price matrix table */
+.price-matrix {
+    margin-bottom: 0;
+    white-space: nowrap;
+    min-width: 100%;
+}
+
+/* Sticky corner cell (top-left) */
+.price-matrix .sticky-corner {
+    position: sticky;
+    left: 0;
+    top: 0;
+    z-index: 3;
+    background: #f8f9fa;
+    border-right: 2px solid #adb5bd;
+    border-bottom: 2px solid #adb5bd;
+    font-weight: bold;
+    font-size: 0.875rem;
+    min-width: 120px;
+    max-width: 120px;
+    text-align: center;
+    vertical-align: middle;
+}
+
+/* Sticky column headers (width ranges) */
+.price-matrix .sticky-header {
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    background: #e9ecef;
+    border-bottom: 2px solid #adb5bd;
+    font-weight: 600;
+    font-size: 0.75rem;
+    text-align: center;
+    vertical-align: middle;
+    min-width: 80px;
+    max-width: 80px;
+    padding: 0.5rem 0.25rem;
+    line-height: 1.2;
+}
+
+/* Sticky row headers (length ranges) */
+.price-matrix .sticky-row-header {
+    position: sticky;
+    left: 0;
+    z-index: 1;
+    background: #f8f9fa;
+    border-right: 2px solid #dee2e6;
+    font-weight: 600;
+    font-size: 0.75rem;
+    text-align: center;
+    vertical-align: middle;
+    min-width: 120px;
+    max-width: 120px;
+    padding: 0.25rem;
+}
+
+/* Data cells */
+.price-matrix tbody td {
+    padding: 0.25rem;
+    min-width: 80px;
+    max-width: 80px;
+    text-align: center;
+    vertical-align: middle;
+}
+
+/* Price input fields */
+.price-input {
+    width: 100%;
+    text-align: right;
+    font-size: 0.875rem;
+    padding: 0.25rem 0.5rem;
+    border: 1px solid #ced4da;
+    border-radius: 0.25rem;
+}
+
+.price-input:focus {
+    border-color: #86b7fe;
+    outline: 0;
+    box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25);
+}
+
+/* Modified cell highlighting */
+.price-matrix td.modified {
+    background-color: #fff3cd;
+    position: relative;
+}
+
+.price-matrix td.modified::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    border: 2px solid #ffc107;
+    pointer-events: none;
+    z-index: 1;
+}
+
+.price-matrix td.modified .price-input {
+    background-color: #fffbf0;
+    font-weight: 600;
+}
+
+/* Invalid input */
+.price-input.is-invalid {
+    border-color: #dc3545;
+    background-color: #f8d7da;
+}
+
+/* Hover effects */
+.price-matrix tbody tr:hover {
+    background-color: #f8f9fa;
+}
+
+.price-matrix tbody td:hover {
+    background-color: #e9ecef;
+}
+
+/* Zebra striping for better readability */
+.price-matrix tbody tr:nth-of-type(odd) {
+    background-color: rgba(0, 0, 0, 0.02);
+}
+
+/* Header tooltips */
+.sticky-header[title],
+.sticky-row-header[title] {
+    cursor: help;
+}
+
+/* Save button area */
+#changeCounter,
+#changeCounter2 {
+    font-weight: 600;
+    font-size: 1rem;
+    vertical-align: middle;
+}
+
+#saveStatus {
+    min-width: 300px;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .price-matrix .sticky-corner,
+    .price-matrix .sticky-row-header {
+        min-width: 100px;
+        max-width: 100px;
+        font-size: 0.7rem;
+    }
+
+    .price-matrix .sticky-header,
+    .price-matrix tbody td {
+        min-width: 70px;
+        max-width: 70px;
+    }
+
+    .price-input {
+        font-size: 0.75rem;
+        padding: 0.2rem 0.3rem;
+    }
+}
+
+/* Print styles */
+@media print {
+    .matrix-container {
+        overflow: visible;
+    }
+
+    .price-matrix {
+        page-break-inside: avoid;
+    }
+
+    .price-matrix .sticky-header,
+    .price-matrix .sticky-row-header,
+    .price-matrix .sticky-corner {
+        position: static;
+    }
+
+    .btn,
+    #changeCounter,
+    #changeCounter2,
+    #saveStatus {
+        display: none !important;
+    }
+}
+
+/* Loading spinner in save button */
+.spinner-border-sm {
+    width: 1rem;
+    height: 1rem;
+    border-width: 0.15em;
+}
+
+/* Accessibility: Focus visible */
+.price-input:focus-visible {
+    outline: 2px solid #0d6efd;
+    outline-offset: 2px;
+}

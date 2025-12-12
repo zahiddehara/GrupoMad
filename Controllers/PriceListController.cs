@@ -1247,6 +1247,128 @@ namespace GrupoMad.Controllers
             return RedirectToAction(nameof(ManageRangesByDimensions), new { itemId = priceListItemId });
         }
 
+        // GET: PriceList/ManageRangesByDimensionsMatrix/5
+        public async Task<IActionResult> ManageRangesByDimensionsMatrix(int? itemId)
+        {
+            if (itemId == null)
+            {
+                return NotFound();
+            }
+
+            var item = await _context.PriceListItems
+                .Include(pli => pli.Product)
+                    .ThenInclude(p => p.ProductType)
+                .Include(pli => pli.PriceList)
+                .Include(pli => pli.PriceRangesByDimensions)
+                .FirstOrDefaultAsync(pli => pli.Id == itemId);
+
+            if (item == null)
+            {
+                return NotFound();
+            }
+
+            // Verify product type is PerRangeDimensions
+            if (item.Product?.ProductType?.PricingType != PricingType.PerRangeDimensions)
+            {
+                throw new InvalidOperationException("Este tipo de producto no soporta rangos por dimensiones");
+            }
+
+            // Build a dictionary of existing prices indexed by range combination
+            var existingPrices = new Dictionary<string, (int Id, decimal Price)>();
+            foreach (var range in item.PriceRangesByDimensions)
+            {
+                // Find matching predefined ranges
+                var widthIndex = Helpers.DimensionRanges.WidthRanges
+                    .FindIndex(r => r.Min == range.MinWidth && r.Max == range.MaxWidth);
+                var lengthIndex = Helpers.DimensionRanges.LengthRanges
+                    .FindIndex(r => r.Min == range.MinHeight && r.Max == range.MaxHeight);
+
+                if (widthIndex >= 0 && lengthIndex >= 0)
+                {
+                    var key = Helpers.DimensionRanges.CreateRangeKey(widthIndex, lengthIndex);
+                    existingPrices[key] = (range.Id, range.Price);
+                }
+            }
+
+            ViewBag.ExistingPrices = existingPrices;
+            return View(item);
+        }
+
+        // POST: PriceList/SaveRangesByDimensionsMatrix
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> SaveRangesByDimensionsMatrix(int itemId, Dictionary<string, decimal> prices)
+        {
+            try
+            {
+                var item = await _context.PriceListItems
+                    .Include(pli => pli.PriceRangesByDimensions)
+                    .FirstOrDefaultAsync(pli => pli.Id == itemId);
+
+                if (item == null)
+                {
+                    return NotFound();
+                }
+
+                int created = 0, updated = 0;
+
+                foreach (var kvp in prices)
+                {
+                    var (widthIndex, lengthIndex) = Helpers.DimensionRanges.ParseRangeKey(kvp.Key);
+                    var price = kvp.Value;
+
+                    // Skip if price is 0 or negative
+                    if (price <= 0)
+                        continue;
+
+                    var widthRange = Helpers.DimensionRanges.WidthRanges[widthIndex];
+                    var lengthRange = Helpers.DimensionRanges.LengthRanges[lengthIndex];
+
+                    // Check if range already exists
+                    var existingRange = item.PriceRangesByDimensions
+                        .FirstOrDefault(r =>
+                            r.MinWidth == widthRange.Min &&
+                            r.MaxWidth == widthRange.Max &&
+                            r.MinHeight == lengthRange.Min &&
+                            r.MaxHeight == lengthRange.Max);
+
+                    if (existingRange != null)
+                    {
+                        // Update existing
+                        existingRange.Price = price;
+                        existingRange.UpdatedAt = DateTime.Now;
+                        updated++;
+                    }
+                    else
+                    {
+                        // Create new
+                        var newRange = new PriceRangeByDimensions
+                        {
+                            PriceListItemId = itemId,
+                            MinWidth = widthRange.Min,
+                            MaxWidth = widthRange.Max,
+                            MinHeight = lengthRange.Min,
+                            MaxHeight = lengthRange.Max,
+                            Price = price,
+                            CreatedAt = DateTime.Now,
+                            UpdatedAt = DateTime.Now
+                        };
+                        _context.PriceRangesByDimensions.Add(newRange);
+                        created++;
+                    }
+                }
+
+                await _context.SaveChangesAsync();
+                TempData["Success"] = $"Matriz guardada exitosamente. Creados: {created}, Actualizados: {updated}";
+
+                return Json(new { success = true, message = TempData["Success"] });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = $"Error al guardar matriz: {ex.Message}" });
+            }
+        }
+
         #endregion
     }
 }

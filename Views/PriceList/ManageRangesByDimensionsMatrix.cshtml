@@ -1,0 +1,119 @@
+@model PriceListItem
+@using GrupoMad.Helpers
+
+@{
+    ViewData["Title"] = "Matriz de Precios por Dimensiones";
+    var existingPrices = ViewBag.ExistingPrices as Dictionary<string, (int Id, decimal Price)> ?? new Dictionary<string, (int Id, decimal Price)>();
+}
+
+<div class="container-fluid">
+    <div class="row mb-3">
+        <div class="col">
+            <h2>@ViewData["Title"]</h2>
+            <p class="text-muted">
+                Producto: <strong>@Model.Product?.Name</strong> |
+                Lista de Precios: <strong>@Model.PriceList?.Name</strong>
+            </p>
+        </div>
+        <div class="col-auto">
+            <a asp-action="ManageRangesByDimensions" asp-route-itemId="@Model.Id" class="btn btn-secondary">
+                <i class="bi bi-list-ul"></i> Cambiar a Vista de Lista
+            </a>
+        </div>
+    </div>
+
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            @TempData["Success"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            @TempData["Error"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    <div class="row mb-3">
+        <div class="col">
+            <button type="button" id="saveAllBtn" class="btn btn-primary btn-lg">
+                <i class="bi bi-save"></i> Guardar Todos los Cambios
+            </button>
+            <span id="changeCounter" class="ms-3 text-muted"></span>
+            <div id="saveStatus" class="d-inline-block ms-3"></div>
+        </div>
+    </div>
+
+    <div class="matrix-container">
+        <table class="table table-bordered table-sm price-matrix" id="priceMatrix">
+            <thead>
+                <tr>
+                    <th class="sticky-corner">Ancho → Largo ↓</th>
+                    @for (int w = 0; w < DimensionRanges.WidthRanges.Count; w++)
+                    {
+                        var range = DimensionRanges.WidthRanges[w];
+                        <th class="sticky-header width-header" title="@DimensionRanges.FormatRange(range.Min, range.Max)">
+                            @range.Min<br/>@range.Max
+                        </th>
+                    }
+                </tr>
+            </thead>
+            <tbody>
+                @for (int l = 0; l < DimensionRanges.LengthRanges.Count; l++)
+                {
+                    var lengthRange = DimensionRanges.LengthRanges[l];
+                    <tr>
+                        <th class="sticky-row-header" title="@DimensionRanges.FormatRange(lengthRange.Min, lengthRange.Max)">
+                            @lengthRange.Min - @lengthRange.Max
+                        </th>
+                        @for (int w = 0; w < DimensionRanges.WidthRanges.Count; w++)
+                        {
+                            var key = DimensionRanges.CreateRangeKey(w, l);
+                            var hasPrice = existingPrices.ContainsKey(key);
+                            var price = hasPrice ? existingPrices[key].Price : 0;
+
+                            <td>
+                                <input type="number"
+                                       class="form-control form-control-sm price-input"
+                                       data-key="@key"
+                                       value="@(price > 0 ? price.ToString("F2") : "")"
+                                       step="0.01"
+                                       min="0"
+                                       placeholder="0.00" />
+                            </td>
+                        }
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+
+    <div class="row mt-3 mb-5">
+        <div class="col">
+            <button type="button" id="saveAllBtn2" class="btn btn-primary btn-lg">
+                <i class="bi bi-save"></i> Guardar Todos los Cambios
+            </button>
+            <span id="changeCounter2" class="ms-3 text-muted"></span>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="~/js/manage-ranges-by-dimensions-matrix.js"></script>
+    <script>
+        // Initialize matrix with item ID and anti-forgery token
+        const priceMatrix = new PriceMatrix({
+            itemId: @Model.Id,
+            saveUrl: '@Url.Action("SaveRangesByDimensionsMatrix", "PriceList")',
+            antiForgeryToken: '@Html.AntiForgeryToken()'
+        });
+    </script>
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/manage-ranges-by-dimensions-matrix.css" />
+}
