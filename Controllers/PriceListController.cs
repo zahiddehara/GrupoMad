@@ -1296,14 +1296,14 @@ namespace GrupoMad.Controllers
 
         // POST: PriceList/SaveRangesByDimensionsMatrix
         [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> SaveRangesByDimensionsMatrix(int itemId, Dictionary<string, decimal> prices)
+        [IgnoreAntiforgeryToken]
+        public async Task<IActionResult> SaveRangesByDimensionsMatrix([FromBody] SaveRangesByDimensionsRequest request)
         {
             try
             {
                 var item = await _context.PriceListItems
                     .Include(pli => pli.PriceRangesByDimensions)
-                    .FirstOrDefaultAsync(pli => pli.Id == itemId);
+                    .FirstOrDefaultAsync(pli => pli.Id == request.ItemId);
 
                 if (item == null)
                 {
@@ -1312,7 +1312,7 @@ namespace GrupoMad.Controllers
 
                 int created = 0, updated = 0;
 
-                foreach (var kvp in prices)
+                foreach (var kvp in request.Prices)
                 {
                     var (widthIndex, lengthIndex) = Helpers.DimensionRanges.ParseRangeKey(kvp.Key);
                     var price = kvp.Value;
@@ -1344,7 +1344,7 @@ namespace GrupoMad.Controllers
                         // Create new
                         var newRange = new PriceRangeByDimensions
                         {
-                            PriceListItemId = itemId,
+                            PriceListItemId = request.ItemId,
                             MinWidth = widthRange.Min,
                             MaxWidth = widthRange.Max,
                             MinHeight = lengthRange.Min,
@@ -1370,5 +1370,12 @@ namespace GrupoMad.Controllers
         }
 
         #endregion
+    }
+
+    // Request model for SaveRangesByDimensionsMatrix
+    public class SaveRangesByDimensionsRequest
+    {
+        public int ItemId { get; set; }
+        public Dictionary<string, decimal> Prices { get; set; } = new Dictionary<string, decimal>();
     }
 }

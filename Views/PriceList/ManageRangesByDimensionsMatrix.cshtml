@@ -43,6 +43,10 @@
             <button type="button" id="saveAllBtn" class="btn btn-primary btn-lg">
                 <i class="bi bi-save"></i> Guardar Todos los Cambios
             </button>
+            <button type="button" id="importCsvBtn" class="btn btn-success btn-lg ms-2">
+                <i class="bi bi-file-earmark-spreadsheet"></i> Importar CSV
+            </button>
+            <input type="file" id="csvFileInput" accept=".csv" style="display: none;" />
             <span id="changeCounter" class="ms-3 text-muted"></span>
             <div id="saveStatus" class="d-inline-block ms-3"></div>
         </div>
@@ -109,7 +113,9 @@
         const priceMatrix = new PriceMatrix({
             itemId: @Model.Id,
             saveUrl: '@Url.Action("SaveRangesByDimensionsMatrix", "PriceList")',
-            antiForgeryToken: '@Html.AntiForgeryToken()'
+            antiForgeryToken: '@Html.AntiForgeryToken()',
+            widthRanges: @Html.Raw(Json.Serialize(DimensionRanges.WidthRanges.Select(r => new { r.Min, r.Max }))),
+            lengthRanges: @Html.Raw(Json.Serialize(DimensionRanges.LengthRanges.Select(r => new { r.Min, r.Max })))
         });
     </script>
 }

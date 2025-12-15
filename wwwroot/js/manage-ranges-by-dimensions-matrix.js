@@ -7,6 +7,8 @@ class PriceMatrix {
         this.itemId = config.itemId;
         this.saveUrl = config.saveUrl;
         this.antiForgeryToken = this.extractAntiForgeryToken(config.antiForgeryToken);
+        this.widthRanges = config.widthRanges || [];
+        this.lengthRanges = config.lengthRanges || [];
 
         this.inputs = document.querySelectorAll('.price-input');
         this.changedCells = new Map(); // key -> value
@@ -45,6 +47,10 @@ class PriceMatrix {
         // Add save button listeners
         document.getElementById('saveAllBtn')?.addEventListener('click', () => this.saveChanges());
         document.getElementById('saveAllBtn2')?.addEventListener('click', () => this.saveChanges());
+
+        // Add CSV import listeners
+        document.getElementById('importCsvBtn')?.addEventListener('click', () => this.handleImportClick());
+        document.getElementById('csvFileInput')?.addEventListener('change', (e) => this.handleFileSelected(e));
 
         // Warn before leaving if there are unsaved changes
         window.addEventListener('beforeunload', (e) => {
@@ -151,18 +157,18 @@ class PriceMatrix {
         }
 
         try {
-            const formData = new FormData();
-            formData.append('itemId', this.itemId);
-            formData.append('__RequestVerificationToken', this.antiForgeryToken);
-
-            // Add each price as separate form field
-            Object.keys(prices).forEach(key => {
-                formData.append(`prices[${key}]`, prices[key]);
-            });
+            // Prepare request payload
+            const payload = {
+                itemId: this.itemId,
+                prices: prices
+            };
 
             const response = await fetch(this.saveUrl, {
                 method: 'POST',
-                body: formData
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(payload)
             });
 
             const result = await response.json();
@@ -223,6 +229,178 @@ class PriceMatrix {
                 bsAlert.close();
             }
         }, 5000);
+    }
+
+    /**
+     * Handle import button click
+     */
+    handleImportClick() {
+        const fileInput = document.getElementById('csvFileInput');
+        if (fileInput) {
+            fileInput.click();
+        }
+    }
+
+    /**
+     * Handle file selected event
+     */
+    async handleFileSelected(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+
+        // Reset file input
+        event.target.value = '';
+
+        try {
+            const csvText = await this.readFileAsText(file);
+            const csvData = this.parseCSV(csvText);
+
+            if (this.validateCSVDimensions(csvData)) {
+                this.loadCSVData(csvData);
+                this.showStatus('CSV importado correctamente. Revisa los cambios y haz clic en "Guardar" para confirmar.', 'success');
+            }
+        } catch (error) {
+            console.error('CSV import error:', error);
+            this.showStatus(`Error al importar CSV: ${error.message}`, 'danger');
+        }
+    }
+
+    /**
+     * Read file as text
+     */
+    readFileAsText(file) {
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = (e) => resolve(e.target.result);
+            reader.onerror = (e) => reject(new Error('Error al leer el archivo'));
+            reader.readAsText(file);
+        });
+    }
+
+    /**
+     * Parse CSV text into 2D array
+     */
+    parseCSV(csvText) {
+        const lines = csvText.trim().split('\n');
+        const data = [];
+
+        for (let line of lines) {
+            const row = [];
+            let current = '';
+            let inQuotes = false;
+
+            for (let i = 0; i < line.length; i++) {
+                const char = line[i];
+
+                if (char === '"') {
+                    inQuotes = !inQuotes;
+                } else if (char === ',' && !inQuotes) {
+                    row.push(current.trim());
+                    current = '';
+                } else {
+                    current += char;
+                }
+            }
+            row.push(current.trim());
+            data.push(row);
+        }
+
+        return data;
+    }
+
+    /**
+     * Parse price value (removes $, commas, etc.)
+     */
+    parsePrice(value) {
+        if (!value || value === '') return null;
+
+        // Remove $, quotes, and commas
+        const cleaned = value.replace(/[\$",]/g, '').trim();
+
+        if (cleaned === '') return null;
+
+        const num = parseFloat(cleaned);
+        return isNaN(num) ? null : num;
+    }
+
+    /**
+     * Validate CSV dimensions match configured ranges
+     */
+    validateCSVDimensions(csvData) {
+        if (!csvData || csvData.length < 2) {
+            throw new Error('El CSV debe tener al menos 2 filas (encabezados + datos)');
+        }
+
+        // Extract width values from header row (skip first empty cell)
+        const csvWidths = csvData[0].slice(1).map(v => parseFloat(v)).filter(v => !isNaN(v));
+
+        // Extract length values from first column (skip first empty cell)
+        const csvLengths = csvData.slice(1).map(row => parseFloat(row[0])).filter(v => !isNaN(v));
+
+        // Validate widths
+        if (csvWidths.length !== this.widthRanges.length) {
+            throw new Error(`El CSV tiene ${csvWidths.length} columnas de ancho, pero se esperan ${this.widthRanges.length}`);
+        }
+
+        // Validate lengths
+        if (csvLengths.length !== this.lengthRanges.length) {
+            throw new Error(`El CSV tiene ${csvLengths.length} filas de largo, pero se esperan ${this.lengthRanges.length}`);
+        }
+
+        // Validate each width matches
+        for (let i = 0; i < csvWidths.length; i++) {
+            const csvWidth = csvWidths[i];
+            const expectedWidth = this.widthRanges[i].Min;
+
+            if (Math.abs(csvWidth - expectedWidth) > 0.01) {
+                throw new Error(`El ancho en la columna ${i + 1} (${csvWidth}) no coincide con el esperado (${expectedWidth})`);
+            }
+        }
+
+        // Validate each length matches
+        for (let i = 0; i < csvLengths.length; i++) {
+            const csvLength = csvLengths[i];
+            const expectedLength = this.lengthRanges[i].Min;
+
+            if (Math.abs(csvLength - expectedLength) > 0.01) {
+                throw new Error(`El largo en la fila ${i + 1} (${csvLength}) no coincide con el esperado (${expectedLength})`);
+            }
+        }
+
+        return true;
+    }
+
+    /**
+     * Load CSV data into matrix inputs
+     */
+    loadCSVData(csvData) {
+        let loadedCount = 0;
+
+        // Iterate through data rows (skip header row)
+        for (let l = 0; l < this.lengthRanges.length && (l + 1) < csvData.length; l++) {
+            const row = csvData[l + 1]; // +1 to skip header row
+
+            // Iterate through columns (skip first column which is length value)
+            for (let w = 0; w < this.widthRanges.length && (w + 1) < row.length; w++) {
+                const key = `${w}_${l}`; // Match the key format from DimensionRanges.CreateRangeKey
+                const priceValue = this.parsePrice(row[w + 1]); // +1 to skip first column
+
+                const input = document.querySelector(`input[data-key="${key}"]`);
+                if (input) {
+                    if (priceValue !== null && priceValue > 0) {
+                        input.value = priceValue.toFixed(2);
+                    } else {
+                        input.value = '';
+                    }
+
+                    // Trigger input change event to mark as modified
+                    input.dispatchEvent(new Event('input', { bubbles: true }));
+                    loadedCount++;
+                }
+            }
+        }
+
+        console.log(`Loaded ${loadedCount} prices from CSV`);
     }
 }
 
