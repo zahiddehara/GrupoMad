@@ -238,6 +238,83 @@ else
                 }
             </form>
         }
+        else if (Model.ProductType?.HasHeadingStyles == true && Model.ProductType.ProductTypeHeadingStyles.Any())
+        {
+            var productsGrouped = Model.PriceListItems
+                .GroupBy(pli => pli.ProductId)
+                .Select(g => new {
+                    ProductId = g.Key,
+                    Product = g.First().Product,
+                    Items = g.OrderBy(i => Model.ProductType.ProductTypeHeadingStyles.FirstOrDefault(h => h.Id == i.ProductTypeHeadingStyleId)?.DisplayOrder ?? 999).ToList()
+                })
+                .OrderBy(g => g.Product.Name)
+                .ToList();
+
+            <div class="alert alert-info">
+                <i class="bi bi-info-circle"></i>
+                Este tipo de producto usa <strong>Estilos de Cabecera</strong>.
+                Haz clic en "Rangos" para definir los precios por dimensiones para cada combinación de producto y estilo.
+            </div>
+
+            <div class="table-responsive">
+                <table class="table table-bordered table-hover">
+                    <thead class="table-light">
+                        <tr>
+                            <th>SKU</th>
+                            <th>Producto</th>
+                            @foreach (var headingStyle in Model.ProductType.ProductTypeHeadingStyles.Where(h => h.IsActive).OrderBy(h => h.DisplayOrder))
+                            {
+                                <th class="text-center">@headingStyle.Name</th>
+                            }
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var productGroup in productsGrouped)
+                        {
+                            <tr>
+                                <td><code>@productGroup.Product.SKU</code></td>
+                                <td><strong>@productGroup.Product.Name</strong></td>
+                                @foreach (var headingStyle in Model.ProductType.ProductTypeHeadingStyles.Where(h => h.IsActive).OrderBy(h => h.DisplayOrder))
+                                {
+                                    var headingStyleItem = productGroup.Items.FirstOrDefault(i => i.ProductTypeHeadingStyleId == headingStyle.Id);
+                                    <td class="text-center">
+                                        @if (headingStyleItem != null)
+                                        {
+                                            <a asp-action="ManageRangesByDimensionsMatrix"
+                                               asp-route-itemId="@headingStyleItem.Id"
+                                               class="btn btn-sm btn-info"
+                                               title="Gestionar rangos de precios por dimensiones para @productGroup.Product.Name - @headingStyle.Name">
+                                                <i class="bi bi-bounding-box"></i> Rangos
+                                            </a>
+
+                                            @* Mostrar cantidad de rangos definidos si existen *@
+                                            @if (headingStyleItem.PriceRangesByDimensions != null && headingStyleItem.PriceRangesByDimensions.Any())
+                                            {
+                                                <br />
+                                                <small class="text-success">
+                                                    <i class="bi bi-check-circle-fill"></i> @headingStyleItem.PriceRangesByDimensions.Count rango(s)
+                                                </small>
+                                            }
+                                            else
+                                            {
+                                                <br />
+                                                <small class="text-muted">
+                                                    <i class="bi bi-exclamation-circle"></i> Sin rangos
+                                                </small>
+                                            }
+                                        }
+                                        else
+                                        {
+                                            <span class="text-muted">-</span>
+                                        }
+                                    </td>
+                                }
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
         else
         {
             <div class="table-responsive">
@@ -388,7 +465,7 @@ else
                                 }
                                 else if (item.Product?.ProductType?.PricingType == GrupoMad.Models.PricingType.PerRangeDimensions)
                                 {
-                                    <a asp-action="ManageRangesByDimensions" asp-route-itemId="@item.Id" class="btn btn-sm btn-info" title="Gestionar Rangos por Dimensiones">
+                                    <a asp-action="ManageRangesByDimensionsMatrix" asp-route-itemId="@item.Id" class="btn btn-sm btn-info" title="Gestionar Rangos por Dimensiones">
                                         <i class="bi bi-bounding-box"></i> Rangos
                                     </a>
                                 }

@@ -207,6 +207,12 @@ namespace GrupoMad.Models
         public int? ProductTypeVariantId { get; set; }
         public ProductTypeVariant? ProductTypeVariant { get; set; }
 
+        [StringLength(100)]
+        public string? HeadingStyle { get; set; }
+
+        public int? ProductTypeHeadingStyleId { get; set; }
+        public ProductTypeHeadingStyle? ProductTypeHeadingStyle { get; set; }
+
         /// <summary>
         /// Cantidad de productos
         /// </summary>

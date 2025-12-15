@@ -40,6 +40,14 @@
 
     <div class="row mb-3">
         <div class="col">
+            <a asp-action="ManageItems" asp-route-id="@Model.PriceListId" class="btn btn-secondary">
+                <i class="bi bi-arrow-left"></i> Volver a Gestionar Productos
+            </a>
+        </div>
+    </div>
+
+    <div class="row mb-3">
+        <div class="col">
             <button type="button" id="saveAllBtn" class="btn btn-primary btn-lg">
                 <i class="bi bi-save"></i> Guardar Todos los Cambios
             </button>

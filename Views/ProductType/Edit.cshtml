@@ -81,6 +81,36 @@
                     </button>
                 </div>
 
+                <div class="form-check mb-3">
+                    <input asp-for="HasHeadingStyles" class="form-check-input" type="checkbox" id="hasHeadingStylesCheckbox" />
+                    <label asp-for="HasHeadingStyles" class="form-check-label">
+                        Tiene Estilos de Cabecera
+                    </label>
+                    <small class="form-text text-muted d-block">Marcar si este tipo requiere estilos de cabecera (ej: Cortinas con plisado, ojales, trabillas)</small>
+                </div>
+
+                <div id="headingStylesSection" style="display: @(Model.HasHeadingStyles ? "block" : "none");" class="mb-3">
+                    <label class="control-label">Estilos de Cabecera</label>
+                    <div id="headingStylesList">
+                        @for (int i = 0; i < Model.HeadingStyles.Count; i++)
+                        {
+                            <div class="input-group mb-2 heading-style-row" data-index="@i">
+                                <input type="text" name="HeadingStyles[@i].Name" value="@Model.HeadingStyles[i].Name" class="form-control" placeholder="Nombre de estilo" required />
+                                <input type="hidden" name="HeadingStyles[@i].Id" value="@Model.HeadingStyles[i].Id" />
+                                <input type="hidden" name="HeadingStyles[@i].DisplayOrder" value="@Model.HeadingStyles[i].DisplayOrder" />
+                                <input type="hidden" name="HeadingStyles[@i].IsActive" value="@Model.HeadingStyles[i].IsActive.ToString().ToLower()" />
+                                <input type="hidden" name="HeadingStyles[@i].IsDeleted" value="false" class="is-deleted-field-heading" />
+                                <button type="button" class="btn btn-outline-danger remove-heading-style-btn">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </div>
+                        }
+                    </div>
+                    <button type="button" class="btn btn-sm btn-outline-primary mt-2" id="addHeadingStyleBtn">
+                        <i class="bi bi-plus-circle"></i> Agregar Estilo de Cabecera
+                    </button>
+                </div>
+
                 <div class="form-group">
                     <button type="submit" class="btn btn-primary">
                         <i class="bi bi-save"></i> Guardar Cambios
@@ -127,6 +157,7 @@
     @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
     <script>
         let variantIndex = @Model.Variants.Count;
+        let headingStyleIndex = @Model.HeadingStyles.Count;
 
         document.getElementById('hasVariantsCheckbox').addEventListener('change', function() {
             const variantsSection = document.getElementById('variantsSection');
@@ -155,6 +186,38 @@
             if (e.target.closest('.remove-variant-btn')) {
                 const row = e.target.closest('.variant-row');
                 const isDeletedField = row.querySelector('.is-deleted-field');
+                isDeletedField.value = 'true';
+                row.style.display = 'none';
+            }
+        });
+
+        document.getElementById('hasHeadingStylesCheckbox').addEventListener('change', function() {
+            const headingStylesSection = document.getElementById('headingStylesSection');
+            headingStylesSection.style.display = this.checked ? 'block' : 'none';
+        });
+
+        document.getElementById('addHeadingStyleBtn').addEventListener('click', function() {
+            const headingStylesList = document.getElementById('headingStylesList');
+            const headingStyleHtml = `
+                <div class="input-group mb-2 heading-style-row" data-index="${headingStyleIndex}">
+                    <input type="text" name="HeadingStyles[${headingStyleIndex}].Name" class="form-control" placeholder="Nombre de estilo (ej: Plisado, Ojales, Trabillas)" required />
+                    <input type="hidden" name="HeadingStyles[${headingStyleIndex}].Id" value="0" />
+                    <input type="hidden" name="HeadingStyles[${headingStyleIndex}].DisplayOrder" value="${headingStyleIndex + 1}" />
+                    <input type="hidden" name="HeadingStyles[${headingStyleIndex}].IsActive" value="true" />
+                    <input type="hidden" name="HeadingStyles[${headingStyleIndex}].IsDeleted" value="false" class="is-deleted-field-heading" />
+                    <button type="button" class="btn btn-outline-danger remove-heading-style-btn">
+                        <i class="bi bi-trash"></i>
+                    </button>
+                </div>
+            `;
+            headingStylesList.insertAdjacentHTML('beforeend', headingStyleHtml);
+            headingStyleIndex++;
+        });
+
+        document.getElementById('headingStylesList').addEventListener('click', function(e) {
+            if (e.target.closest('.remove-heading-style-btn')) {
+                const row = e.target.closest('.heading-style-row');
+                const isDeletedField = row.querySelector('.is-deleted-field-heading');
                 isDeletedField.value = 'true';
                 row.style.display = 'none';
             }

@@ -30,12 +30,25 @@ namespace GrupoMad.Data
                 .HasForeignKey(ptv => ptv.ProductTypeId)
                 .OnDelete(DeleteBehavior.Cascade);
 
+            modelBuilder.Entity<ProductTypeHeadingStyle>()
+                .HasOne(pths => pths.ProductType)
+                .WithMany(pt => pt.ProductTypeHeadingStyles)
+                .HasForeignKey(pths => pths.ProductTypeId)
+                .OnDelete(DeleteBehavior.Cascade);
+
             // Configurar relación PriceListItem - ProductTypeVariant
             modelBuilder.Entity<PriceListItem>()
                 .HasOne(pli => pli.ProductTypeVariant)
                 .WithMany()
                 .HasForeignKey(pli => pli.ProductTypeVariantId)
-                .OnDelete(DeleteBehavior.Restrict);
+                .OnDelete(DeleteBehavior.SetNull);
+
+            // Configurar relación PriceListItem - ProductTypeHeadingStyle
+            modelBuilder.Entity<PriceListItem>()
+                .HasOne(pli => pli.ProductTypeHeadingStyle)
+                .WithMany()
+                .HasForeignKey(pli => pli.ProductTypeHeadingStyleId)
+                .OnDelete(DeleteBehavior.SetNull);
 
             // Configurar relación ShippingAddress - Contact
             modelBuilder.Entity<ShippingAddress>()
@@ -125,6 +138,7 @@ namespace GrupoMad.Data
         public DbSet<Store> Stores { get; set; }
         public DbSet<ProductType> ProductTypes { get; set; }
         public DbSet<ProductTypeVariant> ProductTypeVariants { get; set; }
+        public DbSet<ProductTypeHeadingStyle> ProductTypeHeadingStyles { get; set; }
         public DbSet<Product> Products { get; set; }
         public DbSet<ProductColor> ProductColors { get; set; }
         public DbSet<PriceList> PriceLists { get; set; }

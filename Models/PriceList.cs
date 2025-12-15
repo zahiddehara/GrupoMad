@@ -60,6 +60,17 @@ namespace GrupoMad.Models
         /// </summary>
         public ProductTypeVariant? ProductTypeVariant { get; set; }
 
+        /// <summary>
+        /// ID del estilo de cabecera del producto (FK a ProductTypeHeadingStyle).
+        /// Null si el producto no tiene estilos de cabecera.
+        /// </summary>
+        public int? ProductTypeHeadingStyleId { get; set; }
+
+        /// <summary>
+        /// Navegación al estilo de cabecera del tipo de producto
+        /// </summary>
+        public ProductTypeHeadingStyle? ProductTypeHeadingStyle { get; set; }
+
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
         public DateTime? UpdatedAt { get; set; }

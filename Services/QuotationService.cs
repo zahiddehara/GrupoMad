@@ -55,6 +55,7 @@ namespace GrupoMad.Services
             int productId,
             int storeId,
             int? variantId = null,
+            int? headingStyleId = null,
             decimal? width = null,
             decimal? height = null)
         {
@@ -67,11 +68,13 @@ namespace GrupoMad.Services
                 .Include(pli => pli.Product)
                     .ThenInclude(p => p.ProductType)
                 .Include(pli => pli.ProductTypeVariant)
+                .Include(pli => pli.ProductTypeHeadingStyle)
                 .Where(pli =>
                     pli.ProductId == productId &&
                     pli.PriceList.StoreId == storeId &&
                     pli.PriceList.IsActive &&
-                    (variantId == null || pli.ProductTypeVariantId == variantId))
+                    (variantId == null || pli.ProductTypeVariantId == variantId) &&
+                    (headingStyleId == null || pli.ProductTypeHeadingStyleId == headingStyleId))
                 .OrderByDescending(pli => pli.PriceList.UpdatedAt ?? pli.PriceList.CreatedAt)
                 .FirstOrDefaultAsync();
 
@@ -86,11 +89,13 @@ namespace GrupoMad.Services
                     .Include(pli => pli.Product)
                         .ThenInclude(p => p.ProductType)
                     .Include(pli => pli.ProductTypeVariant)
+                    .Include(pli => pli.ProductTypeHeadingStyle)
                     .Where(pli =>
                         pli.ProductId == productId &&
                         pli.PriceList.StoreId == null &&
                         pli.PriceList.IsActive &&
-                        (variantId == null || pli.ProductTypeVariantId == variantId))
+                        (variantId == null || pli.ProductTypeVariantId == variantId) &&
+                        (headingStyleId == null || pli.ProductTypeHeadingStyleId == headingStyleId))
                     .OrderByDescending(pli => pli.PriceList.UpdatedAt ?? pli.PriceList.CreatedAt)
                     .FirstOrDefaultAsync();
             }
@@ -182,6 +187,8 @@ namespace GrupoMad.Services
             var quotation = await _context.Quotations
                 .Include(q => q.Items)
                     .ThenInclude(i => i.ProductTypeVariant)
+                .Include(q => q.Items)
+                    .ThenInclude(i => i.ProductTypeHeadingStyle)
                 .FirstOrDefaultAsync(q => q.Id == quotationId);
 
             if (quotation == null || !CanChangeStatus(quotation, newStatus))
@@ -216,6 +223,10 @@ namespace GrupoMad.Services
                 if (item.ProductTypeVariantId.HasValue && item.ProductTypeVariant != null)
                 {
                     item.Variant = item.ProductTypeVariant.Name;
+                }
+                if (item.ProductTypeHeadingStyleId.HasValue && item.ProductTypeHeadingStyle != null)
+                {
+                    item.HeadingStyle = item.ProductTypeHeadingStyle.Name;
                 }
             }
         }

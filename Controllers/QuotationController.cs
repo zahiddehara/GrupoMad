@@ -115,6 +115,8 @@ namespace GrupoMad.Controllers
                     .ThenInclude(i => i.ProductColor)
                 .Include(q => q.Items)
                     .ThenInclude(i => i.ProductTypeVariant)
+                .Include(q => q.Items)
+                    .ThenInclude(i => i.ProductTypeHeadingStyle)
                 .FirstOrDefaultAsync(m => m.Id == id);
 
             if (quotation == null)
@@ -262,11 +264,21 @@ namespace GrupoMad.Controllers
                                 variantId = variantEntity?.Id;
                             }
 
+                            // Convertir nombre de heading style a ID si es necesario
+                            int? headingStyleId = null;
+                            if (!string.IsNullOrEmpty(itemDto.HeadingStyle))
+                            {
+                                var headingStyleEntity = await _context.ProductTypeHeadingStyles
+                                    .FirstOrDefaultAsync(h => h.Name == itemDto.HeadingStyle);
+                                headingStyleId = headingStyleEntity?.Id;
+                            }
+
                             // SEGURIDAD: Recalcular precios desde el servidor, no confiar en el formulario
                             var priceResult = await _quotationService.GetProductPriceAsync(
                                 itemDto.ProductId,
                                 quotation.StoreId,
                                 variantId,
+                                headingStyleId,
                                 itemDto.Width,
                                 itemDto.Height
                             );
@@ -284,6 +296,8 @@ namespace GrupoMad.Controllers
                                 ProductColorId = itemDto.ProductColorId,
                                 Variant = itemDto.Variant,
                                 ProductTypeVariantId = variantId,
+                                HeadingStyle = itemDto.HeadingStyle,
+                                ProductTypeHeadingStyleId = headingStyleId,
                                 Quantity = itemDto.Quantity,
                                 UnitPrice = priceResult.Value.unitPrice,
                                 DiscountedPrice = priceResult.Value.discountedPrice,
@@ -328,6 +342,8 @@ namespace GrupoMad.Controllers
                     .ThenInclude(i => i.ProductColor)
                 .Include(q => q.Items)
                     .ThenInclude(i => i.ProductTypeVariant)
+                .Include(q => q.Items)
+                    .ThenInclude(i => i.ProductTypeHeadingStyle)
                 .FirstOrDefaultAsync(q => q.Id == id);
 
             if (quotation == null)
@@ -468,11 +484,21 @@ namespace GrupoMad.Controllers
                                 variantId = variantEntity?.Id;
                             }
 
+                            // Convertir nombre de heading style a ID si es necesario
+                            int? headingStyleId = null;
+                            if (!string.IsNullOrEmpty(itemDto.HeadingStyle))
+                            {
+                                var headingStyleEntity = await _context.ProductTypeHeadingStyles
+                                    .FirstOrDefaultAsync(h => h.Name == itemDto.HeadingStyle);
+                                headingStyleId = headingStyleEntity?.Id;
+                            }
+
                             // SEGURIDAD: Recalcular precios desde el servidor, no confiar en el formulario
                             var priceResult = await _quotationService.GetProductPriceAsync(
                                 itemDto.ProductId,
                                 existingQuotation.StoreId,
                                 variantId,
+                                headingStyleId,
                                 itemDto.Width,
                                 itemDto.Height
                             );
@@ -490,6 +516,8 @@ namespace GrupoMad.Controllers
                                 ProductColorId = itemDto.ProductColorId,
                                 Variant = itemDto.Variant,
                                 ProductTypeVariantId = variantId,
+                                HeadingStyle = itemDto.HeadingStyle,
+                                ProductTypeHeadingStyleId = headingStyleId,
                                 Quantity = itemDto.Quantity,
                                 UnitPrice = priceResult.Value.unitPrice,
                                 DiscountedPrice = priceResult.Value.discountedPrice,
@@ -652,7 +680,7 @@ namespace GrupoMad.Controllers
 
         // API: Obtener precio de producto
         [HttpGet]
-        public async Task<IActionResult> GetProductPrice(int productId, int storeId, string? variant = null, decimal? width = null, decimal? height = null)
+        public async Task<IActionResult> GetProductPrice(int productId, int storeId, string? variant = null, string? headingStyle = null, decimal? width = null, decimal? height = null)
         {
             // Convertir nombre de variante a ID si es necesario
             int? variantId = null;
@@ -663,7 +691,16 @@ namespace GrupoMad.Controllers
                 variantId = variantEntity?.Id;
             }
 
-            var price = await _quotationService.GetProductPriceAsync(productId, storeId, variantId, width, height);
+            // Convertir nombre de heading style a ID si es necesario
+            int? headingStyleId = null;
+            if (!string.IsNullOrEmpty(headingStyle))
+            {
+                var headingStyleEntity = await _context.ProductTypeHeadingStyles
+                    .FirstOrDefaultAsync(h => h.Name == headingStyle);
+                headingStyleId = headingStyleEntity?.Id;
+            }
+
+            var price = await _quotationService.GetProductPriceAsync(productId, storeId, variantId, headingStyleId, width, height);
 
             if (price == null)
             {
@@ -731,6 +768,37 @@ namespace GrupoMad.Controllers
                 }).ToList();
 
             return Json(new { success = true, variants = variants });
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> GetProductHeadingStyles(int productId)
+        {
+            var product = await _context.Products
+                .Include(p => p.ProductType)
+                    .ThenInclude(pt => pt.ProductTypeHeadingStyles)
+                .FirstOrDefaultAsync(p => p.Id == productId);
+
+            if (product == null)
+            {
+                return Json(new { success = false, message = "Producto no encontrado" });
+            }
+
+            if (product.ProductType == null || !product.ProductType.HasHeadingStyles)
+            {
+                return Json(new { success = false, headingStyles = new List<object>() });
+            }
+
+            var headingStyles = product.ProductType.ProductTypeHeadingStyles
+                .Where(h => h.IsActive)
+                .OrderBy(h => h.DisplayOrder)
+                .Select(h => new
+                {
+                    id = h.Id,
+                    name = h.Name,
+                    displayOrder = h.DisplayOrder
+                }).ToList();
+
+            return Json(new { success = true, headingStyles = headingStyles });
         }
 
         [HttpGet]
@@ -868,6 +936,9 @@ namespace GrupoMad.Controllers
             // Productos (todos)
             ViewData["Products"] = _context.Products
                 .Include(p => p.ProductType)
+                    .ThenInclude(pt => pt.ProductTypeVariants)
+                .Include(p => p.ProductType)
+                    .ThenInclude(pt => pt.ProductTypeHeadingStyles)
                 .Where(p => p.IsActive)
                 .OrderBy(p => p.Name)
                 .ToList();
@@ -880,6 +951,7 @@ namespace GrupoMad.Controllers
         public int ProductId { get; set; }
         public int? ProductColorId { get; set; }
         public string? Variant { get; set; }
+        public string? HeadingStyle { get; set; }
         public decimal Quantity { get; set; }
         public decimal UnitPrice { get; set; }
         public decimal DiscountedPrice { get; set; }

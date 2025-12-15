@@ -212,16 +212,17 @@
                             <table class="table table-hover align-middle mb-0" id="itemsTable">
                                 <thead class="table-light">
                                     <tr>
-                                        <th class="px-3 py-2" style="width: 18%">Producto</th>
-                                        <th class="px-3 py-2" style="width: 10%">Variante</th>
-                                        <th class="px-3 py-2" style="width: 10%">Color</th>
+                                        <th class="px-3 py-2" style="width: 16%">Producto</th>
+                                        <th class="px-3 py-2" style="width: 9%">Variante</th>
+                                        <th class="px-3 py-2" style="width: 9%">Estilo Cabecera</th>
+                                        <th class="px-3 py-2" style="width: 9%">Color</th>
                                         <th class="px-3 py-2" style="width: 7%">Ancho (m)</th>
                                         <th class="px-3 py-2" style="width: 7%">Alto (m)</th>
                                         <th class="px-3 py-2" style="width: 7%">Cantidad</th>
-                                        <th class="px-3 py-2" style="width: 11%">Precio Unit.</th>
-                                        <th class="px-3 py-2" style="width: 11%">Precio c/Desc.</th>
-                                        <th class="px-3 py-2" style="width: 11%">Total</th>
-                                        <th class="px-3 py-2" style="width: 5%"></th>
+                                        <th class="px-3 py-2" style="width: 10%">Precio Unit.</th>
+                                        <th class="px-3 py-2" style="width: 10%">Precio c/Desc.</th>
+                                        <th class="px-3 py-2" style="width: 10%">Total</th>
+                                        <th class="px-3 py-2" style="width: 3%"></th>
                                     </tr>
                                 </thead>
                                 <tbody id="itemsTableBody">
@@ -331,13 +332,16 @@
             id = p.Id,
             name = p.Name,
             productTypeName = p.ProductType.Name,
-            pricingType = p.ProductType.PricingType.ToString()
+            pricingType = p.ProductType.PricingType.ToString(),
+            hasVariants = p.ProductType.HasVariants,
+            hasHeadingStyles = p.ProductType.HasHeadingStyles
         })));
 
         // Items existentes
         const existingItems = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.Items.OrderBy(i => i.DisplayOrder).Select(i => new {
             productId = i.ProductId,
             variant = Model.Status == GrupoMad.Models.QuotationStatus.Draft && i.ProductTypeVariantId.HasValue ? i.ProductTypeVariant?.Name : i.Variant,
+            headingStyle = Model.Status == GrupoMad.Models.QuotationStatus.Draft && i.ProductTypeHeadingStyleId.HasValue ? i.ProductTypeHeadingStyle?.Name : i.HeadingStyle,
             productColorId = i.ProductColorId,
             quantity = i.Quantity,
             width = i.Width,
@@ -403,6 +407,11 @@
                     </select>
                 </td>
                 <td class="px-3 py-2">
+                    <select name="items[${itemCounter}].HeadingStyle" class="form-select form-select-sm heading-style-select" data-index="${itemCounter}" disabled>
+                        <option value="">N/A</option>
+                    </select>
+                </td>
+                <td class="px-3 py-2">
                     <select name="items[${itemCounter}].ProductColorId" class="form-select form-select-sm color-select" data-index="${itemCounter}" disabled>
                         <option value="">Primero seleccione un producto...</option>
                     </select>
@@ -451,6 +460,7 @@
                 const productId = this.value;
                 if (productId) {
                     loadProductVariants(productId, currentIndex);
+                    loadProductHeadingStyles(productId, currentIndex);
                     loadProductColors(productId, currentIndex);
                     updateDimensionFields(productId, currentIndex);
                 } else {
@@ -461,6 +471,14 @@
                     }
                     variantSelect.html('<option value="">N/A</option>');
                     variantSelect.prop('disabled', true);
+
+                    // Limpiar el dropdown de estilos de cabecera
+                    const headingStyleSelect = $(row).find('.heading-style-select');
+                    if (headingStyleSelect.hasClass('select2-hidden-accessible')) {
+                        headingStyleSelect.select2('destroy');
+                    }
+                    headingStyleSelect.html('<option value="">N/A</option>');
+                    headingStyleSelect.prop('disabled', true);
 
                     // Limpiar el dropdown de colores
                     const colorSelect = $(row).find('.color-select');
@@ -501,6 +519,7 @@
             // Si hay datos existentes, cargar las variantes, colores y seleccionar correctamente
             if (itemData && itemData.productId) {
                 loadProductVariants(itemData.productId, currentIndex, itemData.variant);
+                loadProductHeadingStyles(itemData.productId, currentIndex, itemData.headingStyle);
                 loadProductColors(itemData.productId, currentIndex, itemData.productColorId);
                 updateDimensionFields(itemData.productId, currentIndex);
                 calculateItemTotal(currentIndex);
@@ -586,6 +605,55 @@
             }
         }
 
+        // Cargar estilos de cabecera del producto
+        async function loadProductHeadingStyles(productId, index, selectedHeadingStyle = null) {
+            if (!productId) return;
+
+            try {
+                const response = await fetch(`/Quotation/GetProductHeadingStyles?productId=${productId}`);
+                const data = await response.json();
+
+                const headingStyleSelect = $(`[name="items[${index}].HeadingStyle"]`);
+
+                if (headingStyleSelect.hasClass('select2-hidden-accessible')) {
+                    headingStyleSelect.select2('destroy');
+                }
+
+                if (data.success && data.headingStyles && data.headingStyles.length > 0) {
+                    headingStyleSelect.html('<option value="">Seleccione un estilo...</option>');
+                    data.headingStyles.forEach(style => {
+                        const option = $('<option></option>')
+                            .val(style.name)
+                            .text(style.name);
+
+                        if (selectedHeadingStyle && style.name === selectedHeadingStyle) {
+                            option.prop('selected', true);
+                        }
+
+                        headingStyleSelect.append(option);
+                    });
+                    headingStyleSelect.prop('disabled', false);
+
+                    headingStyleSelect.select2({
+                        theme: 'bootstrap-5',
+                        placeholder: 'Seleccione un estilo...',
+                        allowClear: true,
+                        width: '100%'
+                    });
+
+                    headingStyleSelect.on('change', function() {
+                        loadProductPrice(productId, index);
+                    });
+                } else {
+                    headingStyleSelect.html('<option value="">N/A</option>');
+                    headingStyleSelect.prop('disabled', true);
+                    loadProductPrice(productId, index);
+                }
+            } catch (error) {
+                console.error('Error al cargar estilos de cabecera:', error);
+            }
+        }
+
         // Cargar colores del producto
         async function loadProductColors(productId, index, selectedColorId = null) {
             if (!productId) return;
@@ -642,6 +710,9 @@
             const variantInput = document.querySelector(`[name="items[${index}].Variant"]`);
             const variant = variantInput && !variantInput.disabled && variantInput.value ? variantInput.value : null;
 
+            const headingStyleInput = document.querySelector(`[name="items[${index}].HeadingStyle"]`);
+            const headingStyle = headingStyleInput && !headingStyleInput.disabled && headingStyleInput.value ? headingStyleInput.value : null;
+
             const widthInput = document.querySelector(`[name="items[${index}].Width"]`);
             const heightInput = document.querySelector(`[name="items[${index}].Height"]`);
             const width = widthInput && !widthInput.disabled ? (parseFloat(widthInput.value) || null) : null;
@@ -650,6 +721,7 @@
             try {
                 let url = `/Quotation/GetProductPrice?productId=${productId}&storeId=${storeId}`;
                 if (variant) url += `&variant=${encodeURIComponent(variant)}`;
+                if (headingStyle) url += `&headingStyle=${encodeURIComponent(headingStyle)}`;
                 if (width !== null) url += `&width=${width}`;
                 if (height !== null) url += `&height=${height}`;
 

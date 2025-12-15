@@ -61,6 +61,11 @@ namespace GrupoMad.Controllers
                 ModelState.AddModelError("", "Debe agregar al menos una variante activa cuando 'Tiene Variantes' está marcado.");
             }
 
+            if (model.HasHeadingStyles && (model.HeadingStyles == null || !model.HeadingStyles.Any(h => !h.IsDeleted)))
+            {
+                ModelState.AddModelError("", "Debe agregar al menos un estilo de cabecera activo cuando 'Tiene Estilos de Cabecera' está marcado.");
+            }
+
             if (ModelState.IsValid)
             {
                 var productType = new ProductType
@@ -70,6 +75,7 @@ namespace GrupoMad.Controllers
                     PricingType = model.PricingType,
                     IsActive = model.IsActive,
                     HasVariants = model.HasVariants,
+                    HasHeadingStyles = model.HasHeadingStyles,
                     CreatedAt = DateTime.UtcNow
                 };
 
@@ -94,6 +100,24 @@ namespace GrupoMad.Controllers
                     await _context.SaveChangesAsync();
                 }
 
+                if (model.HasHeadingStyles && model.HeadingStyles != null)
+                {
+                    int displayOrder = 1;
+                    foreach (var headingStyleVm in model.HeadingStyles.Where(h => !h.IsDeleted))
+                    {
+                        var headingStyle = new ProductTypeHeadingStyle
+                        {
+                            ProductTypeId = productType.Id,
+                            Name = headingStyleVm.Name,
+                            DisplayOrder = displayOrder++,
+                            IsActive = headingStyleVm.IsActive,
+                            CreatedAt = DateTime.UtcNow
+                        };
+                        _context.ProductTypeHeadingStyles.Add(headingStyle);
+                    }
+                    await _context.SaveChangesAsync();
+                }
+
                 TempData["Success"] = "Tipo de producto creado exitosamente.";
                 return RedirectToAction(nameof(Index));
             }
@@ -109,6 +133,7 @@ namespace GrupoMad.Controllers
 
             var productType = await _context.ProductTypes
                 .Include(pt => pt.ProductTypeVariants)
+                .Include(pt => pt.ProductTypeHeadingStyles)
                 .FirstOrDefaultAsync(pt => pt.Id == id);
 
             if (productType == null)
@@ -130,7 +155,15 @@ namespace GrupoMad.Controllers
                     Name = v.Name,
                     DisplayOrder = v.DisplayOrder,
                     IsActive = v.IsActive
-                }).OrderBy(v => v.DisplayOrder).ToList()
+                }).OrderBy(v => v.DisplayOrder).ToList(),
+                HasHeadingStyles = productType.HasHeadingStyles,
+                HeadingStyles = productType.ProductTypeHeadingStyles.Select(h => new ProductTypeHeadingStyleViewModel
+                {
+                    Id = h.Id,
+                    Name = h.Name,
+                    DisplayOrder = h.DisplayOrder,
+                    IsActive = h.IsActive
+                }).OrderBy(h => h.DisplayOrder).ToList()
             };
 
             return View(viewModel);
@@ -150,12 +183,18 @@ namespace GrupoMad.Controllers
                 ModelState.AddModelError("", "Debe tener al menos una variante activa cuando 'Tiene Variantes' está marcado.");
             }
 
+            if (model.HasHeadingStyles && (model.HeadingStyles == null || !model.HeadingStyles.Any(h => !h.IsDeleted)))
+            {
+                ModelState.AddModelError("", "Debe tener al menos un estilo de cabecera activo cuando 'Tiene Estilos de Cabecera' está marcado.");
+            }
+
             if (ModelState.IsValid)
             {
                 try
                 {
                     var productType = await _context.ProductTypes
                         .Include(pt => pt.ProductTypeVariants)
+                        .Include(pt => pt.ProductTypeHeadingStyles)
                         .FirstOrDefaultAsync(pt => pt.Id == id);
 
                     if (productType == null)
@@ -168,6 +207,7 @@ namespace GrupoMad.Controllers
                     productType.PricingType = model.PricingType;
                     productType.IsActive = model.IsActive;
                     productType.HasVariants = model.HasVariants;
+                    productType.HasHeadingStyles = model.HasHeadingStyles;
                     productType.UpdatedAt = DateTime.UtcNow;
 
                     if (model.HasVariants && model.Variants != null)
@@ -210,6 +250,48 @@ namespace GrupoMad.Controllers
                     {
                         var allVariants = productType.ProductTypeVariants.ToList();
                         _context.ProductTypeVariants.RemoveRange(allVariants);
+                    }
+
+                    if (model.HasHeadingStyles && model.HeadingStyles != null)
+                    {
+                        var existingHeadingStyleIds = productType.ProductTypeHeadingStyles.Select(h => h.Id).ToList();
+                        var submittedHeadingStyleIds = model.HeadingStyles.Where(h => h.Id > 0 && !h.IsDeleted).Select(h => h.Id).ToList();
+
+                        var headingStylesToDelete = productType.ProductTypeHeadingStyles.Where(h => !submittedHeadingStyleIds.Contains(h.Id)).ToList();
+                        _context.ProductTypeHeadingStyles.RemoveRange(headingStylesToDelete);
+
+                        int displayOrder = 1;
+                        foreach (var headingStyleVm in model.HeadingStyles.Where(h => !h.IsDeleted))
+                        {
+                            if (headingStyleVm.Id > 0)
+                            {
+                                var existingHeadingStyle = productType.ProductTypeHeadingStyles.FirstOrDefault(h => h.Id == headingStyleVm.Id);
+                                if (existingHeadingStyle != null)
+                                {
+                                    existingHeadingStyle.Name = headingStyleVm.Name;
+                                    existingHeadingStyle.DisplayOrder = displayOrder++;
+                                    existingHeadingStyle.IsActive = headingStyleVm.IsActive;
+                                    existingHeadingStyle.UpdatedAt = DateTime.UtcNow;
+                                }
+                            }
+                            else
+                            {
+                                var newHeadingStyle = new ProductTypeHeadingStyle
+                                {
+                                    ProductTypeId = productType.Id,
+                                    Name = headingStyleVm.Name,
+                                    DisplayOrder = displayOrder++,
+                                    IsActive = headingStyleVm.IsActive,
+                                    CreatedAt = DateTime.UtcNow
+                                };
+                                _context.ProductTypeHeadingStyles.Add(newHeadingStyle);
+                            }
+                        }
+                    }
+                    else
+                    {
+                        var allHeadingStyles = productType.ProductTypeHeadingStyles.ToList();
+                        _context.ProductTypeHeadingStyles.RemoveRange(allHeadingStyles);
                     }
 
                     await _context.SaveChangesAsync();
@@ -331,6 +413,8 @@ namespace GrupoMad.Controllers
         public bool IsActive { get; set; } = true;
         public bool HasVariants { get; set; } = false;
         public List<ProductTypeVariantViewModel> Variants { get; set; } = new List<ProductTypeVariantViewModel>();
+        public bool HasHeadingStyles { get; set; } = false;
+        public List<ProductTypeHeadingStyleViewModel> HeadingStyles { get; set; } = new List<ProductTypeHeadingStyleViewModel>();
     }
 
     public class ProductTypeEditViewModel
@@ -342,9 +426,20 @@ namespace GrupoMad.Controllers
         public bool IsActive { get; set; }
         public bool HasVariants { get; set; }
         public List<ProductTypeVariantViewModel> Variants { get; set; } = new List<ProductTypeVariantViewModel>();
+        public bool HasHeadingStyles { get; set; }
+        public List<ProductTypeHeadingStyleViewModel> HeadingStyles { get; set; } = new List<ProductTypeHeadingStyleViewModel>();
     }
 
     public class ProductTypeVariantViewModel
+    {
+        public int Id { get; set; }
+        public string Name { get; set; } = string.Empty;
+        public int DisplayOrder { get; set; }
+        public bool IsActive { get; set; } = true;
+        public bool IsDeleted { get; set; } = false;
+    }
+
+    public class ProductTypeHeadingStyleViewModel
     {
         public int Id { get; set; }
         public string Name { get; set; } = string.Empty;

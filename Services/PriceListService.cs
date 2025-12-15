@@ -40,6 +40,8 @@ namespace GrupoMad.Services
                 .Include(pl => pl.Store)
                 .Include(pl => pl.ProductType)
                     .ThenInclude(pt => pt.ProductTypeVariants)
+                .Include(pl => pl.ProductType)
+                    .ThenInclude(pt => pt.ProductTypeHeadingStyles)
                 .Include(pl => pl.PriceListItems)
                     .ThenInclude(pli => pli.Product)
                         .ThenInclude(p => p.ProductColors)
@@ -47,7 +49,13 @@ namespace GrupoMad.Services
                     .ThenInclude(pli => pli.Product)
                         .ThenInclude(p => p.ProductType)
                 .Include(pl => pl.PriceListItems)
+                    .ThenInclude(pli => pli.ProductTypeVariant)
+                .Include(pl => pl.PriceListItems)
+                    .ThenInclude(pli => pli.ProductTypeHeadingStyle)
+                .Include(pl => pl.PriceListItems)
                     .ThenInclude(pli => pli.Discounts)
+                .Include(pl => pl.PriceListItems)
+                    .ThenInclude(pli => pli.PriceRangesByDimensions)
                 .FirstOrDefaultAsync(pl => pl.Id == id);
         }
 
@@ -374,6 +382,8 @@ namespace GrupoMad.Services
             var priceList = await _context.PriceLists
                 .Include(pl => pl.ProductType)
                     .ThenInclude(pt => pt.ProductTypeVariants)
+                .Include(pl => pl.ProductType)
+                    .ThenInclude(pt => pt.ProductTypeHeadingStyles)
                 .FirstOrDefaultAsync(pl => pl.Id == priceListId);
 
             if (priceList?.ProductTypeId == null) return 0;
@@ -400,6 +410,7 @@ namespace GrupoMad.Services
             {
                 if (priceList.ProductType.HasVariants && priceList.ProductType.ProductTypeVariants.Any())
                 {
+                    // Productos con variantes
                     foreach (var variant in priceList.ProductType.ProductTypeVariants.Where(v => v.IsActive).OrderBy(v => v.DisplayOrder))
                     {
                         var exists = await _context.PriceListItems
@@ -421,12 +432,38 @@ namespace GrupoMad.Services
                         }
                     }
                 }
+                else if (priceList.ProductType.HasHeadingStyles && priceList.ProductType.ProductTypeHeadingStyles.Any())
+                {
+                    // Productos con estilos de cabecera
+                    foreach (var headingStyle in priceList.ProductType.ProductTypeHeadingStyles.Where(h => h.IsActive).OrderBy(h => h.DisplayOrder))
+                    {
+                        var exists = await _context.PriceListItems
+                            .AnyAsync(pli => pli.PriceListId == priceListId
+                                          && pli.ProductId == productId
+                                          && pli.ProductTypeHeadingStyleId == headingStyle.Id);
+
+                        if (!exists)
+                        {
+                            _context.PriceListItems.Add(new PriceListItem
+                            {
+                                PriceListId = priceListId,
+                                ProductId = productId,
+                                Price = 0,
+                                ProductTypeHeadingStyleId = headingStyle.Id,
+                                CreatedAt = DateTime.UtcNow
+                            });
+                            added++;
+                        }
+                    }
+                }
                 else
                 {
+                    // Productos sin variantes ni estilos de cabecera
                     var exists = await _context.PriceListItems
                         .AnyAsync(pli => pli.PriceListId == priceListId
                                       && pli.ProductId == productId
-                                      && pli.ProductTypeVariantId == null);
+                                      && pli.ProductTypeVariantId == null
+                                      && pli.ProductTypeHeadingStyleId == null);
 
                     if (!exists)
                     {
@@ -436,6 +473,7 @@ namespace GrupoMad.Services
                             ProductId = productId,
                             Price = 0,
                             ProductTypeVariantId = null,
+                            ProductTypeHeadingStyleId = null,
                             CreatedAt = DateTime.UtcNow
                         });
                         added++;

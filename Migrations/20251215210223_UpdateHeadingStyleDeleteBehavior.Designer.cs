@@ -3,6 +3,7 @@ using System;
 using GrupoMad.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -10,9 +11,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace GrupoMad.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251215210223_UpdateHeadingStyleDeleteBehavior")]
+    partial class UpdateHeadingStyleDeleteBehavior
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "9.0.10");
@@ -593,10 +596,6 @@ namespace GrupoMad.Migrations
                     b.Property<int>("DisplayOrder")
                         .HasColumnType("INTEGER");
 
-                    b.Property<string>("HeadingStyle")
-                        .HasMaxLength(100)
-                        .HasColumnType("TEXT");
-
                     b.Property<decimal?>("Height")
                         .HasColumnType("decimal(18,2)");
 
@@ -604,9 +603,6 @@ namespace GrupoMad.Migrations
                         .HasColumnType("INTEGER");
 
                     b.Property<int>("ProductId")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<int?>("ProductTypeHeadingStyleId")
                         .HasColumnType("INTEGER");
 
                     b.Property<int?>("ProductTypeVariantId")
@@ -636,8 +632,6 @@ namespace GrupoMad.Migrations
                     b.HasIndex("ProductColorId");
 
                     b.HasIndex("ProductId");
-
-                    b.HasIndex("ProductTypeHeadingStyleId");
 
                     b.HasIndex("ProductTypeVariantId");
 
@@ -876,7 +870,7 @@ namespace GrupoMad.Migrations
                     b.HasOne("GrupoMad.Models.ProductTypeVariant", "ProductTypeVariant")
                         .WithMany()
                         .HasForeignKey("ProductTypeVariantId")
-                        .OnDelete(DeleteBehavior.SetNull);
+                        .OnDelete(DeleteBehavior.Restrict);
 
                     b.Navigation("PriceList");
 
@@ -1009,10 +1003,6 @@ namespace GrupoMad.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.HasOne("GrupoMad.Models.ProductTypeHeadingStyle", "ProductTypeHeadingStyle")
-                        .WithMany()
-                        .HasForeignKey("ProductTypeHeadingStyleId");
-
                     b.HasOne("GrupoMad.Models.ProductTypeVariant", "ProductTypeVariant")
                         .WithMany()
                         .HasForeignKey("ProductTypeVariantId")
@@ -1027,8 +1017,6 @@ namespace GrupoMad.Migrations
                     b.Navigation("Product");
 
                     b.Navigation("ProductColor");
-
-                    b.Navigation("ProductTypeHeadingStyle");
 
                     b.Navigation("ProductTypeVariant");
 

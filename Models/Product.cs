@@ -25,11 +25,15 @@ namespace GrupoMad.Models
 
         public bool HasVariants { get; set; } = false;
 
+        public bool HasHeadingStyles { get; set; } = false;
+
         public bool IsActive { get; set; } = true;
 
         public List<Product> Products { get; set; } = new List<Product>();
 
         public List<ProductTypeVariant> ProductTypeVariants { get; set; } = new List<ProductTypeVariant>();
+
+        public List<ProductTypeHeadingStyle> ProductTypeHeadingStyles { get; set; } = new List<ProductTypeHeadingStyle>();
 
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
