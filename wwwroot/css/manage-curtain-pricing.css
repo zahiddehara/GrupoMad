@@ -120,3 +120,40 @@
 .text-muted i {
     margin-right: 0.5rem;
 }
+
+/* Quick Paste Area */
+.quick-paste-area .card {
+    transition: border-color 0.3s ease;
+}
+
+.quick-paste-area .card:hover {
+    border-color: #198754 !important;
+    box-shadow: 0 0 0 0.1rem rgba(25, 135, 84, 0.25);
+}
+
+#quickPasteTextarea {
+    font-family: 'Courier New', monospace;
+    resize: vertical;
+}
+
+#quickPasteTextarea:focus {
+    border-color: #198754;
+    box-shadow: 0 0 0 0.25rem rgba(25, 135, 84, 0.25);
+}
+
+#pasteStatus .alert {
+    padding: 0.5rem;
+    margin-bottom: 0;
+    font-size: 0.85rem;
+}
+
+/* Animation for successful paste */
+@keyframes successPulse {
+    0% { background-color: #d1e7dd; }
+    50% { background-color: #a3cfbb; }
+    100% { background-color: #d1e7dd; }
+}
+
+.profit-margin-input.paste-success {
+    animation: successPulse 0.6s ease;
+}

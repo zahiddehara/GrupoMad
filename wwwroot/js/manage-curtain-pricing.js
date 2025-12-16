@@ -71,6 +71,10 @@ class CurtainPricing {
         document.getElementById('calculateBtn')?.addEventListener('click', () => this.calculatePrices());
         document.getElementById('saveBtn')?.addEventListener('click', () => this.savePricing());
 
+        // Quick paste event listeners
+        document.getElementById('applyPasteBtn')?.addEventListener('click', () => this.applyPastedValues());
+        document.getElementById('clearPasteBtn')?.addEventListener('click', () => this.clearPasteArea());
+
         // Monitor input changes
         document.querySelectorAll('.profit-margin-input').forEach(input => {
             input.addEventListener('input', () => {
@@ -89,6 +93,113 @@ class CurtainPricing {
             this.calculatedPrices = null;
             document.getElementById('saveBtn').disabled = true;
         });
+    }
+
+    applyPastedValues() {
+        const textarea = document.getElementById('quickPasteTextarea');
+        const statusDiv = document.getElementById('pasteStatus');
+        const text = textarea.value.trim();
+
+        if (!text) {
+            statusDiv.innerHTML = '<div class="alert alert-warning"><i class="bi bi-exclamation-triangle"></i> Por favor pegue los valores primero</div>';
+            return;
+        }
+
+        // Parse the pasted text
+        const lines = text.split(/\r?\n/);
+        const values = [];
+        const errors = [];
+
+        lines.forEach((line, index) => {
+            const trimmed = line.trim();
+            if (!trimmed) return; // Skip empty lines
+
+            // Remove % sign if present and parse number
+            const cleanValue = trimmed.replace('%', '').trim();
+            const numValue = parseFloat(cleanValue);
+
+            if (isNaN(numValue)) {
+                errors.push(`Línea ${index + 1}: "${line}" no es un número válido`);
+            } else if (numValue < 0) {
+                errors.push(`Línea ${index + 1}: ${numValue} es negativo`);
+            } else if (numValue > 1000) {
+                errors.push(`Línea ${index + 1}: ${numValue}% parece muy alto`);
+            } else {
+                values.push(numValue);
+            }
+        });
+
+        // Show errors if any
+        if (errors.length > 0) {
+            const errorHtml = '<div class="alert alert-danger">' +
+                '<i class="bi bi-x-circle"></i> <strong>Errores encontrados:</strong><br>' +
+                '<small>' + errors.slice(0, 5).join('<br>') + '</small>' +
+                (errors.length > 5 ? '<br><small>...y ' + (errors.length - 5) + ' más</small>' : '') +
+                '</div>';
+            statusDiv.innerHTML = errorHtml;
+            return;
+        }
+
+        if (values.length === 0) {
+            statusDiv.innerHTML = '<div class="alert alert-warning"><i class="bi bi-exclamation-triangle"></i> No se encontraron valores válidos</div>';
+            return;
+        }
+
+        // Apply values to inputs
+        const profitInputs = document.querySelectorAll('.profit-margin-input');
+        let appliedCount = 0;
+
+        profitInputs.forEach((input, index) => {
+            if (index < values.length) {
+                input.value = values[index];
+                input.classList.add('paste-success', 'modified');
+
+                // Remove animation class after animation completes
+                setTimeout(() => {
+                    input.classList.remove('paste-success');
+                }, 600);
+
+                appliedCount++;
+            }
+        });
+
+        // Show success message
+        const totalInputs = profitInputs.length;
+        let message = `<div class="alert alert-success">
+            <i class="bi bi-check-circle-fill"></i>
+            <strong>${appliedCount} valores aplicados correctamente</strong>`;
+
+        if (appliedCount < totalInputs) {
+            message += `<br><small>Nota: Se aplicaron ${appliedCount} de ${totalInputs} valores posibles</small>`;
+        }
+
+        if (values.length > totalInputs) {
+            message += `<br><small>Se ignoraron ${values.length - totalInputs} valores extras</small>`;
+        }
+
+        message += '</div>';
+        statusDiv.innerHTML = message;
+
+        // Clear textarea after successful application
+        textarea.value = '';
+
+        // Reset calculated prices since inputs changed
+        this.calculatedPrices = null;
+        document.getElementById('saveBtn').disabled = true;
+
+        // Auto-hide success message after 5 seconds
+        setTimeout(() => {
+            statusDiv.innerHTML = '';
+        }, 5000);
+    }
+
+    clearPasteArea() {
+        const textarea = document.getElementById('quickPasteTextarea');
+        const statusDiv = document.getElementById('pasteStatus');
+
+        textarea.value = '';
+        statusDiv.innerHTML = '';
+        textarea.focus();
     }
 
     calculatePrices() {

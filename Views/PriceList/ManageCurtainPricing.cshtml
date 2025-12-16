@@ -103,6 +103,33 @@
                     <hr />
 
                     <h6 class="mb-3">Utilidad por Altura (%)</h6>
+
+                    <!-- Quick Paste Area -->
+                    <div class="quick-paste-area mb-3">
+                        <div class="card border-success">
+                            <div class="card-header bg-success bg-opacity-10 py-2">
+                                <small class="text-success fw-bold">
+                                    <i class="bi bi-lightning-fill"></i> Pegar Rápido desde Excel
+                                </small>
+                            </div>
+                            <div class="card-body p-2">
+                                <textarea id="quickPasteTextarea"
+                                          class="form-control form-control-sm mb-2"
+                                          rows="3"
+                                          placeholder="Pegue aquí los valores de Excel (ej: 30%, 35%, 40%...)&#10;Un valor por línea"></textarea>
+                                <div class="d-flex gap-2">
+                                    <button type="button" id="applyPasteBtn" class="btn btn-success btn-sm flex-grow-1">
+                                        <i class="bi bi-check2-circle"></i> Aplicar Valores
+                                    </button>
+                                    <button type="button" id="clearPasteBtn" class="btn btn-outline-secondary btn-sm">
+                                        <i class="bi bi-x-circle"></i> Limpiar
+                                    </button>
+                                </div>
+                                <div id="pasteStatus" class="mt-2"></div>
+                            </div>
+                        </div>
+                    </div>
+
                     <div class="profit-margins-container" style="max-height: 500px; overflow-y: auto;">
                         @for (int i = 0; i < DimensionRanges.LengthRanges.Count; i++)
                         {
