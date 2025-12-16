@@ -1370,6 +1370,152 @@ namespace GrupoMad.Controllers
         }
 
         #endregion
+
+        #region Curtain Pricing
+
+        // GET: PriceList/ManageCurtainPricing/5
+        public async Task<IActionResult> ManageCurtainPricing(int? itemId)
+        {
+            if (itemId == null)
+            {
+                return NotFound();
+            }
+
+            var item = await _context.PriceListItems
+                .Include(pli => pli.Product)
+                    .ThenInclude(p => p.ProductType)
+                .Include(pli => pli.PriceList)
+                .Include(pli => pli.ProductTypeHeadingStyle)
+                .Include(pli => pli.CurtainPricingConfig)
+                .FirstOrDefaultAsync(pli => pli.Id == itemId.Value);
+
+            if (item == null)
+            {
+                return NotFound();
+            }
+
+            // Verify this is a curtain product with heading styles
+            if (item.Product?.ProductType?.HasHeadingStyles != true)
+            {
+                TempData["Error"] = "Este producto no tiene estilos de cabecera configurados.";
+                return RedirectToAction(nameof(ManageItems), new { id = item.PriceListId });
+            }
+
+            return View(item);
+        }
+
+        // POST: PriceList/SaveCurtainPricing
+        [HttpPost]
+        public async Task<IActionResult> SaveCurtainPricing([FromBody] SaveCurtainPricingRequest request)
+        {
+            try
+            {
+                var item = await _context.PriceListItems
+                    .Include(pli => pli.CurtainPricingConfig)
+                    .Include(pli => pli.PriceRangesByDimensions)
+                    .FirstOrDefaultAsync(pli => pli.Id == request.ItemId);
+
+                if (item == null)
+                {
+                    return Json(new { success = false, message = "Item no encontrado" });
+                }
+
+                // Save or update curtain pricing config
+                if (item.CurtainPricingConfig == null)
+                {
+                    item.CurtainPricingConfig = new CurtainPricingConfig
+                    {
+                        PriceListItemId = item.Id,
+                        BasePrice = request.BasePrice,
+                        TaxPercent = request.TaxPercent,
+                        ProfitMarginsByHeightJson = System.Text.Json.JsonSerializer.Serialize(request.ProfitMargins),
+                        CreatedAt = DateTime.UtcNow
+                    };
+                    _context.CurtainPricingConfigs.Add(item.CurtainPricingConfig);
+                }
+                else
+                {
+                    item.CurtainPricingConfig.BasePrice = request.BasePrice;
+                    item.CurtainPricingConfig.TaxPercent = request.TaxPercent;
+                    item.CurtainPricingConfig.ProfitMarginsByHeightJson = System.Text.Json.JsonSerializer.Serialize(request.ProfitMargins);
+                    item.CurtainPricingConfig.UpdatedAt = DateTime.UtcNow;
+                }
+
+                // Calculate and save prices for each dimension range
+                var widthRanges = GrupoMad.Helpers.DimensionRanges.WidthRanges;
+                var heightRanges = GrupoMad.Helpers.DimensionRanges.LengthRanges;
+
+                int created = 0;
+                int updated = 0;
+
+                for (int h = 0; h < heightRanges.Count; h++)
+                {
+                    var heightRange = heightRanges[h];
+                    var profitMargin = request.ProfitMargins.ContainsKey(h.ToString())
+                        ? request.ProfitMargins[h.ToString()]
+                        : 0;
+
+                    for (int w = 0; w < widthRanges.Count; w++)
+                    {
+                        var widthRange = widthRanges[w];
+
+                        // Get fabric usage from the matrix
+                        var fabricUsage = GrupoMad.Helpers.CurtainFabricMatrix.GetFabricUsageByRangeIndex(w, h);
+
+                        // Calculate price using formula: (BasePrice * FabricUsage) * ((ProfitMargin * 0.01) + 1) * ((Tax * 0.01) + 1)
+                        var price = (request.BasePrice * fabricUsage)
+                                  * ((profitMargin * 0.01m) + 1)
+                                  * ((request.TaxPercent * 0.01m) + 1);
+
+                        // Round to 2 decimal places
+                        price = Math.Round(price, 2);
+
+                        // Find or create price range
+                        var existingRange = item.PriceRangesByDimensions?.FirstOrDefault(r =>
+                            r.MinWidth == widthRange.Min &&
+                            r.MaxWidth == widthRange.Max &&
+                            r.MinHeight == heightRange.Min &&
+                            r.MaxHeight == heightRange.Max);
+
+                        if (existingRange != null)
+                        {
+                            existingRange.Price = price;
+                            existingRange.UpdatedAt = DateTime.UtcNow;
+                            updated++;
+                        }
+                        else
+                        {
+                            var newRange = new PriceRangeByDimensions
+                            {
+                                PriceListItemId = item.Id,
+                                MinWidth = widthRange.Min,
+                                MaxWidth = widthRange.Max,
+                                MinHeight = heightRange.Min,
+                                MaxHeight = heightRange.Max,
+                                Price = price,
+                                CreatedAt = DateTime.UtcNow,
+                                UpdatedAt = DateTime.UtcNow
+                            };
+                            _context.PriceRangesByDimensions.Add(newRange);
+                            created++;
+                        }
+                    }
+                }
+
+                await _context.SaveChangesAsync();
+
+                return Json(new {
+                    success = true,
+                    message = $"Configuración guardada y precios calculados. Creados: {created}, Actualizados: {updated}"
+                });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = $"Error: {ex.Message}" });
+            }
+        }
+
+        #endregion
     }
 
     // Request model for SaveRangesByDimensionsMatrix
@@ -1377,5 +1523,14 @@ namespace GrupoMad.Controllers
     {
         public int ItemId { get; set; }
         public Dictionary<string, decimal> Prices { get; set; } = new Dictionary<string, decimal>();
+    }
+
+    // Request model for SaveCurtainPricing
+    public class SaveCurtainPricingRequest
+    {
+        public int ItemId { get; set; }
+        public decimal BasePrice { get; set; }
+        public decimal TaxPercent { get; set; }
+        public Dictionary<string, decimal> ProfitMargins { get; set; } = new Dictionary<string, decimal>();
     }
 }

@@ -81,6 +81,12 @@ namespace GrupoMad.Models
 
         public List<PriceRangeByDimensions>? PriceRangesByDimensions { get; set; }
 
+        /// <summary>
+        /// Configuración de precios para cortinas (opcional).
+        /// Solo aplica para productos de tipo Cortinas con estilos de cabecera.
+        /// </summary>
+        public CurtainPricingConfig? CurtainPricingConfig { get; set; }
+
         // Métodos helper para cálculo de precios
 
         /// <summary>

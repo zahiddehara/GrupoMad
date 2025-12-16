@@ -1,0 +1,184 @@
+@model PriceListItem
+@using GrupoMad.Helpers
+@using System.Text.Json
+
+@{
+    ViewData["Title"] = "Configuración de Precios para Cortinas";
+
+    // Deserialize existing config if available
+    Dictionary<string, decimal>? existingProfitMargins = null;
+    decimal existingBasePrice = 0;
+    decimal existingTaxPercent = 16; // Default IVA
+
+    if (Model.CurtainPricingConfig != null)
+    {
+        existingBasePrice = Model.CurtainPricingConfig.BasePrice;
+        existingTaxPercent = Model.CurtainPricingConfig.TaxPercent;
+        try
+        {
+            existingProfitMargins = JsonSerializer.Deserialize<Dictionary<string, decimal>>(
+                Model.CurtainPricingConfig.ProfitMarginsByHeightJson);
+        }
+        catch { }
+    }
+}
+
+<div class="container-fluid">
+    <div class="row mb-3">
+        <div class="col">
+            <h2>@ViewData["Title"]</h2>
+            <p class="text-muted">
+                Producto: <strong>@Model.Product?.Name</strong> |
+                Lista de Precios: <strong>@Model.PriceList?.Name</strong> |
+                Estilo de Cabecera: <strong>@Model.ProductTypeHeadingStyle?.Name</strong>
+            </p>
+        </div>
+    </div>
+
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            @TempData["Success"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            @TempData["Error"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    <div class="row mb-3">
+        <div class="col">
+            <a asp-action="ManageItems" asp-route-id="@Model.PriceListId" class="btn btn-secondary">
+                <i class="bi bi-arrow-left"></i> Volver a Gestionar Productos
+            </a>
+            <a asp-action="ManageRangesByDimensionsMatrix" asp-route-itemId="@Model.Id" class="btn btn-info">
+                <i class="bi bi-table"></i> Ver Matriz de Precios
+            </a>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Left Panel: Configuration -->
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">
+                        <i class="bi bi-gear-fill"></i> Configuración
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <label for="basePrice" class="form-label">Precio Base por Metro</label>
+                        <div class="input-group">
+                            <span class="input-group-text">$</span>
+                            <input type="number"
+                                   class="form-control"
+                                   id="basePrice"
+                                   value="@(existingBasePrice > 0 ? existingBasePrice : "")"
+                                   step="0.01"
+                                   min="0"
+                                   placeholder="0.00" />
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="taxPercent" class="form-label">IVA (%)</label>
+                        <div class="input-group">
+                            <input type="number"
+                                   class="form-control"
+                                   id="taxPercent"
+                                   value="@existingTaxPercent"
+                                   step="0.01"
+                                   min="0"
+                                   max="100" />
+                            <span class="input-group-text">%</span>
+                        </div>
+                    </div>
+
+                    <hr />
+
+                    <h6 class="mb-3">Utilidad por Altura (%)</h6>
+                    <div class="profit-margins-container" style="max-height: 500px; overflow-y: auto;">
+                        @for (int i = 0; i < DimensionRanges.LengthRanges.Count; i++)
+                        {
+                            var range = DimensionRanges.LengthRanges[i];
+                            var existingValue = existingProfitMargins?.ContainsKey(i.ToString()) == true
+                                ? existingProfitMargins[i.ToString()]
+                                : 0;
+
+                            <div class="mb-2">
+                                <label class="form-label small">
+                                    @range.Min - @range.Max m
+                                </label>
+                                <div class="input-group input-group-sm">
+                                    <input type="number"
+                                           class="form-control profit-margin-input"
+                                           data-height-index="@i"
+                                           value="@(existingValue > 0 ? existingValue : "")"
+                                           step="0.01"
+                                           min="0"
+                                           max="1000"
+                                           placeholder="0.00" />
+                                    <span class="input-group-text">%</span>
+                                </div>
+                            </div>
+                        }
+                    </div>
+
+                    <hr />
+
+                    <div class="d-grid gap-2">
+                        <button type="button" id="calculateBtn" class="btn btn-success btn-lg">
+                            <i class="bi bi-calculator"></i> Calcular Precios
+                        </button>
+                        <button type="button" id="saveBtn" class="btn btn-primary btn-lg" disabled>
+                            <i class="bi bi-save"></i> Guardar Configuración
+                        </button>
+                        <div id="saveStatus" class="text-center"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Panel: Preview -->
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0">
+                        <i class="bi bi-eye-fill"></i> Vista Previa de Precios Calculados
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div id="previewContainer">
+                        <p class="text-muted text-center">
+                            <i class="bi bi-info-circle"></i>
+                            Ingrese la configuración y haga clic en "Calcular Precios" para ver la vista previa.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="~/js/manage-curtain-pricing.js"></script>
+    <script>
+        const curtainPricing = new CurtainPricing({
+            itemId: @Model.Id,
+            saveUrl: '@Url.Action("SaveCurtainPricing", "PriceList")',
+            antiForgeryToken: '@Html.AntiForgeryToken()',
+            widthRanges: @Html.Raw(Json.Serialize(DimensionRanges.WidthRanges.Select(r => new { r.Min, r.Max }))),
+            lengthRanges: @Html.Raw(Json.Serialize(DimensionRanges.LengthRanges.Select(r => new { r.Min, r.Max })))
+        });
+    </script>
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/manage-curtain-pricing.css" />
+}

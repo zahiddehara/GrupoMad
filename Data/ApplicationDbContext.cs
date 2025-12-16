@@ -50,6 +50,13 @@ namespace GrupoMad.Data
                 .HasForeignKey(pli => pli.ProductTypeHeadingStyleId)
                 .OnDelete(DeleteBehavior.SetNull);
 
+            // Configurar relación PriceListItem - CurtainPricingConfig (1:1 opcional)
+            modelBuilder.Entity<CurtainPricingConfig>()
+                .HasOne(cpc => cpc.PriceListItem)
+                .WithOne(pli => pli.CurtainPricingConfig)
+                .HasForeignKey<CurtainPricingConfig>(cpc => cpc.PriceListItemId)
+                .OnDelete(DeleteBehavior.Cascade);
+
             // Configurar relación ShippingAddress - Contact
             modelBuilder.Entity<ShippingAddress>()
                 .HasOne(sa => sa.Contact)
@@ -146,6 +153,7 @@ namespace GrupoMad.Data
         public DbSet<PriceListItemDiscount> PriceListItemDiscounts { get; set; }
         public DbSet<PriceRangeByLength> PriceRangesByLength { get; set; }
         public DbSet<PriceRangeByDimensions> PriceRangesByDimensions { get; set; }
+        public DbSet<CurtainPricingConfig> CurtainPricingConfigs { get; set; }
         public DbSet<Contact> Contacts { get; set; }
         public DbSet<ShippingAddress> ShippingAddresses { get; set; }
         public DbSet<User> Users { get; set; }

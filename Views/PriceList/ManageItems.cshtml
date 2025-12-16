@@ -280,12 +280,20 @@ else
                                     <td class="text-center">
                                         @if (headingStyleItem != null)
                                         {
-                                            <a asp-action="ManageRangesByDimensionsMatrix"
-                                               asp-route-itemId="@headingStyleItem.Id"
-                                               class="btn btn-sm btn-info"
-                                               title="Gestionar rangos de precios por dimensiones para @productGroup.Product.Name - @headingStyle.Name">
-                                                <i class="bi bi-bounding-box"></i> Rangos
-                                            </a>
+                                            <div class="btn-group-vertical" role="group">
+                                                <a asp-action="ManageCurtainPricing"
+                                                   asp-route-itemId="@headingStyleItem.Id"
+                                                   class="btn btn-sm btn-success mb-1"
+                                                   title="Configurar precios automáticos para cortinas">
+                                                    <i class="bi bi-gear-fill"></i> Configurar
+                                                </a>
+                                                <a asp-action="ManageRangesByDimensionsMatrix"
+                                                   asp-route-itemId="@headingStyleItem.Id"
+                                                   class="btn btn-sm btn-info"
+                                                   title="Gestionar rangos de precios por dimensiones para @productGroup.Product.Name - @headingStyle.Name">
+                                                    <i class="bi bi-bounding-box"></i> Rangos
+                                                </a>
+                                            </div>
 
                                             @* Mostrar cantidad de rangos definidos si existen *@
                                             @if (headingStyleItem.PriceRangesByDimensions != null && headingStyleItem.PriceRangesByDimensions.Any())
@@ -300,6 +308,15 @@ else
                                                 <br />
                                                 <small class="text-muted">
                                                     <i class="bi bi-exclamation-circle"></i> Sin rangos
+                                                </small>
+                                            }
+
+                                            @* Mostrar si tiene configuración de cortinas *@
+                                            @if (headingStyleItem.CurtainPricingConfig != null)
+                                            {
+                                                <br />
+                                                <small class="text-info">
+                                                    <i class="bi bi-gear-fill"></i> Configurado
                                                 </small>
                                             }
                                         }

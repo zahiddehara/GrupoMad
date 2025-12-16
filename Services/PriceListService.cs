@@ -56,6 +56,8 @@ namespace GrupoMad.Services
                     .ThenInclude(pli => pli.Discounts)
                 .Include(pl => pl.PriceListItems)
                     .ThenInclude(pli => pli.PriceRangesByDimensions)
+                .Include(pl => pl.PriceListItems)
+                    .ThenInclude(pli => pli.CurtainPricingConfig)
                 .FirstOrDefaultAsync(pl => pl.Id == id);
         }
 
