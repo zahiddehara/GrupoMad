@@ -396,7 +396,7 @@
         }
 
         // Agregar nuevo item
-        function addItem(itemData = null) {
+        async function addItem(itemData = null) {
             const tbody = document.getElementById('itemsTableBody');
             const row = document.createElement('tr');
             row.id = `item-${itemCounter}`;
@@ -590,10 +590,15 @@
 
             // Si hay datos existentes, cargar las variantes, colores y seleccionar correctamente
             if (itemData && itemData.productId) {
-                loadProductVariants(itemData.productId, currentIndex, itemData.variant);
-                loadProductHeadingStyles(itemData.productId, currentIndex, itemData.headingStyle);
-                loadProductColors(itemData.productId, currentIndex, itemData.productColorId);
+                // Cargar variantes, estilos y colores SIN recargar precio automáticamente
+                await loadProductVariants(itemData.productId, currentIndex, itemData.variant, false);
+                await loadProductHeadingStyles(itemData.productId, currentIndex, itemData.headingStyle, false);
+                await loadProductColors(itemData.productId, currentIndex, itemData.productColorId);
                 updateDimensionFields(itemData.productId, currentIndex);
+
+                // Ahora sí cargar el precio actualizado con toda la información disponible
+                await loadProductPrice(itemData.productId, currentIndex);
+
                 calculateItemTotal(currentIndex);
             }
 
@@ -632,7 +637,7 @@
         }
 
         // Cargar variantes del producto
-        async function loadProductVariants(productId, index, selectedVariant = null) {
+        async function loadProductVariants(productId, index, selectedVariant = null, shouldLoadPrice = true) {
             if (!productId) return;
 
             try {
@@ -673,7 +678,9 @@
                 } else {
                     variantSelect.html('<option value="">N/A</option>');
                     variantSelect.prop('disabled', true);
-                    loadProductPrice(productId, index);
+                    if (shouldLoadPrice) {
+                        loadProductPrice(productId, index);
+                    }
                 }
             } catch (error) {
                 console.error('Error al cargar variantes:', error);
@@ -681,7 +688,7 @@
         }
 
         // Cargar estilos de cabecera del producto
-        async function loadProductHeadingStyles(productId, index, selectedHeadingStyle = null) {
+        async function loadProductHeadingStyles(productId, index, selectedHeadingStyle = null, shouldLoadPrice = true) {
             if (!productId) return;
 
             try {
@@ -722,7 +729,9 @@
                 } else {
                     headingStyleSelect.html('<option value="">N/A</option>');
                     headingStyleSelect.prop('disabled', true);
-                    loadProductPrice(productId, index);
+                    if (shouldLoadPrice) {
+                        loadProductPrice(productId, index);
+                    }
                 }
             } catch (error) {
                 console.error('Error al cargar estilos de cabecera:', error);
