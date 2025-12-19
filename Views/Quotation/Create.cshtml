@@ -228,17 +228,20 @@
                             <table class="table table-hover align-middle mb-0" id="itemsTable">
                                 <thead class="table-light">
                                     <tr>
-                                        <th class="px-3 py-2" style="width: 16%">Producto</th>
-                                        <th class="px-3 py-2" style="width: 9%">Variante</th>
-                                        <th class="px-3 py-2" style="width: 9%">Estilo Cabecera</th>
-                                        <th class="px-3 py-2" style="width: 9%">Color</th>
-                                        <th class="px-3 py-2" style="width: 7%">Ancho (m)</th>
-                                        <th class="px-3 py-2" style="width: 7%">Alto (m)</th>
-                                        <th class="px-3 py-2" style="width: 7%">Cantidad</th>
-                                        <th class="px-3 py-2" style="width: 10%">Precio Unit.</th>
-                                        <th class="px-3 py-2" style="width: 10%">Precio c/Desc.</th>
-                                        <th class="px-3 py-2" style="width: 10%">Total</th>
-                                        <th class="px-3 py-2" style="width: 3%"></th>
+                                        <th class="px-2 py-2" style="width: 14%">Producto</th>
+                                        <th class="px-2 py-2" style="width: 8%">Variante</th>
+                                        <th class="px-2 py-2" style="width: 8%">Estilo Cab.</th>
+                                        <th class="px-2 py-2" style="width: 8%">Color</th>
+                                        <th class="px-2 py-2" style="width: 7%">Lado Ctrl.</th>
+                                        <th class="px-2 py-2" style="width: 7%">Galería</th>
+                                        <th class="px-2 py-2" style="width: 6%">Ancho</th>
+                                        <th class="px-2 py-2" style="width: 6%">Alto</th>
+                                        <th class="px-2 py-2" style="width: 6%">Cant.</th>
+                                        <th class="px-2 py-2" style="width: 9%">P. Unit.</th>
+                                        <th class="px-2 py-2" style="width: 9%">P. Desc.</th>
+                                        <th class="px-2 py-2" style="width: 8%">Total</th>
+                                        <th class="px-2 py-2" style="width: 4%"></th>
+                                        <th class="px-2 py-2" style="width: 4%"></th>
                                     </tr>
                                 </thead>
                                 <tbody id="itemsTableBody">
@@ -491,46 +494,65 @@
             const row = document.createElement('tr');
             row.id = `item-${itemCounter}`;
             row.innerHTML = `
-                <td class="px-3 py-2">
+                <td class="px-2 py-2">
                     <select name="items[${itemCounter}].ProductId" class="form-select form-select-sm product-select" data-index="${itemCounter}" required>
                         <option value="">Seleccione...</option>
                         ${products.map(p => `<option value="${p.id}">${p.name} - ${p.productTypeName}</option>`).join('')}
                     </select>
                 </td>
-                <td class="px-3 py-2">
+                <td class="px-2 py-2">
                     <select name="items[${itemCounter}].Variant" class="form-select form-select-sm variant-select" data-index="${itemCounter}" disabled>
                         <option value="">N/A</option>
                     </select>
                 </td>
-                <td class="px-3 py-2">
+                <td class="px-2 py-2">
                     <select name="items[${itemCounter}].HeadingStyle" class="form-select form-select-sm heading-style-select" data-index="${itemCounter}" disabled>
                         <option value="">N/A</option>
                     </select>
                 </td>
-                <td class="px-3 py-2">
+                <td class="px-2 py-2">
                     <select name="items[${itemCounter}].ProductColorId" class="form-select form-select-sm color-select" data-index="${itemCounter}" disabled>
                         <option value="">Primero seleccione un producto...</option>
                     </select>
                 </td>
-                <td class="px-3 py-2">
+                <td class="px-2 py-2">
+                    <select name="items[${itemCounter}].ControlSide" class="form-select form-select-sm">
+                        <option value="">N/A</option>
+                        <option value="1">Izquierda</option>
+                        <option value="2">Derecha</option>
+                    </select>
+                </td>
+                <td class="px-2 py-2">
+                    <select name="items[${itemCounter}].HasValance" class="form-select form-select-sm">
+                        <option value="">N/A</option>
+                        <option value="true">Sí</option>
+                        <option value="false">No</option>
+                    </select>
+                </td>
+                <td class="px-2 py-2">
                     <input name="items[${itemCounter}].Width" type="number" step="0.01" min="0" class="form-control form-control-sm dimension-input" data-index="${itemCounter}" />
                 </td>
-                <td class="px-3 py-2">
+                <td class="px-2 py-2">
                     <input name="items[${itemCounter}].Height" type="number" step="0.01" min="0" class="form-control form-control-sm dimension-input" data-index="${itemCounter}" />
                 </td>
-                <td class="px-3 py-2">
+                <td class="px-2 py-2">
                     <input name="items[${itemCounter}].Quantity" type="number" step="0.01" min="0.01" value="1" class="form-control form-control-sm quantity-input" data-index="${itemCounter}" required />
                 </td>
-                <td class="px-3 py-2">
+                <td class="px-2 py-2">
                     <input name="items[${itemCounter}].UnitPrice" type="number" step="0.01" min="0" class="form-control form-control-sm price-input" data-index="${itemCounter}" readonly />
                 </td>
-                <td class="px-3 py-2">
+                <td class="px-2 py-2">
                     <input name="items[${itemCounter}].DiscountedPrice" type="number" step="0.01" min="0" class="form-control form-control-sm discounted-price-input" data-index="${itemCounter}" required readonly />
                 </td>
-                <td class="px-3 py-2">
+                <td class="px-2 py-2">
                     <strong class="item-total" data-index="${itemCounter}">$0.00</strong>
                 </td>
-                <td class="px-3 py-2">
+                <td class="px-2 py-2 text-center">
+                    <button type="button" class="btn btn-sm btn-outline-secondary toggle-notes-btn" data-index="${itemCounter}" title="Notas">
+                        <i class="bi bi-sticky"></i>
+                    </button>
+                </td>
+                <td class="px-2 py-2">
                     <button type="button" class="btn btn-sm btn-outline-danger" onclick="removeItem(${itemCounter})">
                         <i class="bi bi-trash"></i>
                     </button>
@@ -538,6 +560,24 @@
             `;
 
             tbody.appendChild(row);
+
+            // Agregar fila expandible para notas (inicialmente oculta)
+            const notesRow = document.createElement('tr');
+            notesRow.id = `item-${itemCounter}-notes`;
+            notesRow.className = 'notes-row';
+            notesRow.style.display = 'none';
+            notesRow.innerHTML = `
+                <td colspan="14" class="p-3 bg-light">
+                    <div class="mb-2">
+                        <label class="form-label fw-bold">
+                            <i class="bi bi-sticky"></i> Notas del Item
+                        </label>
+                        <textarea name="items[${itemCounter}].Notes" class="form-control" rows="3" placeholder="Ingrese notas adicionales para este item..."></textarea>
+                    </div>
+                </td>
+            `;
+
+            tbody.appendChild(notesRow);
 
             // Capturar el índice actual antes de incrementar
             const currentIndex = itemCounter;
@@ -608,6 +648,35 @@
                 });
             });
 
+            // Event listener para toggle de notas
+            const toggleNotesBtn = row.querySelector('.toggle-notes-btn');
+            toggleNotesBtn.addEventListener('click', function() {
+                const notesRowElement = document.getElementById(`item-${currentIndex}-notes`);
+
+                if (notesRowElement.style.display === 'none') {
+                    notesRowElement.style.display = '';
+                    this.classList.remove('btn-outline-secondary');
+                    this.classList.add('btn-secondary');
+                } else {
+                    notesRowElement.style.display = 'none';
+                    this.classList.remove('btn-secondary');
+                    this.classList.add('btn-outline-secondary');
+                }
+            });
+
+            // Listener para actualizar el botón cuando hay contenido en las notas
+            const notesTextarea = notesRow.querySelector('textarea');
+            notesTextarea.addEventListener('input', function() {
+                const toggleBtn = row.querySelector('.toggle-notes-btn');
+                if (this.value.trim()) {
+                    toggleBtn.classList.remove('btn-outline-secondary');
+                    toggleBtn.classList.add('btn-warning');
+                } else if (notesRow.style.display === 'none') {
+                    toggleBtn.classList.remove('btn-warning');
+                    toggleBtn.classList.add('btn-outline-secondary');
+                }
+            });
+
             itemCounter++;
             toggleNoItemsMessage();
         }
@@ -615,6 +684,8 @@
         // Eliminar item
         function removeItem(index) {
             const row = $(`#item-${index}`);
+            const notesRow = $(`#item-${index}-notes`);
+
             if (row.length) {
                 // Destruir Select2 antes de eliminar la fila
                 row.find('.color-select').each(function() {
@@ -629,6 +700,7 @@
                 });
 
                 row.remove();
+                notesRow.remove();
                 calculateTotals();
                 toggleNoItemsMessage();
             }
