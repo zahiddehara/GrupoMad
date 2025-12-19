@@ -304,6 +304,9 @@ namespace GrupoMad.Controllers
                                 Width = itemDto.Width,
                                 Height = itemDto.Height,
                                 Description = itemDto.Description,
+                                ControlSide = itemDto.ControlSide,
+                                HasValance = itemDto.HasValance,
+                                Notes = itemDto.Notes,
                                 DisplayOrder = i
                             };
                             quotation.Items.Add(quotationItem);
@@ -525,6 +528,9 @@ namespace GrupoMad.Controllers
                                 Width = itemDto.Width,
                                 Height = itemDto.Height,
                                 Description = itemDto.Description,
+                                ControlSide = itemDto.ControlSide,
+                                HasValance = itemDto.HasValance,
+                                Notes = itemDto.Notes,
                                 DisplayOrder = i
                             };
                             existingQuotation.Items.Add(quotationItem);
@@ -959,5 +965,8 @@ namespace GrupoMad.Controllers
         public decimal? Width { get; set; }
         public decimal? Height { get; set; }
         public string? Description { get; set; }
+        public ControlSide? ControlSide { get; set; }
+        public bool? HasValance { get; set; }
+        public string? Notes { get; set; }
     }
 }
