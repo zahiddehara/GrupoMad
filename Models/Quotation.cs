@@ -12,6 +12,12 @@ namespace GrupoMad.Models
         Expired = 5     // Expirada
     }
 
+    public enum ControlSide
+    {
+        Left = 1,
+        Right = 2
+    }
+
     public class Quotation
     {
         public int Id { get; set; }
@@ -266,6 +272,22 @@ namespace GrupoMad.Models
         /// Orden de visualización en la cotización
         /// </summary>
         public int DisplayOrder { get; set; }
+
+        /// <summary>
+        /// Lado de control para cortinas (izquierda o derecha)
+        /// </summary>
+        public ControlSide? ControlSide { get; set; }
+
+        /// <summary>
+        /// Indica si la cortina incluye galería
+        /// </summary>
+        public bool? HasValance { get; set; }
+
+        /// <summary>
+        /// Notas específicas de este item
+        /// </summary>
+        [StringLength(1000)]
+        public string? Notes { get; set; }
 
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
         public DateTime? UpdatedAt { get; set; }
