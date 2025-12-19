@@ -336,6 +336,7 @@ namespace GrupoMad.Controllers
             }
 
             var quotation = await _context.Quotations
+                .Include(q => q.Store)
                 .Include(q => q.Items)
                     .ThenInclude(i => i.Product)
                 .Include(q => q.Items)
