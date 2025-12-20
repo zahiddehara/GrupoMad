@@ -330,6 +330,9 @@
                             <a asp-action="Index" class="btn btn-outline-secondary">
                                 <i class="bi bi-arrow-left"></i> Volver a la Lista
                             </a>
+                            <a asp-action="DownloadPdf" asp-route-id="@Model.Id" class="btn btn-outline-primary">
+                                <i class="bi bi-file-earmark-pdf"></i> Descargar PDF
+                            </a>
                         </div>
                         <div>
                             @if (Model.Status == GrupoMad.Models.QuotationStatus.Draft)

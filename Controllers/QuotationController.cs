@@ -14,11 +14,13 @@ namespace GrupoMad.Controllers
     {
         private readonly ApplicationDbContext _context;
         private readonly QuotationService _quotationService;
+        private readonly QuotationPdfService _quotationPdfService;
 
-        public QuotationController(ApplicationDbContext context, QuotationService quotationService)
+        public QuotationController(ApplicationDbContext context, QuotationService quotationService, QuotationPdfService quotationPdfService)
         {
             _context = context;
             _quotationService = quotationService;
+            _quotationPdfService = quotationPdfService;
         }
 
         // GET: Quotation
@@ -951,6 +953,34 @@ namespace GrupoMad.Controllers
                 .Where(p => p.IsActive)
                 .OrderBy(p => p.Name)
                 .ToList();
+        }
+
+        // GET: Quotation/DownloadPdf/5
+        public async Task<IActionResult> DownloadPdf(int? id)
+        {
+            if (id == null)
+            {
+                return NotFound();
+            }
+
+            try
+            {
+                var pdfBytes = await _quotationPdfService.GenerateQuotationPdfAsync(id.Value);
+
+                var quotation = await _context.Quotations
+                    .Where(q => q.Id == id.Value)
+                    .Select(q => q.QuotationNumber)
+                    .FirstOrDefaultAsync();
+
+                var fileName = $"Cotizacion_{quotation ?? id.ToString()}.pdf";
+
+                return File(pdfBytes, "application/pdf", fileName);
+            }
+            catch (Exception ex)
+            {
+                TempData["ErrorMessage"] = $"Error al generar el PDF: {ex.Message}";
+                return RedirectToAction(nameof(Details), new { id });
+            }
         }
     }
 
