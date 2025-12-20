@@ -218,6 +218,7 @@
                                         <th class="px-2 py-2" style="width: 8%">Color</th>
                                         <th class="px-2 py-2" style="width: 7%">Lado Ctrl.</th>
                                         <th class="px-2 py-2" style="width: 7%">Galería</th>
+                                        <th class="px-2 py-2" style="width: 7%">Montaje</th>
                                         <th class="px-2 py-2" style="width: 6%">Ancho</th>
                                         <th class="px-2 py-2" style="width: 6%">Alto</th>
                                         <th class="px-2 py-2" style="width: 6%">Cant.</th>
@@ -354,6 +355,7 @@
             description = i.Description,
             controlSide = i.ControlSide,
             valanceType = i.ValanceType,
+            mountingType = i.MountingType,
             notes = i.Notes
         })));
 
@@ -441,6 +443,13 @@
                         <option value="7" ${itemData?.valanceType === 7 ? 'selected' : ''}>Gal de PVC</option>
                         <option value="8" ${itemData?.valanceType === 8 ? 'selected' : ''}>Gal con relleno</option>
                         <option value="9" ${itemData?.valanceType === 9 ? 'selected' : ''}>Gal lisa</option>
+                    </select>
+                </td>
+                <td class="px-2 py-2">
+                    <select name="items[${itemCounter}].MountingType" class="form-select form-select-sm">
+                        <option value="">N/A</option>
+                        <option value="1" ${itemData?.mountingType === 1 ? 'selected' : ''}>Techo</option>
+                        <option value="2" ${itemData?.mountingType === 2 ? 'selected' : ''}>Pared</option>
                     </select>
                 </td>
                 <td class="px-2 py-2">

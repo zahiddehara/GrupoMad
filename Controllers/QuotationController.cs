@@ -306,6 +306,7 @@ namespace GrupoMad.Controllers
                                 Description = itemDto.Description,
                                 ControlSide = itemDto.ControlSide,
                                 ValanceType = itemDto.ValanceType,
+                                MountingType = itemDto.MountingType,
                                 Notes = itemDto.Notes,
                                 DisplayOrder = i
                             };
@@ -530,6 +531,7 @@ namespace GrupoMad.Controllers
                                 Description = itemDto.Description,
                                 ControlSide = itemDto.ControlSide,
                                 ValanceType = itemDto.ValanceType,
+                                MountingType = itemDto.MountingType,
                                 Notes = itemDto.Notes,
                                 DisplayOrder = i
                             };
@@ -967,6 +969,7 @@ namespace GrupoMad.Controllers
         public string? Description { get; set; }
         public ControlSide? ControlSide { get; set; }
         public ValanceType? ValanceType { get; set; }
+        public MountingType? MountingType { get; set; }
         public string? Notes { get; set; }
     }
 }

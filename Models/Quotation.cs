@@ -31,6 +31,12 @@ namespace GrupoMad.Models
         GalLisa = 9          // Gal lisa
     }
 
+    public enum MountingType
+    {
+        Techo = 1,           // Ceiling
+        Pared = 2            // Wall
+    }
+
     public class Quotation
     {
         public int Id { get; set; }
@@ -295,6 +301,11 @@ namespace GrupoMad.Models
         /// Tipo de galería para la cortina
         /// </summary>
         public ValanceType? ValanceType { get; set; }
+
+        /// <summary>
+        /// Tipo de montaje (Techo o Pared)
+        /// </summary>
+        public MountingType? MountingType { get; set; }
 
         /// <summary>
         /// Notas específicas de este item
