@@ -353,7 +353,7 @@
             discountedPrice = i.DiscountedPrice,
             description = i.Description,
             controlSide = i.ControlSide,
-            hasValance = i.HasValance,
+            valanceType = i.ValanceType,
             notes = i.Notes
         })));
 
@@ -430,10 +430,17 @@
                     </select>
                 </td>
                 <td class="px-2 py-2">
-                    <select name="items[${itemCounter}].HasValance" class="form-select form-select-sm">
+                    <select name="items[${itemCounter}].ValanceType" class="form-select form-select-sm">
                         <option value="">N/A</option>
-                        <option value="true" ${itemData?.hasValance === true ? 'selected' : ''}>Sí</option>
-                        <option value="false" ${itemData?.hasValance === false ? 'selected' : ''}>No</option>
+                        <option value="1" ${itemData?.valanceType === 1 ? 'selected' : ''}>No</option>
+                        <option value="2" ${itemData?.valanceType === 2 ? 'selected' : ''}>Fascia</option>
+                        <option value="3" ${itemData?.valanceType === 3 ? 'selected' : ''}>F/C</option>
+                        <option value="4" ${itemData?.valanceType === 4 ? 'selected' : ''}>Cofre</option>
+                        <option value="5" ${itemData?.valanceType === 5 ? 'selected' : ''}>Cofre/C</option>
+                        <option value="6" ${itemData?.valanceType === 6 ? 'selected' : ''}>Lambrequín</option>
+                        <option value="7" ${itemData?.valanceType === 7 ? 'selected' : ''}>Gal de PVC</option>
+                        <option value="8" ${itemData?.valanceType === 8 ? 'selected' : ''}>Gal con relleno</option>
+                        <option value="9" ${itemData?.valanceType === 9 ? 'selected' : ''}>Gal lisa</option>
                     </select>
                 </td>
                 <td class="px-2 py-2">

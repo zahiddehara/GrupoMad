@@ -18,6 +18,19 @@ namespace GrupoMad.Models
         Right = 2
     }
 
+    public enum ValanceType
+    {
+        No = 1,
+        Fascia = 2,
+        FC = 3,              // F/C
+        Cofre = 4,
+        CofreC = 5,          // Cofre/C
+        Lambrequin = 6,      // Lambrequín
+        GalPVC = 7,          // Gal de PVC
+        GalConRelleno = 8,   // Gal con relleno
+        GalLisa = 9          // Gal lisa
+    }
+
     public class Quotation
     {
         public int Id { get; set; }
@@ -279,9 +292,9 @@ namespace GrupoMad.Models
         public ControlSide? ControlSide { get; set; }
 
         /// <summary>
-        /// Indica si la cortina incluye galería
+        /// Tipo de galería para la cortina
         /// </summary>
-        public bool? HasValance { get; set; }
+        public ValanceType? ValanceType { get; set; }
 
         /// <summary>
         /// Notas específicas de este item

@@ -305,7 +305,7 @@ namespace GrupoMad.Controllers
                                 Height = itemDto.Height,
                                 Description = itemDto.Description,
                                 ControlSide = itemDto.ControlSide,
-                                HasValance = itemDto.HasValance,
+                                ValanceType = itemDto.ValanceType,
                                 Notes = itemDto.Notes,
                                 DisplayOrder = i
                             };
@@ -529,7 +529,7 @@ namespace GrupoMad.Controllers
                                 Height = itemDto.Height,
                                 Description = itemDto.Description,
                                 ControlSide = itemDto.ControlSide,
-                                HasValance = itemDto.HasValance,
+                                ValanceType = itemDto.ValanceType,
                                 Notes = itemDto.Notes,
                                 DisplayOrder = i
                             };
@@ -966,7 +966,7 @@ namespace GrupoMad.Controllers
         public decimal? Height { get; set; }
         public string? Description { get; set; }
         public ControlSide? ControlSide { get; set; }
-        public bool? HasValance { get; set; }
+        public ValanceType? ValanceType { get; set; }
         public string? Notes { get; set; }
     }
 }
