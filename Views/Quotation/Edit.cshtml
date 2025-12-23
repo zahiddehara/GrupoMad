@@ -933,11 +933,13 @@
         });
 
         // Inicializar con items existentes
-        existingItems.forEach(item => {
-            addItem(item);
-        });
+        (async function() {
+            for (const item of existingItems) {
+                await addItem(item);
+            }
 
-        toggleNoItemsMessage();
-        calculateTotals();
+            toggleNoItemsMessage();
+            calculateTotals();
+        })();
     </script>
 }
