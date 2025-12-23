@@ -190,9 +190,57 @@ namespace GrupoMad.Services
                     {
                         col.Item().Text("CLIENTE").FontSize(11).Bold().FontColor(Colors.Blue.Darken3);
                         col.Item().PaddingTop(5).Text($"{quotation.Contact?.FirstName} {quotation.Contact?.LastName}").FontSize(10).Bold();
+
                         if (!string.IsNullOrEmpty(quotation.Contact?.RFC))
                         {
-                            col.Item().Text($"RFC: {quotation.Contact?.RFC}").FontSize(9).FontColor(Colors.Grey.Darken1);
+                            col.Item().Text($"RFC: {quotation.Contact?.RFC}").FontSize(9);
+                        }
+
+                        if (!string.IsNullOrEmpty(quotation.Contact?.Email))
+                        {
+                            col.Item().Text($"Email: {quotation.Contact?.Email}").FontSize(9);
+                        }
+
+                        // Dirección del cliente
+                        if (!string.IsNullOrEmpty(quotation.Contact?.Street))
+                        {
+                            var contactAddress = quotation.Contact.Street;
+                            if (!string.IsNullOrEmpty(quotation.Contact.ExteriorNumber))
+                                contactAddress += $" {quotation.Contact.ExteriorNumber}";
+                            if (!string.IsNullOrEmpty(quotation.Contact.InteriorNumber))
+                                contactAddress += $" Int. {quotation.Contact.InteriorNumber}";
+
+                            col.Item().Text(contactAddress).FontSize(9);
+                        }
+
+                        if (!string.IsNullOrEmpty(quotation.Contact?.Neighborhood) || !string.IsNullOrEmpty(quotation.Contact?.City))
+                        {
+                            var contactCityLine = "";
+                            if (!string.IsNullOrEmpty(quotation.Contact.Neighborhood))
+                                contactCityLine += quotation.Contact.Neighborhood;
+                            if (!string.IsNullOrEmpty(quotation.Contact.City))
+                            {
+                                if (!string.IsNullOrEmpty(contactCityLine))
+                                    contactCityLine += ", ";
+                                contactCityLine += quotation.Contact.City;
+                            }
+
+                            col.Item().Text(contactCityLine).FontSize(9);
+                        }
+
+                        if (quotation.Contact?.StateID != null || !string.IsNullOrEmpty(quotation.Contact?.PostalCode))
+                        {
+                            var contactStateLine = "";
+                            if (quotation.Contact.StateID != null)
+                                contactStateLine += quotation.Contact.StateID.ToString();
+                            if (!string.IsNullOrEmpty(quotation.Contact.PostalCode))
+                            {
+                                if (!string.IsNullOrEmpty(contactStateLine))
+                                    contactStateLine += ", ";
+                                contactStateLine += $"C.P. {quotation.Contact.PostalCode}";
+                            }
+
+                            col.Item().Text(contactStateLine).FontSize(9);
                         }
                     });
 
