@@ -68,29 +68,88 @@ namespace GrupoMad.Services
                 // Logo y datos de la empresa
                 column.Item().Row(row =>
                 {
-                    // Logo (si existe)
-                    var logoPath = Path.Combine(_webHostEnvironment.WebRootPath, "images", "LOGO_DECONOLUX.png");
-                    if (File.Exists(logoPath))
+                    // Logo (si existe en la Company)
+                    var company = quotation.Store?.Company;
+                    var logoPath = !string.IsNullOrEmpty(company?.LogoPath)
+                        ? Path.Combine(_webHostEnvironment.WebRootPath, company.LogoPath.TrimStart('/', '\\'))
+                        : null;
+
+                    if (logoPath != null && File.Exists(logoPath))
                     {
                         row.RelativeItem(1).Height(60).Image(logoPath);
                     }
                     else
                     {
-                        row.RelativeItem(1).Height(60).AlignMiddle().Text(quotation.Store?.Company?.Name ?? "")
+                        row.RelativeItem(1).Height(60).AlignMiddle().Text(company?.Name ?? "")
                             .FontSize(24).Bold().FontColor(Colors.Blue.Darken3);
                     }
 
                     // Información de la empresa
                     row.RelativeItem(2).Column(col =>
                     {
-                        col.Item().AlignRight().Text(quotation.Store?.Company?.Name ?? "")
+                        col.Item().AlignRight().Text(company?.Name ?? "")
                             .FontSize(14).Bold().FontColor(Colors.Blue.Darken3);
                         col.Item().AlignRight().Text($"Sucursal: {quotation.Store?.Name ?? ""}")
                             .FontSize(10).FontColor(Colors.Grey.Darken2);
 
-                        // Aquí se pueden agregar más datos fiscales cuando estén disponibles en el modelo
-                        // col.Item().AlignRight().Text($"RFC: {quotation.Store?.Company?.RFC ?? ""}")
-                        //     .FontSize(9).FontColor(Colors.Grey.Darken1);
+                        // Datos fiscales de la empresa
+                        if (!string.IsNullOrEmpty(company?.RFC))
+                        {
+                            col.Item().AlignRight().Text($"RFC: {company.RFC}")
+                                .FontSize(10).FontColor(Colors.Grey.Darken2);
+                        }
+
+                        // Dirección de la empresa
+                        if (!string.IsNullOrEmpty(company?.Street))
+                        {
+                            var address = company.Street;
+                            if (!string.IsNullOrEmpty(company.ExteriorNumber))
+                                address += $" {company.ExteriorNumber}";
+                            if (!string.IsNullOrEmpty(company.InteriorNumber))
+                                address += $" Int. {company.InteriorNumber}";
+
+                            col.Item().AlignRight().Text(address)
+                                .FontSize(10).FontColor(Colors.Grey.Darken2);
+                        }
+
+                        if (!string.IsNullOrEmpty(company?.Neighborhood) || !string.IsNullOrEmpty(company?.City))
+                        {
+                            var cityLine = "";
+                            if (!string.IsNullOrEmpty(company.Neighborhood))
+                                cityLine += company.Neighborhood;
+                            if (!string.IsNullOrEmpty(company.City))
+                            {
+                                if (!string.IsNullOrEmpty(cityLine))
+                                    cityLine += ", ";
+                                cityLine += company.City;
+                            }
+
+                            col.Item().AlignRight().Text(cityLine)
+                                .FontSize(10).FontColor(Colors.Grey.Darken2);
+                        }
+
+                        if (company?.StateID != null || !string.IsNullOrEmpty(company?.PostalCode))
+                        {
+                            var stateLine = "";
+                            if (company.StateID != null)
+                                stateLine += company.StateID.ToString();
+                            if (!string.IsNullOrEmpty(company.PostalCode))
+                            {
+                                if (!string.IsNullOrEmpty(stateLine))
+                                    stateLine += ", ";
+                                stateLine += $"C.P. {company.PostalCode}";
+                            }
+
+                            col.Item().AlignRight().Text(stateLine)
+                                .FontSize(10).FontColor(Colors.Grey.Darken2);
+                        }
+
+                        // Email de la empresa
+                        if (!string.IsNullOrEmpty(company?.Email))
+                        {
+                            col.Item().AlignRight().Text(company.Email)
+                                .FontSize(10).FontColor(Colors.Grey.Darken2);
+                        }
                     });
                 });
 
