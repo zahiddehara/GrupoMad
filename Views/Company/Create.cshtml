@@ -5,7 +5,7 @@
 
 <h1>Crear Nueva Empresa</h1>
 
-<form asp-action="Create" method="post">
+<form asp-action="Create" method="post" enctype="multipart/form-data">
     <div asp-validation-summary="ModelOnly" class="text-danger"></div>
 
     <div class="row">
@@ -91,6 +91,16 @@
                 <label asp-for="Email" class="form-label">Email</label>
                 <input asp-for="Email" type="email" class="form-control" />
                 <span asp-validation-for="Email" class="text-danger"></span>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-12">
+            <div class="form-group mb-3">
+                <label for="logo" class="form-label">Logo</label>
+                <input type="file" id="logo" name="logo" class="form-control" accept="image/*" />
+                <small class="form-text text-muted">Formatos aceptados: JPG, PNG, GIF. Tamaño máximo recomendado: 2MB</small>
             </div>
         </div>
     </div>

@@ -489,3 +489,7 @@ $RECYCLE.BIN/
 *.sqlite3
 *.db-shm
 *.db-wal
+
+# User uploaded files
+wwwroot/images/logos/*
+!wwwroot/images/logos/.gitkeep

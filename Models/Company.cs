@@ -34,6 +34,9 @@ namespace GrupoMad.Models
         [StringLength(100)]
         public string? Email { get; set; }
 
+        [StringLength(255)]
+        public string? LogoPath { get; set; }
+
         public List<Store>? Stores { get; set; }
         public List<Contact> Contacts { get; set; } = new List<Contact>();
     }

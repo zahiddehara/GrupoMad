@@ -11,6 +11,7 @@
 <table class="table table-striped">
     <thead>
         <tr>
+            <th>Logo</th>
             <th>Nombre</th>
             <th>RFC</th>
             <th>Ciudad</th>
@@ -22,6 +23,16 @@
         @foreach(var company in Model)
         {
             <tr>
+                <td>
+                    @if (!string.IsNullOrEmpty(company.LogoPath))
+                    {
+                        <img src="@company.LogoPath" alt="Logo" style="max-height: 40px; max-width: 60px;" class="img-thumbnail" />
+                    }
+                    else
+                    {
+                        <span class="text-muted">Sin logo</span>
+                    }
+                </td>
                 <td>@company.Name</td>
                 <td>@company.RFC</td>
                 <td>@company.City</td>

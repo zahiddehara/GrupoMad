@@ -6,8 +6,9 @@
 
 <h1>Editar Empresa: @Model.Name</h1>
 
-<form asp-action="Edit" method="post">
+<form asp-action="Edit" method="post" enctype="multipart/form-data">
     <input type="hidden" asp-for="Id" />
+    <input type="hidden" asp-for="LogoPath" />
     <div asp-validation-summary="ModelOnly" class="text-danger"></div>
 
     <div class="row">
@@ -93,6 +94,23 @@
                 <label asp-for="Email" class="form-label">Email</label>
                 <input asp-for="Email" type="email" class="form-control" />
                 <span asp-validation-for="Email" class="text-danger"></span>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-12">
+            <div class="form-group mb-3">
+                <label for="logo" class="form-label">Logo</label>
+                @if (!string.IsNullOrEmpty(Model.LogoPath))
+                {
+                    <div class="mb-2">
+                        <img src="@Model.LogoPath" alt="Logo actual" style="max-width: 200px; max-height: 100px;" class="img-thumbnail" />
+                        <p class="text-muted small">Logo actual</p>
+                    </div>
+                }
+                <input type="file" id="logo" name="logo" class="form-control" accept="image/*" />
+                <small class="form-text text-muted">Formatos aceptados: JPG, PNG, GIF. Tamaño máximo recomendado: 2MB. Dejar vacío para mantener el logo actual.</small>
             </div>
         </div>
     </div>
