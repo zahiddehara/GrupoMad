@@ -4,10 +4,17 @@
     ViewData["Title"] = "Empresas";
 }
 
-<table class="table">
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h1>Empresas</h1>
+</div>
+
+<table class="table table-striped">
     <thead>
         <tr>
             <th>Nombre</th>
+            <th>RFC</th>
+            <th>Ciudad</th>
+            <th>Email</th>
             <th>Acciones</th>
         </tr>
     </thead>
@@ -16,8 +23,12 @@
         {
             <tr>
                 <td>@company.Name</td>
+                <td>@company.RFC</td>
+                <td>@company.City</td>
+                <td>@company.Email</td>
                 <td>
-                    <a asp-action="Edit" asp-route-id="@company.Id">Editar</a>
+                    <a asp-action="Details" asp-route-id="@company.Id" class="btn btn-sm btn-info">Detalles</a>
+                    <a asp-action="Edit" asp-route-id="@company.Id" class="btn btn-sm btn-warning">Editar</a>
                 </td>
             </tr>
         }

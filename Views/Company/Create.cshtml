@@ -1,14 +1,106 @@
 @model GrupoMad.Models.Company
 @{
-    ViewData["Title"] = "Crear";
+    ViewData["Title"] = "Crear Empresa";
 }
 
-<h1>Crear empresa</h1>
+<h1>Crear Nueva Empresa</h1>
 
 <form asp-action="Create" method="post">
-    <div class="form-group">
-        <label for="Name">Name</label>
-        <input type="text" asp-for="Name" class="form-control" />
+    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+    <div class="row">
+        <div class="col-md-6">
+            <div class="form-group mb-3">
+                <label asp-for="Name" class="form-label">Nombre</label>
+                <input asp-for="Name" class="form-control" />
+                <span asp-validation-for="Name" class="text-danger"></span>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="form-group mb-3">
+                <label asp-for="RFC" class="form-label">RFC</label>
+                <input asp-for="RFC" class="form-control" />
+                <span asp-validation-for="RFC" class="text-danger"></span>
+            </div>
+        </div>
     </div>
-    <button type="submit" class="btn btn-primary">Aceptar</button>
+
+    <div class="row">
+        <div class="col-md-8">
+            <div class="form-group mb-3">
+                <label asp-for="Street" class="form-label">Calle</label>
+                <input asp-for="Street" class="form-control" />
+                <span asp-validation-for="Street" class="text-danger"></span>
+            </div>
+        </div>
+        <div class="col-md-2">
+            <div class="form-group mb-3">
+                <label asp-for="ExteriorNumber" class="form-label">No. Ext.</label>
+                <input asp-for="ExteriorNumber" class="form-control" />
+                <span asp-validation-for="ExteriorNumber" class="text-danger"></span>
+            </div>
+        </div>
+        <div class="col-md-2">
+            <div class="form-group mb-3">
+                <label asp-for="InteriorNumber" class="form-label">No. Int.</label>
+                <input asp-for="InteriorNumber" class="form-control" />
+                <span asp-validation-for="InteriorNumber" class="text-danger"></span>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-6">
+            <div class="form-group mb-3">
+                <label asp-for="Neighborhood" class="form-label">Colonia</label>
+                <input asp-for="Neighborhood" class="form-control" />
+                <span asp-validation-for="Neighborhood" class="text-danger"></span>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="form-group mb-3">
+                <label asp-for="City" class="form-label">Ciudad</label>
+                <input asp-for="City" class="form-control" />
+                <span asp-validation-for="City" class="text-danger"></span>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-6">
+            <div class="form-group mb-3">
+                <label asp-for="StateID" class="form-label">Estado</label>
+                <select asp-for="StateID" class="form-control" asp-items="Html.GetEnumSelectList<GrupoMad.Models.MexicanState>()">
+                    <option value="">-- Seleccione un estado --</option>
+                </select>
+                <span asp-validation-for="StateID" class="text-danger"></span>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="form-group mb-3">
+                <label asp-for="PostalCode" class="form-label">Código Postal</label>
+                <input asp-for="PostalCode" class="form-control" />
+                <span asp-validation-for="PostalCode" class="text-danger"></span>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-12">
+            <div class="form-group mb-3">
+                <label asp-for="Email" class="form-label">Email</label>
+                <input asp-for="Email" type="email" class="form-control" />
+                <span asp-validation-for="Email" class="text-danger"></span>
+            </div>
+        </div>
+    </div>
+
+    <div class="form-group">
+        <button type="submit" class="btn btn-primary">Crear</button>
+        <a asp-action="Index" class="btn btn-secondary">Cancelar</a>
+    </div>
 </form>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}
