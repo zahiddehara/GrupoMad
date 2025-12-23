@@ -48,7 +48,7 @@ namespace GrupoMad.Services
                     page.Size(PageSizes.Letter);
                     page.Margin(1.5f, Unit.Centimetre);
                     page.PageColor(Colors.White);
-                    page.DefaultTextStyle(x => x.FontSize(10).FontFamily("Arial"));
+                    page.DefaultTextStyle(x => x.FontSize(10).FontFamily("Public Sans"));
 
                     page.Header().Element(c => ComposeHeader(c, quotation));
                     page.Content().Element(c => ComposeContent(c, quotation));

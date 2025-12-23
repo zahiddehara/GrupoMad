@@ -8,6 +8,16 @@ var builder = WebApplication.CreateBuilder(args);
 
 QuestPDF.Settings.License = LicenseType.Community;
 
+// Registrar fuentes personalizadas para PDFs
+var fontsPath = Path.Combine(builder.Environment.WebRootPath, "fonts");
+QuestPDF.Drawing.FontManager.RegisterFont(File.OpenRead(Path.Combine(fontsPath, "PublicSans-Regular.ttf")));
+QuestPDF.Drawing.FontManager.RegisterFont(File.OpenRead(Path.Combine(fontsPath, "PublicSans-Bold.ttf")));
+QuestPDF.Drawing.FontManager.RegisterFont(File.OpenRead(Path.Combine(fontsPath, "PublicSans-Italic.ttf")));
+QuestPDF.Drawing.FontManager.RegisterFont(File.OpenRead(Path.Combine(fontsPath, "PublicSans-BoldItalic.ttf")));
+QuestPDF.Drawing.FontManager.RegisterFont(File.OpenRead(Path.Combine(fontsPath, "PublicSans-Light.ttf")));
+QuestPDF.Drawing.FontManager.RegisterFont(File.OpenRead(Path.Combine(fontsPath, "PublicSans-Medium.ttf")));
+QuestPDF.Drawing.FontManager.RegisterFont(File.OpenRead(Path.Combine(fontsPath, "PublicSans-SemiBold.ttf")));
+
 // Add services to the container.
 builder.Services.AddControllersWithViews();
 // Agregar DbContext con SQLite
