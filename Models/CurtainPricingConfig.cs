@@ -18,10 +18,14 @@ namespace GrupoMad.Models
         [Column(TypeName = "decimal(5,2)")]
         public decimal TaxPercent { get; set; }
 
+        [Required]
+        public CurtainPricingType PricingType { get; set; } = CurtainPricingType.Normal;
+
         /// <summary>
         /// JSON with profit margin percentages by height index.
         /// Format: {"0":60,"1":62,"2":64,...}
-        /// The key is the index in DimensionRanges.LengthRanges
+        /// The key is the index in DimensionRanges.LengthRanges (45 ranges) for Normal
+        /// or DimensionRanges.SpecialLengthRanges (6 ranges) for Special
         /// </summary>
         [Required]
         public string ProfitMarginsByHeightJson { get; set; }

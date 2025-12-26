@@ -42,6 +42,19 @@ namespace GrupoMad.Helpers
         };
 
         /// <summary>
+        /// Special length ranges (6 ranges for special curtain pricing)
+        /// </summary>
+        public static readonly List<(decimal Min, decimal Max)> SpecialLengthRanges = new()
+        {
+            (0m, 1.59m),
+            (1.60m, 1.79m),
+            (1.80m, 1.99m),
+            (2.00m, 2.19m),
+            (2.20m, 2.39m),
+            (2.40m, 2.59m)
+        };
+
+        /// <summary>
         /// Formats a range as display string
         /// </summary>
         public static string FormatRange(decimal min, decimal max)
