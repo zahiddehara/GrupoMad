@@ -240,7 +240,7 @@ class SpecialCurtainPricing {
         html += '<thead><tr>';
         html += '<th class="sticky-corner">Ancho → Largo ↓</th>';
         this.config.widthRanges.forEach(range => {
-            html += `<th title="${range.Min} - ${range.Max}">${range.Min}<br/>${range.Max}</th>`;
+            html += `<th title="${range.min} - ${range.max}">${range.min}<br/>${range.max}</th>`;
         });
         html += '</tr></thead>';
 
@@ -249,7 +249,7 @@ class SpecialCurtainPricing {
         for (let h = 0; h < this.config.lengthRanges.length; h++) {
             const heightRange = this.config.lengthRanges[h];
             html += '<tr>';
-            html += `<th>${heightRange.Min} - ${heightRange.Max}</th>`;
+            html += `<th>${heightRange.min} - ${heightRange.max}</th>`;
 
             for (let w = 0; w < this.config.widthRanges.length; w++) {
                 const key = `${w}_${h}`;

@@ -282,18 +282,19 @@ else
                                         {
                                             <div class="btn-group-vertical" role="group">
                                                 <a asp-action="ManageCurtainPricing"
-                                                   asp-route-itemId="@headingStyleItem.Id"
-                                                   class="btn btn-sm btn-success mb-1"
-                                                   title="Configurar precios automáticos para cortinas">
-                                                    <i class="bi bi-gear-fill"></i> Configurar
+                                                    asp-route-itemId="@headingStyleItem.Id"
+                                                    class="btn btn-sm @(headingStyleItem.CurtainPricingConfig?.PricingType == GrupoMad.Models.CurtainPricingType.Normal ? "btn-primary" : "btn-outline-secondary") mb-1"
+                                                    title="Configurar precios normales (45 rangos de altura)">
+                                                    <i class="bi bi-gear-fill"></i> Normal
                                                 </a>
-                                                <a asp-action="ManageRangesByDimensionsMatrix"
-                                                   asp-route-itemId="@headingStyleItem.Id"
-                                                   class="btn btn-sm btn-info"
-                                                   title="Gestionar rangos de precios por dimensiones para @productGroup.Product.Name - @headingStyle.Name">
-                                                    <i class="bi bi-bounding-box"></i> Rangos
+                                                <a asp-action="ManageSpecialCurtainPricing"
+                                                    asp-route-itemId="@headingStyleItem.Id"
+                                                    class="btn btn-sm @(headingStyleItem.CurtainPricingConfig?.PricingType == GrupoMad.Models.CurtainPricingType.Special ? "btn-success" : "btn-outline-secondary") mb-1"
+                                                    title="Configurar precios especiales (6 rangos de altura)">
+                                                    <i class="bi bi-gear-fill"></i> Especial
                                                 </a>
                                             </div>
+
 
                                             @* Mostrar cantidad de rangos definidos si existen *@
                                             @if (headingStyleItem.PriceRangesByDimensions != null && headingStyleItem.PriceRangesByDimensions.Any())
@@ -311,13 +312,22 @@ else
                                                 </small>
                                             }
 
-                                            @* Mostrar si tiene configuración de cortinas *@
+                                            @* Mostrar si tiene configuración de cortinas y el tipo *@
                                             @if (headingStyleItem.CurtainPricingConfig != null)
                                             {
                                                 <br />
-                                                <small class="text-info">
-                                                    <i class="bi bi-gear-fill"></i> Configurado
-                                                </small>
+                                                @if (headingStyleItem.CurtainPricingConfig.PricingType == GrupoMad.Models.CurtainPricingType.Normal)
+                                                {
+                                                    <span class="badge bg-info" title="45 rangos de altura">
+                                                        <i class="bi bi-gear-fill"></i> Normal (45)
+                                                    </span>
+                                                }
+                                                else
+                                                {
+                                                    <span class="badge bg-success" title="6 rangos de altura">
+                                                        <i class="bi bi-lightning-fill"></i> Especial (6)
+                                                    </span>
+                                                }
                                             }
                                         }
                                         else
