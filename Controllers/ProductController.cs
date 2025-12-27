@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.AspNetCore.Authorization;
 using GrupoMad.Services;
 using GrupoMad.Models;
+using GrupoMad.Models.ViewComponents;
 using GrupoMad.Data;
 
 namespace GrupoMad.Controllers
@@ -25,7 +26,148 @@ namespace GrupoMad.Controllers
         public async Task<IActionResult> Index()
         {
             var products = await _productService.GetAllProductsAsync();
-            return View(products);
+
+            // Configurar la tabla personalizada
+            var config = new DataTableConfig<Product>
+            {
+                TableId = "productsTable",
+                Data = products,
+                MakeRowsClickable = true,
+                RowClickUrl = "/Product/Details/{id}",
+                GetRowId = p => p.Id,
+                EnableFilters = true,
+                Filters = new DataTableFilters
+                {
+                    ShowSearchFilter = true,
+                    SearchPlaceholder = "Buscar por nombre o SKU...",
+                    SearchAttributes = new List<string> { "name", "sku" },
+                    DropdownFilters = new List<DataTableDropdownFilter>
+                    {
+                        new DataTableDropdownFilter
+                        {
+                            Id = "productTypeFilter",
+                            Label = "Tipo de Producto",
+                            DataAttribute = "producttype",
+                            Placeholder = "Todos los tipos"
+                        },
+                        new DataTableDropdownFilter
+                        {
+                            Id = "storeFilter",
+                            Label = "Tienda",
+                            DataAttribute = "store",
+                            Placeholder = "Todas las tiendas"
+                        },
+                        new DataTableDropdownFilter
+                        {
+                            Id = "statusFilter",
+                            Label = "Estado",
+                            DataAttribute = "status",
+                            Placeholder = "Todos"
+                        }
+                    }
+                },
+                Columns = new List<DataTableColumn<Product>>
+                {
+                    new DataTableColumn<Product>
+                    {
+                        Header = "SKU",
+                        ValueSelector = p => p.SKU ?? "",
+                        DataAttribute = "sku",
+                        DataAttributeValueSelector = p => (p.SKU ?? "").ToLower()
+                    },
+                    new DataTableColumn<Product>
+                    {
+                        Header = "Nombre",
+                        ValueSelector = p => p.Name ?? "",
+                        DataAttribute = "name",
+                        DataAttributeValueSelector = p => (p.Name ?? "").ToLower()
+                    },
+                    new DataTableColumn<Product>
+                    {
+                        Header = "Tipo",
+                        ValueSelector = p => p.ProductType != null
+                            ? new Microsoft.AspNetCore.Html.HtmlString($"<span class=\"custom-badge custom-badge-info\">{p.ProductType.Name}</span>")
+                            : new Microsoft.AspNetCore.Html.HtmlString("<span class=\"custom-badge custom-badge-secondary\">Sin tipo</span>"),
+                        DataAttribute = "producttype",
+                        DataAttributeValueSelector = p => p.ProductType?.Name ?? "Sin tipo"
+                    },
+                    new DataTableColumn<Product>
+                    {
+                        Header = "Tipo de Precio",
+                        ValueSelector = p => p.ProductType != null
+                            ? p.ProductType.PricingType switch
+                            {
+                                PricingType.PerSquareMeter => "Por m²",
+                                PricingType.PerUnit => "Por Unidad",
+                                PricingType.PerLinearMeter => "Por Metro Lineal",
+                                PricingType.PerRangeLength => "Por Rango de Largo",
+                                PricingType.PerRangeDimensions => "Por Rango de Dimensiones",
+                                _ => ""
+                            }
+                            : ""
+                    },
+                    new DataTableColumn<Product>
+                    {
+                        Header = "Tienda",
+                        ValueSelector = p => p.Store != null
+                            ? new Microsoft.AspNetCore.Html.HtmlString($"<span class=\"custom-badge custom-badge-warning\">{p.Store.Name}</span>")
+                            : new Microsoft.AspNetCore.Html.HtmlString("<span class=\"custom-badge custom-badge-primary\">Global</span>"),
+                        DataAttribute = "store",
+                        DataAttributeValueSelector = p => p.Store?.Name ?? "Global"
+                    },
+                    new DataTableColumn<Product>
+                    {
+                        Header = "Colores",
+                        ValueSelector = p => p.ProductColors != null && p.ProductColors.Any()
+                            ? new Microsoft.AspNetCore.Html.HtmlString($"<span class=\"custom-badge custom-badge-secondary\">{p.ProductColors.Count} colores</span>")
+                            : new Microsoft.AspNetCore.Html.HtmlString("<span style=\"color: #9ca3af;\">Sin colores</span>")
+                    },
+                    new DataTableColumn<Product>
+                    {
+                        Header = "Estado",
+                        ValueSelector = p => p.IsActive
+                            ? new Microsoft.AspNetCore.Html.HtmlString("<span class=\"custom-badge custom-badge-success\">Activo</span>")
+                            : new Microsoft.AspNetCore.Html.HtmlString("<span class=\"custom-badge custom-badge-danger\">Inactivo</span>"),
+                        DataAttribute = "status",
+                        DataAttributeValueSelector = p => p.IsActive ? "active" : "inactive"
+                    }
+                },
+                ShowActions = true,
+                Actions = new List<DataTableAction<Product>>
+                {
+                    new DataTableAction<Product>
+                    {
+                        Label = "Editar",
+                        Icon = "pencil",
+                        UrlSelector = p => $"/Product/Edit/{p.Id}"
+                    },
+                    new DataTableAction<Product>
+                    {
+                        Label = "Colores",
+                        Icon = "palette",
+                        UrlSelector = p => $"/Product/ManageColors/{p.Id}"
+                    },
+                    new DataTableAction<Product>
+                    {
+                        Label = "Precios",
+                        Icon = "currency-dollar",
+                        UrlSelector = p => $"/Product/PricesByStore/{p.Id}"
+                    },
+                    new DataTableAction<Product>
+                    {
+                        IsDivider = true
+                    },
+                    new DataTableAction<Product>
+                    {
+                        Label = "Eliminar",
+                        Icon = "trash",
+                        UrlSelector = p => $"/Product/Delete/{p.Id}",
+                        CssClass = "dropdown-item text-danger"
+                    }
+                }
+            };
+
+            return View(config);
         }
 
         // GET: Product/Details/5

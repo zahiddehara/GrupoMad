@@ -1,0 +1,317 @@
+@using GrupoMad.Models.ViewComponents
+@using System.Linq
+@model dynamic
+
+@{
+    var tableId = Model.TableId ?? "dataTable";
+    var data = Model.Data;
+    var columns = Model.Columns;
+    var showActions = Model.ShowActions;
+    var actions = Model.Actions;
+    var actionsList = new List<dynamic>();
+    foreach (var action in actions)
+    {
+        actionsList.Add(action);
+    }
+    var makeRowsClickable = Model.MakeRowsClickable;
+    var rowClickUrl = Model.RowClickUrl;
+    var getRowId = Model.GetRowId;
+    var enableFilters = Model.EnableFilters;
+    var filters = Model.Filters;
+}
+
+<div class="custom-datatable-wrapper">
+    @if (enableFilters && filters != null)
+    {
+        <div class="custom-datatable-filters">
+            <div class="custom-datatable-filters-card">
+                <div class="custom-datatable-filters-header">
+                    <h5><i class="bi bi-funnel"></i> Filtros de Búsqueda</h5>
+                </div>
+                <div class="custom-datatable-filters-body">
+                    <div class="custom-datatable-filters-row">
+                        @if (filters.ShowSearchFilter)
+                        {
+                            <div class="custom-datatable-filter-col">
+                                <label class="custom-datatable-filter-label">Buscar</label>
+                                <input type="text" id="@(tableId)_searchInput" class="custom-datatable-filter-input" placeholder="@filters.SearchPlaceholder">
+                            </div>
+                        }
+                        @foreach (var dropdownFilter in filters.DropdownFilters)
+                        {
+                            <div class="custom-datatable-filter-col">
+                                <label class="custom-datatable-filter-label">@dropdownFilter.Label</label>
+                                <select id="@(tableId)_@dropdownFilter.Id" class="custom-datatable-filter-select" data-filter-attribute="@dropdownFilter.DataAttribute">
+                                    <option value="">@dropdownFilter.Placeholder</option>
+                                </select>
+                            </div>
+                        }
+                    </div>
+                    <div class="custom-datatable-filters-actions">
+                        <button type="button" id="@(tableId)_clearFilters" class="custom-datatable-clear-btn">
+                            <i class="bi bi-x-circle"></i> Limpiar Filtros
+                        </button>
+                        <span id="@(tableId)_resultsCount" class="custom-datatable-results-count"></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+
+    <div class="custom-datatable-container">
+        <table class="custom-datatable" id="@tableId">
+            <thead class="custom-datatable-header">
+                <tr>
+                    @foreach (var column in columns)
+                    {
+                        <th class="custom-datatable-th">@column.Header</th>
+                    }
+                    @if (showActions)
+                    {
+                        <th class="custom-datatable-th custom-datatable-th-actions">Acciones</th>
+                    }
+                </tr>
+            </thead>
+            <tbody class="custom-datatable-body" id="@(tableId)_body">
+                @foreach (var item in data)
+                {
+                    var rowId = getRowId != null ? getRowId(item) : 0;
+                    var rowClass = makeRowsClickable ? "custom-datatable-row clickable" : "custom-datatable-row";
+
+                    // Construir data-attributes para filtros
+                    var dataAttributes = new Dictionary<string, string>();
+                    if (enableFilters)
+                    {
+                        foreach (var column in columns)
+                        {
+                            if (!string.IsNullOrEmpty(column.DataAttribute) && column.DataAttributeValueSelector != null)
+                            {
+                                var attrValue = column.DataAttributeValueSelector(item) ?? "";
+                                dataAttributes[column.DataAttribute] = attrValue;
+                            }
+                        }
+                    }
+
+                    <tr class="@rowClass" data-id="@rowId" @foreach(var attr in dataAttributes) { <text> data-@attr.Key="@attr.Value"</text> }>
+                        @foreach (var column in columns)
+                        {
+                            var value = column.ValueSelector(item);
+                            var cssClass = column.CssClassSelector != null ? column.CssClassSelector(item) : "";
+
+                            <td class="custom-datatable-td @cssClass">
+                                @if (value is Microsoft.AspNetCore.Html.IHtmlContent htmlContent)
+                                {
+                                    @htmlContent
+                                }
+                                else
+                                {
+                                    @value
+                                }
+                            </td>
+                        }
+                        @if (showActions && actionsList.Any())
+                        {
+                            <td class="custom-datatable-td custom-datatable-td-actions">
+                                <div class="custom-datatable-actions">
+                                    <button type="button" class="custom-datatable-actions-btn" data-toggle="dropdown">
+                                        <i class="bi bi-three-dots"></i>
+                                    </button>
+                                    <div class="custom-datatable-dropdown">
+                                        @foreach (var action in actionsList)
+                                        {
+                                            if (action.IsDivider)
+                                            {
+                                                <div class="custom-datatable-dropdown-divider"></div>
+                                            }
+                                            else
+                                            {
+                                                var url = action.UrlSelector(item);
+                                                <a href="@url" class="custom-datatable-dropdown-item @action.CssClass">
+                                                    @if (!string.IsNullOrEmpty(action.Icon))
+                                                    {
+                                                        <i class="bi bi-@action.Icon"></i>
+                                                    }
+                                                    @action.Label
+                                                </a>
+                                            }
+                                        }
+                                    </div>
+                                </div>
+                            </td>
+                        }
+                    </tr>
+                }
+            </tbody>
+        </table>
+        <div id="@(tableId)_noResults" class="custom-datatable-no-results" style="display: none;">
+            <i class="bi bi-search"></i>
+            <p>No se encontraron resultados que coincidan con los filtros.</p>
+        </div>
+    </div>
+</div>
+
+@if (makeRowsClickable && !string.IsNullOrEmpty(rowClickUrl))
+{
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const table = document.getElementById('@tableId');
+            if (table) {
+                table.addEventListener('click', function(e) {
+                    const row = e.target.closest('.custom-datatable-row.clickable');
+                    if (row && !e.target.closest('.custom-datatable-actions')) {
+                        const id = row.dataset.id;
+                        if (id) {
+                            window.location.href = '@rowClickUrl'.replace('{id}', id);
+                        }
+                    }
+                });
+            }
+        });
+    </script>
+}
+
+<script>
+    // Toggle dropdown en acciones
+    document.addEventListener('DOMContentLoaded', function() {
+        document.querySelectorAll('.custom-datatable-actions-btn').forEach(btn => {
+            btn.addEventListener('click', function(e) {
+                e.stopPropagation();
+                const dropdown = this.nextElementSibling;
+                const allDropdowns = document.querySelectorAll('.custom-datatable-dropdown');
+
+                allDropdowns.forEach(d => {
+                    if (d !== dropdown) {
+                        d.classList.remove('show');
+                    }
+                });
+
+                dropdown.classList.toggle('show');
+            });
+        });
+
+        document.addEventListener('click', function() {
+            document.querySelectorAll('.custom-datatable-dropdown').forEach(d => {
+                d.classList.remove('show');
+            });
+        });
+    });
+</script>
+
+@if (enableFilters && filters != null)
+{
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const tableId = '@tableId';
+            const tbody = document.getElementById(tableId + '_body');
+            const noResults = document.getElementById(tableId + '_noResults');
+            const resultsCount = document.getElementById(tableId + '_resultsCount');
+            const searchInput = document.getElementById(tableId + '_searchInput');
+            const clearBtn = document.getElementById(tableId + '_clearFilters');
+
+            // Obtener todos los select de filtros
+            const filterSelects = document.querySelectorAll(`[id^="${tableId}_"][id$="Filter"], [id^="${tableId}_"]:not([id$="_searchInput"]):not([id$="_clearFilters"]):not([id$="_resultsCount"]):not([id$="_body"]):not([id$="_noResults"])`);
+            const actualFilterSelects = Array.from(filterSelects).filter(el => el.tagName === 'SELECT');
+
+            // Poblar dropdowns con valores únicos
+            actualFilterSelects.forEach(select => {
+                const filterAttr = select.dataset.filterAttribute;
+                if (!filterAttr) return;
+
+                const uniqueValues = new Set();
+                tbody.querySelectorAll('tr').forEach(row => {
+                    const value = row.dataset[filterAttr];
+                    if (value) uniqueValues.add(value);
+                });
+
+                uniqueValues.forEach(value => {
+                    const option = document.createElement('option');
+                    option.value = value;
+                    option.textContent = value;
+                    select.appendChild(option);
+                });
+            });
+
+            // Función de filtrado
+            function filterTable() {
+                const searchTerm = searchInput ? searchInput.value.toLowerCase() : '';
+                let visibleCount = 0;
+
+                tbody.querySelectorAll('tr').forEach(row => {
+                    let showRow = true;
+
+                    // Filtro de búsqueda
+                    if (searchTerm && searchInput) {
+                        const searchAttrs = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(filters.SearchAttributes));
+                        let matchFound = false;
+
+                        searchAttrs.forEach(attr => {
+                            const value = row.dataset[attr];
+                            if (value && value.toLowerCase().includes(searchTerm)) {
+                                matchFound = true;
+                            }
+                        });
+
+                        if (!matchFound) showRow = false;
+                    }
+
+                    // Filtros de dropdown
+                    actualFilterSelects.forEach(select => {
+                        const filterValue = select.value;
+                        const filterAttr = select.dataset.filterAttribute;
+
+                        if (filterValue && filterAttr) {
+                            const rowValue = row.dataset[filterAttr];
+                            if (rowValue !== filterValue) {
+                                showRow = false;
+                            }
+                        }
+                    });
+
+                    if (showRow) {
+                        row.style.display = '';
+                        visibleCount++;
+                    } else {
+                        row.style.display = 'none';
+                    }
+                });
+
+                // Mostrar/ocultar mensaje de "no resultados"
+                const table = document.getElementById(tableId);
+                if (visibleCount === 0) {
+                    table.style.display = 'none';
+                    noResults.style.display = 'flex';
+                } else {
+                    table.style.display = 'table';
+                    noResults.style.display = 'none';
+                }
+
+                // Actualizar contador
+                const totalCount = tbody.querySelectorAll('tr').length;
+                resultsCount.textContent = `Mostrando ${visibleCount} de ${totalCount} resultados`;
+            }
+
+            // Event listeners
+            if (searchInput) {
+                searchInput.addEventListener('keyup', filterTable);
+            }
+
+            actualFilterSelects.forEach(select => {
+                select.addEventListener('change', filterTable);
+            });
+
+            // Limpiar filtros
+            if (clearBtn) {
+                clearBtn.addEventListener('click', function() {
+                    if (searchInput) searchInput.value = '';
+                    actualFilterSelects.forEach(select => {
+                        select.value = '';
+                    });
+                    filterTable();
+                });
+            }
+
+            // Inicializar contador
+            filterTable();
+        });
+    </script>
+}

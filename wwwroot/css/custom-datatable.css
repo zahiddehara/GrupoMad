@@ -1,0 +1,368 @@
+/* Custom DataTable - Diseño moderno sin Bootstrap */
+
+.custom-datatable-wrapper {
+    width: 100%;
+    margin: 0;
+    padding: 0;
+}
+
+.custom-datatable-container {
+    /* overflow-x: auto; */
+    border-radius: 8px;
+    border: 1px solid #e5e7eb;
+    background: #ffffff;
+}
+
+.custom-datatable {
+    width: 100%;
+    border-collapse: collapse;
+    font-family: 'Geist', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    font-size: 14px;
+    color: #171717;
+}
+
+/* Header */
+.custom-datatable-header {
+    /* background: #f9fafb; */
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.custom-datatable-th {
+    padding: 12px 16px;
+    text-align: left;
+    font-weight: 600;
+    font-size: 14px;
+    color: #374151;
+    letter-spacing: 0.025em;
+    white-space: nowrap;
+}
+
+.custom-datatable-th-actions {
+    width: 80px;
+    text-align: center;
+}
+
+/* Body */
+.custom-datatable-body {
+    background: #ffffff;
+}
+
+.custom-datatable-row {
+    border-bottom: 1px solid #f3f4f6;
+    transition: background-color 0.15s ease;
+}
+
+.custom-datatable-row:last-child {
+    border-bottom: none;
+}
+
+.custom-datatable-row:hover {
+    background-color: #f9fafb;
+}
+
+.custom-datatable-row.clickable {
+    cursor: pointer;
+}
+
+.custom-datatable-row.clickable:hover {
+    background-color: #f0f9ff;
+}
+
+.custom-datatable-td {
+    padding: 14px 16px;
+    color: #171717;
+    vertical-align: middle;
+}
+
+.custom-datatable-td-actions {
+    text-align: center;
+    padding: 8px;
+    width: 80px;
+}
+
+/* Actions Dropdown */
+.custom-datatable-actions {
+    position: relative;
+    display: inline-block;
+}
+
+.custom-datatable-actions-btn {
+    background: transparent;
+    border: 1px solid #e5e7eb;
+    border-radius: 6px;
+    padding: 6px 10px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    color: #6b7280;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.custom-datatable-actions-btn:hover {
+    background: #f3f4f6;
+    border-color: #d1d5db;
+    color: #374151;
+}
+
+.custom-datatable-actions-btn:focus {
+    outline: none;
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.custom-datatable-dropdown {
+    position: absolute;
+    right: 0;
+    top: calc(100% + 4px);
+    background: #ffffff;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    min-width: 180px;
+    z-index: 1000;
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(-10px);
+    transition: all 0.2s ease;
+}
+
+.custom-datatable-dropdown.show {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+}
+
+.custom-datatable-dropdown-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 16px;
+    color: #374151;
+    text-decoration: none;
+    font-size: 14px;
+    transition: background-color 0.15s ease;
+    white-space: nowrap;
+}
+
+.custom-datatable-dropdown-item:first-child {
+    border-radius: 7px 7px 0 0;
+}
+
+.custom-datatable-dropdown-item:last-child {
+    border-radius: 0 0 7px 7px;
+}
+
+.custom-datatable-dropdown-item:hover {
+    background-color: #f3f4f6;
+}
+
+.custom-datatable-dropdown-item i {
+    font-size: 16px;
+    width: 16px;
+}
+
+.custom-datatable-dropdown-item.text-danger {
+    color: #dc2626;
+}
+
+.custom-datatable-dropdown-item.text-danger:hover {
+    background-color: #fef2f2;
+}
+
+.custom-datatable-dropdown-divider {
+    height: 1px;
+    background-color: #e5e7eb;
+    margin: 4px 0;
+}
+
+/* Badges (si se usan) */
+.custom-badge {
+    display: inline-block;
+    padding: 4px 10px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: 500;
+    line-height: 1;
+}
+
+.custom-badge-primary {
+    background-color: #dbeafe;
+    color: #1e40af;
+}
+
+.custom-badge-success {
+    background-color: #dcfce7;
+    color: #15803d;
+}
+
+.custom-badge-danger {
+    background-color: #fee2e2;
+    color: #b91c1c;
+}
+
+.custom-badge-warning {
+    background-color: #fef3c7;
+    color: #92400e;
+}
+
+.custom-badge-info {
+    background-color: #e0f2fe;
+    color: #075985;
+}
+
+.custom-badge-secondary {
+    background-color: #f3f4f6;
+    color: #4b5563;
+}
+
+/* Filters */
+.custom-datatable-filters {
+    margin-bottom: 20px;
+}
+
+.custom-datatable-filters-card {
+    background: #ffffff;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.custom-datatable-filters-header {
+    background: #f9fafb;
+    padding: 14px 20px;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.custom-datatable-filters-header h5 {
+    margin: 0;
+    font-size: 15px;
+    font-weight: 600;
+    color: #374151;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.custom-datatable-filters-body {
+    padding: 20px;
+}
+
+.custom-datatable-filters-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 16px;
+    margin-bottom: 16px;
+}
+
+.custom-datatable-filter-col {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.custom-datatable-filter-label {
+    font-size: 13px;
+    font-weight: 500;
+    color: #374151;
+    margin: 0;
+}
+
+.custom-datatable-filter-input,
+.custom-datatable-filter-select {
+    padding: 8px 12px;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    font-size: 14px;
+    font-family: 'Geist', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    color: #171717;
+    background: #ffffff;
+    transition: all 0.15s ease;
+}
+
+.custom-datatable-filter-input:focus,
+.custom-datatable-filter-select:focus {
+    outline: none;
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.custom-datatable-filter-input::placeholder {
+    color: #9ca3af;
+}
+
+.custom-datatable-filters-actions {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.custom-datatable-clear-btn {
+    padding: 8px 16px;
+    background: transparent;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 500;
+    color: #6b7280;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-family: 'Geist', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
+
+.custom-datatable-clear-btn:hover {
+    background: #f3f4f6;
+    border-color: #9ca3af;
+    color: #374151;
+}
+
+.custom-datatable-clear-btn:focus {
+    outline: none;
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.custom-datatable-results-count {
+    font-size: 13px;
+    color: #6b7280;
+}
+
+/* No Results Message */
+.custom-datatable-no-results {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 60px 20px;
+    text-align: center;
+    color: #9ca3af;
+}
+
+.custom-datatable-no-results i {
+    font-size: 48px;
+    margin-bottom: 16px;
+    color: #d1d5db;
+}
+
+.custom-datatable-no-results p {
+    margin: 0;
+    font-size: 14px;
+    color: #6b7280;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .custom-datatable-th,
+    .custom-datatable-td {
+        padding: 10px 12px;
+        font-size: 13px;
+    }
+
+    .custom-datatable-dropdown {
+        right: auto;
+        left: 0;
+    }
+}
