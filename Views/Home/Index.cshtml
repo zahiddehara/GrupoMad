@@ -2,7 +2,105 @@
     ViewData["Title"] = "Home Page";
 }
 
-<div class="text-center">
-    <h1 class="display-4">Welcome</h1>
-    <p>Learn about <a href="https://learn.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
-</div>
+@section Styles {
+    <style>
+        body {
+            background-color: #c3bfbf;
+        }
+    </style>
+}
+
+    <div class="container py-5">
+        <div class="mb-4">
+            <h1 class="text-center">Grupo Mad</h1>
+            <p class="text-center">Sistema de Gestión</p>
+        </div>
+
+        <div class="row g-4">
+            <div class="col-12 col-md-6 col-lg-3">
+                <a href="@Url.Action("Index", "Quotation")" class="nav-card">
+                    <div class="nav-card-content">
+                        <i class="bi bi-file-earmark-text nav-card-icon"></i>
+                        <h3>Cotizaciones</h3>
+                        <p>Gestiona tus cotizaciones</p>
+                    </div>
+                </a>
+            </div>
+
+            @if (User.IsInRole("Administrator") || User.IsInRole("SalesManager") || User.IsInRole("StoreManager"))
+            {
+                <div class="col-12 col-md-6 col-lg-3">
+                    <a href="@Url.Action("Index", "Product")" class="nav-card">
+                        <div class="nav-card-content">
+                            <i class="bi bi-box-seam nav-card-icon"></i>
+                            <h3>Productos</h3>
+                            <p>Administra productos</p>
+                        </div>
+                    </a>
+                </div>
+
+                <div class="col-12 col-md-6 col-lg-3">
+                    <a href="@Url.Action("Index", "ProductType")" class="nav-card">
+                        <div class="nav-card-content">
+                            <i class="bi bi-tags nav-card-icon"></i>
+                            <h3>Tipos de Producto</h3>
+                            <p>Gestiona categorías</p>
+                        </div>
+                    </a>
+                </div>
+
+                <div class="col-12 col-md-6 col-lg-3">
+                    <a href="@Url.Action("Index", "PriceList")" class="nav-card">
+                        <div class="nav-card-content">
+                            <i class="bi bi-currency-dollar nav-card-icon"></i>
+                            <h3>Listas de Precios</h3>
+                            <p>Administra precios</p>
+                        </div>
+                    </a>
+                </div>
+            }
+
+            <div class="col-12 col-md-6 col-lg-3">
+                <a href="@Url.Action("Index", "Contact")" class="nav-card">
+                    <div class="nav-card-content">
+                        <i class="bi bi-people nav-card-icon"></i>
+                        <h3>Contactos</h3>
+                        <p>Gestiona contactos</p>
+                    </div>
+                </a>
+            </div>
+
+            @if (User.IsInRole("Administrator"))
+            {
+                <div class="col-12 col-md-6 col-lg-3">
+                    <a href="@Url.Action("Index", "Company")" class="nav-card">
+                        <div class="nav-card-content">
+                            <i class="bi bi-building nav-card-icon"></i>
+                            <h3>Empresas</h3>
+                            <p>Administra empresas</p>
+                        </div>
+                    </a>
+                </div>
+
+                <div class="col-12 col-md-6 col-lg-3">
+                    <a href="@Url.Action("Index", "Store")" class="nav-card">
+                        <div class="nav-card-content">
+                            <i class="bi bi-shop nav-card-icon"></i>
+                            <h3>Sucursales</h3>
+                            <p>Gestiona sucursales</p>
+                        </div>
+                    </a>
+                </div>
+
+                <div class="col-12 col-md-6 col-lg-3">
+                    <a href="@Url.Action("Index", "User")" class="nav-card">
+                        <div class="nav-card-content">
+                            <i class="bi bi-person-badge nav-card-icon"></i>
+                            <h3>Usuarios</h3>
+                            <p>Administra usuarios</p>
+                        </div>
+                    </a>
+                </div>
+            }
+        </div>
+    </div>

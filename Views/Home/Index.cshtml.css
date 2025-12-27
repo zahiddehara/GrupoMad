@@ -1,0 +1,50 @@
+h1 {
+    font-size: 48px;
+    color: #262626;
+}
+.nav-card {
+    display: block;
+    text-decoration: none;
+    color: inherit;
+    height: 100%;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.nav-card-content {
+    background-color: #f9f9f9;
+    border-radius: 27px;
+    padding: 28px;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.nav-card:hover {
+    transform: translateY(-4px);
+}
+
+.nav-card:hover .nav-card-content {
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+}
+
+.nav-card-icon {
+    font-size: 48px;
+    margin-bottom: 16px;
+    color: #1b6ec2;
+}
+
+.nav-card h3 {
+    font-size: 18px;
+    font-weight: 400;
+    margin-bottom: 8px;
+    color: #333;
+}
+
+.nav-card p {
+    font-size: 14px;
+    color: #666;
+    margin: 0;
+}
