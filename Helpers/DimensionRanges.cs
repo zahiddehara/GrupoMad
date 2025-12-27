@@ -6,11 +6,11 @@ namespace GrupoMad.Helpers
     public static class DimensionRanges
     {
         /// <summary>
-        /// Width ranges (29 ranges from 1.20m to 20.00m)
+        /// Width ranges (29 ranges from 0.00m to 20.00m)
         /// </summary>
         public static readonly List<(decimal Min, decimal Max)> WidthRanges = new()
         {
-            (1.20m, 1.39m), (1.40m, 1.59m), (1.60m, 1.79m), (1.80m, 1.99m),
+            (0.00m, 1.39m), (1.40m, 1.59m), (1.60m, 1.79m), (1.80m, 1.99m),
             (2.00m, 2.19m), (2.20m, 2.39m), (2.40m, 2.59m), (2.60m, 2.79m),
             (2.80m, 2.99m), (3.00m, 3.19m), (3.20m, 3.39m), (3.40m, 3.59m),
             (3.60m, 3.79m), (3.80m, 3.99m), (4.00m, 4.19m), (4.20m, 4.39m),
