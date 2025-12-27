@@ -6,24 +6,6 @@ namespace GrupoMad.Helpers
     /// </summary>
     public static class CurtainFabricMatrix
     {
-        // Width values in meters (header row from CSV)
-        public static readonly decimal[] Widths = new decimal[]
-        {
-            1.2m, 1.4m, 1.6m, 1.8m, 2m, 2.2m, 2.4m, 2.6m, 2.8m, 3m,
-            3.2m, 3.4m, 3.6m, 3.8m, 4m, 4.2m, 4.4m, 4.6m, 4.8m, 5m,
-            5.2m, 5.4m, 5.6m, 5.8m, 6m, 6.5m, 7m, 7.5m, 8m
-        };
-
-        // Height values in meters (first column from CSV)
-        public static readonly decimal[] Heights = new decimal[]
-        {
-            1m, 1.1m, 1.2m, 1.3m, 1.4m, 1.5m, 1.6m, 1.7m, 1.8m, 1.9m,
-            2m, 2.1m, 2.2m, 2.3m, 2.4m, 2.5m, 2.6m, 2.7m, 2.8m, 2.9m,
-            3m, 3.1m, 3.2m, 3.3m, 3.4m, 3.5m, 3.6m, 3.7m, 3.8m, 3.9m,
-            4m, 4.1m, 4.2m, 4.3m, 4.4m, 4.5m, 5m, 5.5m, 6m, 6.5m,
-            7m, 7.5m, 8m, 8.5m, 9m
-        };
-
         // Fabric usage matrix [height_index, width_index]
         public static readonly decimal[,] FabricUsage = new decimal[,]
         {
@@ -77,38 +59,47 @@ namespace GrupoMad.Helpers
 
         /// <summary>
         /// Gets the fabric usage for given width and height values.
-        /// Returns the closest match based on the matrix.
+        /// Returns the fabric usage based on the range the values fall into.
         /// </summary>
         /// <param name="width">Width in meters</param>
         /// <param name="height">Height in meters</param>
         /// <returns>Fabric usage in meters</returns>
         public static decimal GetFabricUsage(decimal width, decimal height)
         {
-            int widthIndex = FindClosestIndex(Widths, width);
-            int heightIndex = FindClosestIndex(Heights, height);
+            int widthIndex = FindWidthRangeIndex(width);
+            int heightIndex = FindHeightRangeIndex(height);
 
             return FabricUsage[heightIndex, widthIndex];
         }
 
         /// <summary>
-        /// Finds the index of the closest value in an array.
+        /// Finds the index of the range that contains the given height value.
         /// </summary>
-        private static int FindClosestIndex(decimal[] array, decimal value)
+        private static int FindHeightRangeIndex(decimal height)
         {
-            int closestIndex = 0;
-            decimal minDifference = Math.Abs(array[0] - value);
-
-            for (int i = 1; i < array.Length; i++)
+            for (int i = 0; i < DimensionRanges.LengthRanges.Count; i++)
             {
-                decimal difference = Math.Abs(array[i] - value);
-                if (difference < minDifference)
-                {
-                    minDifference = difference;
-                    closestIndex = i;
-                }
+                var range = DimensionRanges.LengthRanges[i];
+                if (height >= range.Min && height <= range.Max)
+                    return i;
             }
+            // Default to last range if exceeds all
+            return DimensionRanges.LengthRanges.Count - 1;
+        }
 
-            return closestIndex;
+        /// <summary>
+        /// Finds the index of the range that contains the given width value.
+        /// </summary>
+        private static int FindWidthRangeIndex(decimal width)
+        {
+            for (int i = 0; i < DimensionRanges.WidthRanges.Count; i++)
+            {
+                var range = DimensionRanges.WidthRanges[i];
+                if (width >= range.Min && width <= range.Max)
+                    return i;
+            }
+            // Default to last range if exceeds all
+            return DimensionRanges.WidthRanges.Count - 1;
         }
 
         /// <summary>

@@ -21,12 +21,12 @@ namespace GrupoMad.Helpers
         };
 
         /// <summary>
-        /// Length ranges (45 ranges from 1.00m to 9.49m)
+        /// Length ranges (45 ranges from 0.00m to 9.49m)
         /// </summary>
         public static readonly List<(decimal Min, decimal Max)> LengthRanges = new()
         {
-            // 0.10m increments from 1.00 to 4.49
-            (1.00m, 1.09m), (1.10m, 1.19m), (1.20m, 1.29m), (1.30m, 1.39m),
+            // 0.10m increments from 0.00 to 4.49
+            (0.00m, 1.09m), (1.10m, 1.19m), (1.20m, 1.29m), (1.30m, 1.39m),
             (1.40m, 1.49m), (1.50m, 1.59m), (1.60m, 1.69m), (1.70m, 1.79m),
             (1.80m, 1.89m), (1.90m, 1.99m), (2.00m, 2.09m), (2.10m, 2.19m),
             (2.20m, 2.29m), (2.30m, 2.39m), (2.40m, 2.49m), (2.50m, 2.59m),
