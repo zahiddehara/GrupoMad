@@ -283,6 +283,10 @@ namespace GrupoMad.Controllers
                 }
             }
 
+            // Cargar conteo de rangos por item sin traer todos los registros a memoria
+            var rangeCountsByItem = await _priceListService.GetPriceRangesCountByItemAsync(priceList.PriceListItems.Select(i => i.Id).ToList());
+            ViewBag.RangeCountsByItem = rangeCountsByItem;
+
             ViewBag.PricingTypes = Enum.GetValues(typeof(PricingType));
 
             return View(priceList);

@@ -55,10 +55,19 @@ namespace GrupoMad.Services
                 .Include(pl => pl.PriceListItems)
                     .ThenInclude(pli => pli.Discounts)
                 .Include(pl => pl.PriceListItems)
-                    .ThenInclude(pli => pli.PriceRangesByDimensions)
-                .Include(pl => pl.PriceListItems)
                     .ThenInclude(pli => pli.CurtainPricingConfig)
+                // PriceRangesByDimensions NO se carga aquí (puede ser miles de registros)
+                // Se carga solo cuando se necesita en las vistas específicas de gestión de rangos
                 .FirstOrDefaultAsync(pl => pl.Id == id);
+        }
+
+        public async Task<Dictionary<int, int>> GetPriceRangesCountByItemAsync(List<int> itemIds)
+        {
+            return await _context.PriceRangesByDimensions
+                .Where(pr => itemIds.Contains(pr.PriceListItemId))
+                .GroupBy(pr => pr.PriceListItemId)
+                .Select(g => new { ItemId = g.Key, Count = g.Count() })
+                .ToDictionaryAsync(x => x.ItemId, x => x.Count);
         }
 
         public async Task<PriceList> CreatePriceListAsync(PriceList priceList)

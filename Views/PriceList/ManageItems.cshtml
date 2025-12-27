@@ -297,11 +297,14 @@ else
 
 
                                             @* Mostrar cantidad de rangos definidos si existen *@
-                                            @if (headingStyleItem.PriceRangesByDimensions != null && headingStyleItem.PriceRangesByDimensions.Any())
+                                            var rangeCountsByItem = ViewBag.RangeCountsByItem as Dictionary<int, int>;
+                                            var rangeCount = rangeCountsByItem?.ContainsKey(headingStyleItem.Id) == true ? rangeCountsByItem[headingStyleItem.Id] : 0;
+
+                                            @if (rangeCount > 0)
                                             {
                                                 <br />
                                                 <small class="text-success">
-                                                    <i class="bi bi-check-circle-fill"></i> @headingStyleItem.PriceRangesByDimensions.Count rango(s)
+                                                    <i class="bi bi-check-circle-fill"></i> @rangeCount rango(s)
                                                 </small>
                                             }
                                             else
