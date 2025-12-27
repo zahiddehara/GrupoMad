@@ -1,33 +1,19 @@
-// Special Curtain Fabric Matrix (6 heights × 29 widths)
-const SPECIAL_CURTAIN_FABRIC_MATRIX = {
-    widths: [1.2, 1.4, 1.6, 1.8, 2, 2.2, 2.4, 2.6, 2.8, 3, 3.2, 3.4, 3.6, 3.8, 4, 4.2, 4.4, 4.6, 4.8, 5, 5.2, 5.4, 5.6, 5.8, 6, 6.5, 7, 7.5, 8],
-    heights: [1.0, 1.6, 1.8, 2.0, 2.2, 2.4],
-    fabricUsage: [
-        [1.4, 2.8, 2.8, 2.8, 2.8, 2.8, 2.8, 4.2, 4.2, 4.2, 4.2, 4.2, 4.2, 5.6, 5.6, 5.6, 5.6, 5.6, 5.6, 5.6, 7, 7, 7, 7, 7, 8.4, 8.4, 8.4, 8.4],
-        [2.9, 3.4, 3.9, 4.32, 4.8, 5.3, 5.8, 6.24, 6.72, 7.2, 7.7, 8.2, 8.7, 9.12, 9.6, 10.1, 10.6, 11.04, 11.52, 12, 12.5, 12.96, 13.44, 13.92, 14.4, 15.6, 16.8, 18, 19.2],
-        [2.9, 3.4, 3.9, 4.32, 4.8, 5.3, 5.8, 6.24, 6.72, 7.2, 7.7, 8.2, 8.7, 9.12, 9.6, 10.1, 10.6, 11.04, 11.52, 12, 12.5, 12.96, 13.44, 13.92, 14.4, 15.6, 16.8, 18, 19.2],
-        [2.9, 3.4, 3.9, 4.32, 4.8, 5.3, 5.8, 6.24, 6.72, 7.2, 7.7, 8.2, 8.7, 9.12, 9.6, 10.1, 10.6, 11.04, 11.52, 12, 12.5, 12.96, 13.44, 13.92, 14.4, 15.6, 16.8, 18, 19.2],
-        [2.9, 3.4, 3.9, 4.32, 4.8, 5.3, 5.8, 6.24, 6.72, 7.2, 7.7, 8.2, 8.7, 9.12, 9.6, 10.1, 10.6, 11.04, 11.52, 12, 12.5, 12.96, 13.44, 13.92, 14.4, 15.6, 16.8, 18, 19.2],
-        [2.9, 3.4, 3.9, 4.32, 4.8, 5.3, 5.8, 6.24, 6.72, 7.2, 7.7, 8.2, 8.7, 9.12, 9.6, 10.1, 10.6, 11.04, 11.52, 12, 12.5, 12.96, 13.44, 13.92, 14.4, 15.6, 16.8, 18, 19.2]
-    ],
-
-    getFabricUsage(widthIndex, heightIndex) {
-        if (heightIndex >= 0 && heightIndex < this.fabricUsage.length &&
-            widthIndex >= 0 && widthIndex < this.fabricUsage[heightIndex].length) {
-            return this.fabricUsage[heightIndex][widthIndex];
-        }
-        return 0;
-    }
-};
+// Special Curtain Fabric Matrix - loaded from server
+let SPECIAL_CURTAIN_FABRIC_MATRIX = null;
 
 class SpecialCurtainPricing {
     constructor(config) {
         this.config = config;
         this.calculatedPrices = null;
+        this.matrixLoaded = false;
         this.init();
     }
 
-    init() {
+    async init() {
+        // Load fabric matrix from server
+        await this.loadFabricMatrix();
+
+        // Continue with normal initialization
         // Event listeners
         document.getElementById('calculateBtn')?.addEventListener('click', () => this.calculatePrices());
         document.getElementById('saveBtn')?.addEventListener('click', () => this.savePricing());
@@ -54,6 +40,36 @@ class SpecialCurtainPricing {
             this.calculatedPrices = null;
             document.getElementById('saveBtn').disabled = true;
         });
+    }
+
+    async loadFabricMatrix() {
+        try {
+            const response = await fetch('/PriceList/GetSpecialCurtainFabricMatrix');
+            const data = await response.json();
+
+            if (data.fabricUsage) {
+                // Transform the data to match the expected format
+                SPECIAL_CURTAIN_FABRIC_MATRIX = {
+                    widths: data.widthRanges.map(r => r.min),
+                    heights: data.heightRanges.map(r => r.min),
+                    fabricUsage: data.fabricUsage,
+                    getFabricUsage(widthIndex, heightIndex) {
+                        if (heightIndex >= 0 && heightIndex < this.fabricUsage.length &&
+                            widthIndex >= 0 && widthIndex < this.fabricUsage[heightIndex].length) {
+                            return this.fabricUsage[heightIndex][widthIndex];
+                        }
+                        return 0;
+                    }
+                };
+                this.matrixLoaded = true;
+            } else {
+                console.error('Failed to load fabric matrix:', data);
+                alert('Error al cargar la matriz de uso de tela. Por favor recargue la página.');
+            }
+        } catch (error) {
+            console.error('Error loading fabric matrix:', error);
+            alert('Error al cargar la matriz de uso de tela. Por favor recargue la página.');
+        }
     }
 
     applyPastedValues() {
@@ -164,6 +180,12 @@ class SpecialCurtainPricing {
     }
 
     calculatePrices() {
+        // Check if matrix is loaded
+        if (!this.matrixLoaded || !SPECIAL_CURTAIN_FABRIC_MATRIX) {
+            alert('La matriz de uso de tela aún no se ha cargado. Por favor espere...');
+            return;
+        }
+
         const basePrice = parseFloat(document.getElementById('basePrice').value);
         const taxPercent = parseFloat(document.getElementById('taxPercent').value);
 

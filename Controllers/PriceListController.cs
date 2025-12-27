@@ -1654,6 +1654,42 @@ namespace GrupoMad.Controllers
             }
         }
 
+        // GET: PriceList/GetSpecialCurtainFabricMatrix
+        [HttpGet]
+        public IActionResult GetSpecialCurtainFabricMatrix()
+        {
+            try
+            {
+                var widthRanges = GrupoMad.Helpers.DimensionRanges.WidthRanges;
+                var heightRanges = GrupoMad.Helpers.DimensionRanges.SpecialLengthRanges;
+
+                // Build the fabric usage matrix
+                var fabricUsageMatrix = new List<List<decimal>>();
+
+                for (int h = 0; h < heightRanges.Count; h++)
+                {
+                    var row = new List<decimal>();
+                    for (int w = 0; w < widthRanges.Count; w++)
+                    {
+                        var fabricUsage = GrupoMad.Helpers.SpecialCurtainFabricMatrix.GetFabricUsageByRangeIndex(w, h);
+                        row.Add(fabricUsage);
+                    }
+                    fabricUsageMatrix.Add(row);
+                }
+
+                return Json(new
+                {
+                    widthRanges = widthRanges.Select(r => new { r.Min, r.Max }).ToList(),
+                    heightRanges = heightRanges.Select(r => new { r.Min, r.Max }).ToList(),
+                    fabricUsage = fabricUsageMatrix
+                });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = $"Error: {ex.Message}" });
+            }
+        }
+
         #endregion
     }
 
