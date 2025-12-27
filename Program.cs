@@ -10,13 +10,15 @@ QuestPDF.Settings.License = LicenseType.Community;
 
 // Registrar fuentes personalizadas para PDFs
 var fontsPath = Path.Combine(builder.Environment.WebRootPath, "fonts");
-QuestPDF.Drawing.FontManager.RegisterFont(File.OpenRead(Path.Combine(fontsPath, "PublicSans-Regular.ttf")));
-QuestPDF.Drawing.FontManager.RegisterFont(File.OpenRead(Path.Combine(fontsPath, "PublicSans-Bold.ttf")));
-QuestPDF.Drawing.FontManager.RegisterFont(File.OpenRead(Path.Combine(fontsPath, "PublicSans-Italic.ttf")));
-QuestPDF.Drawing.FontManager.RegisterFont(File.OpenRead(Path.Combine(fontsPath, "PublicSans-BoldItalic.ttf")));
-QuestPDF.Drawing.FontManager.RegisterFont(File.OpenRead(Path.Combine(fontsPath, "PublicSans-Light.ttf")));
-QuestPDF.Drawing.FontManager.RegisterFont(File.OpenRead(Path.Combine(fontsPath, "PublicSans-Medium.ttf")));
-QuestPDF.Drawing.FontManager.RegisterFont(File.OpenRead(Path.Combine(fontsPath, "PublicSans-SemiBold.ttf")));
+QuestPDF.Drawing.FontManager.RegisterFont(File.OpenRead(Path.Combine(fontsPath, "Geist-Thin.ttf")));
+QuestPDF.Drawing.FontManager.RegisterFont(File.OpenRead(Path.Combine(fontsPath, "Geist-ExtraLight.ttf")));
+QuestPDF.Drawing.FontManager.RegisterFont(File.OpenRead(Path.Combine(fontsPath, "Geist-Light.ttf")));
+QuestPDF.Drawing.FontManager.RegisterFont(File.OpenRead(Path.Combine(fontsPath, "Geist-Regular.ttf")));
+QuestPDF.Drawing.FontManager.RegisterFont(File.OpenRead(Path.Combine(fontsPath, "Geist-Medium.ttf")));
+QuestPDF.Drawing.FontManager.RegisterFont(File.OpenRead(Path.Combine(fontsPath, "Geist-SemiBold.ttf")));
+QuestPDF.Drawing.FontManager.RegisterFont(File.OpenRead(Path.Combine(fontsPath, "Geist-Bold.ttf")));
+QuestPDF.Drawing.FontManager.RegisterFont(File.OpenRead(Path.Combine(fontsPath, "Geist-ExtraBold.ttf")));
+QuestPDF.Drawing.FontManager.RegisterFont(File.OpenRead(Path.Combine(fontsPath, "Geist-Black.ttf")));
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();

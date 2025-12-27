@@ -1,51 +1,65 @@
-/* Public Sans Font Family */
+/* Geist Font Family */
 @font-face {
-  font-family: 'Public Sans';
-  src: url('../fonts/PublicSans-Regular.ttf') format('truetype');
-  font-weight: 400;
+  font-family: 'Geist';
+  src: url('../fonts/Geist-Thin.ttf') format('truetype');
+  font-weight: 100;
   font-style: normal;
 }
 
 @font-face {
-  font-family: 'Public Sans';
-  src: url('../fonts/PublicSans-Italic.ttf') format('truetype');
-  font-weight: 400;
-  font-style: italic;
+  font-family: 'Geist';
+  src: url('../fonts/Geist-ExtraLight.ttf') format('truetype');
+  font-weight: 200;
+  font-style: normal;
 }
 
 @font-face {
-  font-family: 'Public Sans';
-  src: url('../fonts/PublicSans-Light.ttf') format('truetype');
+  font-family: 'Geist';
+  src: url('../fonts/Geist-Light.ttf') format('truetype');
   font-weight: 300;
   font-style: normal;
 }
 
 @font-face {
-  font-family: 'Public Sans';
-  src: url('../fonts/PublicSans-Medium.ttf') format('truetype');
+  font-family: 'Geist';
+  src: url('../fonts/Geist-Regular.ttf') format('truetype');
+  font-weight: 400;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'Geist';
+  src: url('../fonts/Geist-Medium.ttf') format('truetype');
   font-weight: 500;
   font-style: normal;
 }
 
 @font-face {
-  font-family: 'Public Sans';
-  src: url('../fonts/PublicSans-SemiBold.ttf') format('truetype');
+  font-family: 'Geist';
+  src: url('../fonts/Geist-SemiBold.ttf') format('truetype');
   font-weight: 600;
   font-style: normal;
 }
 
 @font-face {
-  font-family: 'Public Sans';
-  src: url('../fonts/PublicSans-Bold.ttf') format('truetype');
+  font-family: 'Geist';
+  src: url('../fonts/Geist-Bold.ttf') format('truetype');
   font-weight: 700;
   font-style: normal;
 }
 
 @font-face {
-  font-family: 'Public Sans';
-  src: url('../fonts/PublicSans-BoldItalic.ttf') format('truetype');
-  font-weight: 700;
-  font-style: italic;
+  font-family: 'Geist';
+  src: url('../fonts/Geist-ExtraBold.ttf') format('truetype');
+  font-weight: 800;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'Geist';
+  src: url('../fonts/Geist-Black.ttf') format('truetype');
+  font-weight: 900;
+  font-style: normal;
 }
 
 @font-face {
@@ -83,17 +97,17 @@ html {
 
 body {
   margin-bottom: 60px;
-  font-family: 'Public Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  font-family: 'Geist', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
 }
 
 h1, h2, h3 {
-  font-family: 'Acid Grotesk', 'Public Sans', sans-serif;
+  font-family: 'Acid Grotesk', 'Geist', sans-serif;
   font-weight: 400;
   font-size: 26px;
 }
 
 .navbar-brand {
-  font-family: 'Acid Grotesk', 'Public Sans', sans-serif;
+  font-family: 'Acid Grotesk', 'Geist', sans-serif;
   font-weight: 300;
 }
 
