@@ -119,3 +119,16 @@ h1, h2, h3 {
 .form-floating > .form-control-plaintext:focus::placeholder, .form-floating > .form-control:focus::placeholder {
   text-align: start;
 }
+
+.navbar-nav .nav-link {
+  font-size: 15px;
+  font-weight: 400;
+  color: #262626;
+}
+
+.navbar-nav .dropdown-item {
+  font-size: 15px;
+  font-weight: 400;
+  padding-left: 10px;
+  padding-right: 10px;
+}
