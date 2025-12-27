@@ -47,31 +47,40 @@ namespace GrupoMad.Helpers
         /// <returns>Fabric usage in meters</returns>
         public static decimal GetFabricUsage(decimal width, decimal height)
         {
-            int widthIndex = FindClosestIndex(Widths, width);
-            int heightIndex = FindClosestIndex(Heights, height);
+            int widthIndex = FindWidthRangeIndex(width);
+            int heightIndex = FindHeightRangeIndex(height);
 
             return FabricUsage[heightIndex, widthIndex];
         }
 
         /// <summary>
-        /// Finds the index of the closest value in an array.
+        /// Finds the index of the range that contains the given height value.
         /// </summary>
-        private static int FindClosestIndex(decimal[] array, decimal value)
+        private static int FindHeightRangeIndex(decimal height)
         {
-            int closestIndex = 0;
-            decimal minDifference = Math.Abs(array[0] - value);
-
-            for (int i = 1; i < array.Length; i++)
+            for (int i = 0; i < DimensionRanges.SpecialLengthRanges.Count; i++)
             {
-                decimal difference = Math.Abs(array[i] - value);
-                if (difference < minDifference)
-                {
-                    minDifference = difference;
-                    closestIndex = i;
-                }
+                var range = DimensionRanges.SpecialLengthRanges[i];
+                if (height >= range.Min && height <= range.Max)
+                    return i;
             }
+            // Default to last range if exceeds all
+            return DimensionRanges.SpecialLengthRanges.Count - 1;
+        }
 
-            return closestIndex;
+        /// <summary>
+        /// Finds the index of the range that contains the given width value.
+        /// </summary>
+        private static int FindWidthRangeIndex(decimal width)
+        {
+            for (int i = 0; i < DimensionRanges.WidthRanges.Count; i++)
+            {
+                var range = DimensionRanges.WidthRanges[i];
+                if (width >= range.Min && width <= range.Max)
+                    return i;
+            }
+            // Default to last range if exceeds all
+            return DimensionRanges.WidthRanges.Count - 1;
         }
 
         /// <summary>
